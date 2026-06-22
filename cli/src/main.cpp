@@ -27,9 +27,9 @@ struct Command {
     std::string description;
 
     //for beginners this just gives you a way to run a function with arguments
-    std::function<void*(int, char**)> execute;
+    std::function<int(int, char**)> execute;
 
-    Command(std::string name, std::string desc, std::function<void*(int, char*[])> fn) :
+    Command(std::string name, std::string desc, std::function<int(int, char**)> fn) :
         name(std::move(name)),
         description(std::move(desc)),
         execute(std::move(fn)) {}
@@ -66,26 +66,26 @@ struct CommandRegistry {
 
 CommandRegistry registry;
 
-void* TestCommand(int argc, char* argv[]) {
+int TestCommand(int argc, char* argv[]) {
     std::cout << "Command!" << std::endl;
-    return nullptr;
+    return 0;
 }
 
-void* buildCommand(int argc, char* argv[]) {
+int buildCommand(int argc, char* argv[]) {
     std::cout << "Building... (STUB)" << std::endl;
 
-    return nullptr;
+    return 0;
 }
 
 /// helpp please!!!
-void* helpCommand(int argc, char* argv[]) {
+int helpCommand(int argc, char* argv[]) {
     (void)argc; (void)argv;
     std::cout << vexil::ux::color::green << "Usage: vexil <command> <args>\n\n" << vexil::ux::color::reset;
     std::cout << vexil::ux::color::cyan << "Available commands:\n" << vexil::ux::color::reset;
 
     if (registry.commands.empty()) {
         std::cout << "   " << vexil::ux::color::red << "(no commands registered)" << vexil::ux::color::reset << "\n";
-        return nullptr;
+        return 1;
     }
 
     // this comment was nuked by the turtle
@@ -117,12 +117,13 @@ void* helpCommand(int argc, char* argv[]) {
     }
 
     std::cout << "\n";
-    return nullptr;
+    return 0;
 };
 
 int initialize() {
-    registry.addCommand(Command("Test", "Testing command", TestCommand));
-    registry.addCommand(Command("Help", "Display help information", helpCommand));
+    registry.addCommand(Command("build", "Build the project", buildCommand));
+    registry.addCommand(Command("test", "Testing command", TestCommand));
+    registry.addCommand(Command("help", "Display help information", helpCommand));
 
     return 0;
 }
