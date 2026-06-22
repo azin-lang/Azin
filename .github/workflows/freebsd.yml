@@ -1,0 +1,26 @@
+name: FreeBSD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and Test in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          mem: 4096
+          prepare: pkg install -y cmake
+          run: |
+            cmake -B build
+            cmake --build build
+            output=$(./build/cli/azin version 2>&1)
+            echo "$output"
+            echo "$output" | grep -qi "azin 0.0.1"

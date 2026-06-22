@@ -1,7 +1,7 @@
 #ifndef VEXIL_UX_COLOR_H
     #define VEXIL_UX_COLOR_H
 
-    namespace vexil::ux::color {
+    namespace azin::ux::color {
         inline const char* reset  = "\033[0m";
         inline const char* red    = "\033[31m";
         inline const char* green  = "\033[32m";

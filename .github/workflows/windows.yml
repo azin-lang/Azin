@@ -1,0 +1,26 @@
+name: Windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: |
+          $output = & .\build\cli\Debug\azin.exe version 2>&1
+          Write-Output $output
+          if ($output -notmatch "azin 0\.0\.1") { exit 1 }

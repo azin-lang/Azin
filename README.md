@@ -1,2 +1,2 @@
-# Vexil
-Welcome to the Vexil compiler!
+# Azin
+Welcome to the Azin compiler!

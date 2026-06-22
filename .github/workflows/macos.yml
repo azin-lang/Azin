@@ -1,0 +1,26 @@
+name: macOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: |
+          output=$(./build/cli/azin version 2>&1)
+          echo "$output"
+          echo "$output" | grep -qi "azin 0.0.1"

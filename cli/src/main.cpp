@@ -1,6 +1,7 @@
 #include "colors.hpp"
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -10,14 +11,14 @@
 
 /// dumbfuck if you cant understand ts
 void handle_error(const std::runtime_error& e) {
-    std::cout << vexil::ux::color::red << e.what() << vexil::ux::color::reset << std::endl;
+    std::cout << azin::ux::color::red << e.what() << azin::ux::color::reset << std::endl;
 }
 
 /// ok so this one might need an explanation but it's pretty self-explanatory for amateurs B)
 /// for dumbasses: it checks the amount of arguments against the minimum required
 void check_arguments(int argc, int min_args, const std::string& usage) {
     if (argc < min_args) {
-        std::cout << vexil::ux::color::green << usage << vexil::ux::color::reset << "\n";
+        std::cout << azin::ux::color::green << usage << azin::ux::color::reset << "\n";
         exit(1);
     }
 }
@@ -77,14 +78,21 @@ int buildCommand(int argc, char* argv[]) {
     return 0;
 }
 
+/// version 0.0.1 (wow so groundbreaking)
+int versionCommand(int argc, char* argv[]) {
+    (void)argc; (void)argv;
+    std::cout << azin::ux::color::cyan << "Azin 0.0.1" << azin::ux::color::reset << "\n";
+    return 0;
+}
+
 /// helpp please!!!
 int helpCommand(int argc, char* argv[]) {
     (void)argc; (void)argv;
-    std::cout << vexil::ux::color::green << "Usage: vexil <command> <args>\n\n" << vexil::ux::color::reset;
-    std::cout << vexil::ux::color::cyan << "Available commands:\n" << vexil::ux::color::reset;
+    std::cout << azin::ux::color::green << "Usage: azin <command> <args>\n\n" << azin::ux::color::reset;
+    std::cout << azin::ux::color::cyan << "Available commands:\n" << azin::ux::color::reset;
 
     if (registry.commands.empty()) {
-        std::cout << "   " << vexil::ux::color::red << "(no commands registered)" << vexil::ux::color::reset << "\n";
+        std::cout << "   " << azin::ux::color::red << "(no commands registered)" << azin::ux::color::reset << "\n";
         return 1;
     }
 
@@ -107,7 +115,7 @@ int helpCommand(int argc, char* argv[]) {
         }
 
         // Print first line with name and padding
-        std::cout << "   " << vexil::ux::color::yellow << cmd.name << vexil::ux::color::reset
+        std::cout << "   " << azin::ux::color::yellow << cmd.name << azin::ux::color::reset
                 << padding << "- " << lines[0] << "\n";
 
         // Print remaining lines with indentation
@@ -123,6 +131,7 @@ int helpCommand(int argc, char* argv[]) {
 int initialize() {
     registry.addCommand(Command("build", "Build the project", buildCommand));
     registry.addCommand(Command("test", "Testing command", TestCommand));
+    registry.addCommand(Command("version", "Display version information", versionCommand));
     registry.addCommand(Command("help", "Display help information", helpCommand));
 
     return 0;
@@ -137,7 +146,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (success != 0) {
-        std::cerr << vexil::ux::color::red << "Failed to initialize commands" << vexil::ux::color::reset << "\n";
+        std::cerr << azin::ux::color::red << "Failed to initialize commands" << azin::ux::color::reset << "\n";
         return 1;
     }
 
