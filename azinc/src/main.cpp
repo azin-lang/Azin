@@ -29,7 +29,7 @@ void check_arguments(int argc, int min_args, const std::string& usage) {
 }
 
 int main(int argc, char* argv[]) {
-    check_arguments(argc, 2, "Usage: azinc <source>");
+    check_arguments(argc, 2, "Usage: azinc <source> <args>");
 
     fs::path source_path = fs::path(argv[1]);
     if (azin::filesystem::checkFileExists(source_path) != 0) {
