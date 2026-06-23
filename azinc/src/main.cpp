@@ -1,49 +1,89 @@
-#include <azin/version.hpp>
-#include <azin/helpers.hpp>
 #include <azin/colors.hpp>
+#include <azin/helpers.hpp>
+#include <expected>
 #include <filesystem>
-#include <functional>
-#include <algorithm>
-#include <iostream>
-#include <sstream>
 #include <fstream>
-#include <cstdlib>
-#include <vector>
+#include <iostream>
+#include <iterator>
 #include <string>
-#include <memory>
+#include <utility>
 
 namespace fs = std::filesystem;
 
-/// dumbfuck if you cant understand ts
-void handle_error(const std::runtime_error& error) {
-    std::cout << azin::ux::color::red << error.what() << azin::ux::color::reset << std::endl;
-}
+using FileError = azin::filesystem::FileError;
+using Result = std::expected<void, FileError>;
 
-/// ok so this one might need an explanation but it's pretty self-explanatory for amateurs B)
-/// for dumbasses: it checks the amount of arguments against the minimum required
-void check_arguments(int argc, int min_args, const std::string& usage) {
-    if (argc < min_args) {
-        std::cout << azin::ux::color::green << usage << azin::ux::color::reset << "\n";
-        exit(1);
+namespace {
+[[nodiscard]]
+auto print_usage(int const argc, char const *const *argv) -> bool {
+    if (argc >= 2) {
+        return true;
     }
+
+    std::cout << azin::ux::color::green << "Usage: " << (argc > 0 ? argv[0] : "azinc") // NOLINT
+              << " <source>" << azin::ux::color::reset << '\n';
+
+    return false;
 }
 
-int main(int argc, char* argv[]) {
-    check_arguments(argc, 2, "Usage: azinc <source> <args>");
+auto print_error(FileError const &err) -> void {
+    std::cerr << azin::ux::color::red << err.message << azin::ux::color::reset << '\n';
+}
 
-    fs::path source_path = fs::path(argv[1]);
-    if (azin::filesystem::checkFileExists(source_path) != 0) {
+[[nodiscard]]
+auto ok(Result const &res) -> bool {
+    if (!res) {
+        print_error(res.error());
+        return false;
+    }
+    return true;
+}
+
+[[nodiscard]]
+auto read_file(fs::path const &path) -> std::expected<std::string, FileError> {
+    auto file_result = azin::filesystem::open_source_file(path);
+    if (!file_result) {
+        return std::unexpected(file_result.error());
+    }
+
+    std::ifstream file = std::move(*file_result);
+
+    return std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+}
+
+[[nodiscard]]
+auto run(int const argc, char const *const *argv) -> int {
+    if (!print_usage(argc, argv)) {
         return 1;
     }
 
-    if (azin::filesystem::checkExtension(source_path) != 0) {
+    fs::path const path{argv[1]}; // NOLINT
+
+    if (!ok(azin::filesystem::check_file_exists(path))) {
         return 1;
     }
 
-    std::ifstream source_file = azin::filesystem::openSourceFile(source_path);
+    if (!ok(azin::filesystem::check_extension(path))) {
+        return 1;
+    }
 
-    std::string source_code((std::istreambuf_iterator<char>(source_file)), std::istreambuf_iterator<char>());
-    std::cout << source_code << std::endl;
+    auto content = read_file(path);
+    if (!content) {
+        print_error(content.error());
+        return 1;
+    }
 
+    std::cout << *content << '\n';
     return 0;
+}
+
+} // namespace
+
+auto main(int const argc, char const *const *argv) -> int {
+    try {
+        return run(argc, argv);
+    }
+    catch (...) {
+        return 1;
+    }
 }

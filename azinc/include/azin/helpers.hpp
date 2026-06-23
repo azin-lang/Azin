@@ -1,14 +1,20 @@
-#ifndef AZIN_HELPERS_HPP
-    #define AZIN_HELPERS_HPP
-    #include <fstream>
+#pragma once
+#include <expected>
+#include <filesystem>
+#include <fstream>
 
+namespace azin::filesystem {
+namespace fs = std::filesystem;
 
-    namespace fs = std::filesystem;
+struct FileError {
+    std::string message;
+};
 
-    namespace azin::filesystem {
-        int checkFileExists(const fs::path& source_path);
-        int checkExtension(const fs::path& source_path);
-        std::ifstream openSourceFile(const fs::path& source_path);
-    }
+using Result = std::expected<void, FileError>;
+using FileResult = std::expected<std::ifstream, FileError>;
 
-#endif // AZIN_HELPERS_HPP
+auto check_file_exists(fs::path const &source_path) -> Result;
+auto check_extension(fs::path const &source_path) -> Result;
+auto open_source_file(fs::path const &source_path) -> FileResult;
+
+} // namespace azin::filesystem

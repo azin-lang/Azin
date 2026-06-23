@@ -1,150 +1,153 @@
-#include <azin/version.hpp>
+#include <algorithm>
 #include <azin/colors.hpp>
 #include <azin/new.hpp>
-#include <filesystem>
+#include <azin/version.hpp>
+#include <cstdio>
+#include <exception>
 #include <functional>
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <vector>
+#include <iterator>
+#include <print>
+#include <ranges>
+#include <span>
 #include <string>
-#include <memory>
+#include <string_view>
+#include <utility>
+#include <vector>
 
-/// dumbfuck if you cant understand ts
-void handle_error(const std::runtime_error& error) {
-    std::cout << azin::ux::color::red << error.what() << azin::ux::color::reset << std::endl;
-}
+namespace {
 
-/// ok so this one might need an explanation but it's pretty self-explanatory for amateurs B)
-/// for dumbasses: it checks the amount of arguments against the minimum required
-void check_arguments(int argc, int min_args, const std::string& usage) {
-    if (argc < min_args) {
-        std::cout << azin::ux::color::green << usage << azin::ux::color::reset << "\n";
-        exit(1);
-    }
-}
+using Args = std::span<std::string_view const>;
+using CommandFn = std::function<int(Args)>;
 
 struct Command {
     std::string name;
     std::string description;
-
-    //for beginners this just gives you a way to run a function with arguments
-    std::function<int(int, char**)> execute;
-
-    Command(std::string name, std::string desc, std::function<int(int, char**)> fn) :
-        name(std::move(name)),
-        description(std::move(desc)),
-        execute(std::move(fn)) {}
+    CommandFn execute;
 };
 
-/// registry for managing commands (WOOAH I DIDNT KNOW THAT!)
-struct CommandRegistry {
-    std::vector<Command> commands;
-
-    /// i think you should go to a doctor if you dont understand what this does
-    void addCommand(const Command& command) {
-        commands.push_back(command);
+class CommandRegistry {
+public:
+    auto add(Command command) -> void {
+        commands_.push_back(std::move(command));
     }
 
-    /// same goes here lol
-    // In CommandRegistry class
-    void executeCommand(const std::string& name, const std::vector<std::string>& args) {
-        for (const auto& cmd : commands) {
-            if (cmd.name == name) {
-                // Build argv array
-                std::vector<char*> argv;
-                argv.push_back(const_cast<char*>(name.c_str()));
-                for (const auto& arg : args) {
-                    argv.push_back(const_cast<char*>(arg.c_str()));
-                }
-                argv.push_back(nullptr);
-                cmd.execute((int)argv.size() - 1, argv.data());
-                return;
-            }
+    [[nodiscard]]
+    auto execute(std::string_view const name, Args const args) const -> int {
+        auto const cmd_it = std::ranges::find(commands_, name, &Command::name);
+
+        if (cmd_it == commands_.end()) {
+            std::println(stderr, "{}Unknown command: {}{}", azin::ux::color::red, name,
+                         azin::ux::color::reset);
+
+            return 1;
         }
-        std::cout << "Command not found: " << name << std::endl;
+
+        return cmd_it->execute(args);
     }
+
+    [[nodiscard]]
+    auto commands() const -> std::vector<Command> const & {
+        return commands_;
+    }
+
+private:
+    std::vector<Command> commands_;
 };
 
-CommandRegistry registry;
+auto help_command(CommandRegistry const &registry, Args /* unused */) -> int {
+    auto const &commands = registry.commands();
 
-int TestCommand(int argc, char* argv[]) {
-    std::cout << "Command!" << std::endl;
-    return 0;
-}
+    std::println("{}Usage: azin <command> [args...]{}\n", azin::ux::color::green,
+                 azin::ux::color::reset);
 
-int buildCommand(int argc, char* argv[]) {
-    std::cout << "Building... (STUB)" << std::endl;
+    std::println("{}Available commands:{}", azin::ux::color::cyan, azin::ux::color::reset);
 
-    return 0;
-}
+    auto const longest = std::ranges::max(
+        commands | std::views::transform(
+                       [](Command const &command) -> std::size_t { return command.name.size(); }),
+        {}, [](std::size_t const value) -> std::size_t { return value; });
 
-/// helpp please!!!
-int helpCommand(int argc, char* argv[]) {
-    (void)argc; (void)argv;
-    std::cout << azin::ux::color::green << "Usage: azin <command> <args>\n\n" << azin::ux::color::reset;
-    std::cout << azin::ux::color::cyan << "Available commands:\n" << azin::ux::color::reset;
-
-    if (registry.commands.empty()) {
-        std::cout << "   " << azin::ux::color::red << "(no commands registered)" << azin::ux::color::reset << "\n";
-        return 1;
+    for (auto const &command : commands) {
+        std::println("  {:<{}}  {}", command.name, longest, command.description);
     }
-
-    // this comment was nuked by the turtle
-    size_t max_len = 0;
-    for (const auto& cmd : registry.commands)
-        max_len = std::max(max_len, cmd.name.size());
-
-    /// I CHOOSE DEATH!
-    for (const Command& cmd : registry.commands) {
-        std::string padding(max_len - cmd.name.size() + 2, ' ');
-        std::string indent = "   " + std::string(max_len + 5, ' '); // For subsequent lines
-
-        // Split description into lines
-        std::vector<std::string> lines;
-        std::stringstream ss(cmd.description);
-        std::string line;
-        while (std::getline(ss, line)) {
-            lines.push_back(line);
-        }
-
-        // Print first line with name and padding
-        std::cout << "   " << azin::ux::color::yellow << cmd.name << azin::ux::color::reset
-                << padding << "- " << lines[0] << "\n";
-
-        // Print remaining lines with indentation
-        for (size_t i = 1; i < lines.size(); ++i) {
-            std::cout << indent << lines[i] << "\n";
-        }
-    }
-
-    std::cout << "\n";
-    return 0;
-};
-
-int initialize() {
-    registry.addCommand(Command("build", "Build the project", buildCommand));
-    registry.addCommand(Command("test", "Testing command", TestCommand));
-    registry.addCommand(Command("version", "Display version information", versionCommand));
-    registry.addCommand(Command("new", "Create a new project <name>", newCommand));
-    registry.addCommand(Command("help", "Display help information", helpCommand));
 
     return 0;
 }
 
-int main(int argc, char* argv[]) {
-    int success = initialize();
+auto test_command(Args /* unused */) -> int {
+    std::println("Command!");
+    return 0;
+}
 
-    if (argc < 2) {
-        helpCommand(argc, argv);
+auto build_command(Args /* unused */) -> int {
+    std::println("Building... (STUB)");
+    return 0;
+}
+
+auto register_commands(CommandRegistry &registry) -> void {
+    registry.add(Command{
+        .name = "build",
+        .description = "Build the project",
+        .execute = build_command,
+    });
+
+    registry.add(Command{
+        .name = "test",
+        .description = "Testing command",
+        .execute = test_command,
+    });
+
+    registry.add(Command{
+        .name = "version",
+        .description = "Display version information",
+        .execute = version_command,
+    });
+
+    registry.add(Command{
+        .name = "new",
+        .description = "Create a new project <name>",
+        .execute = new_command,
+    });
+
+    registry.add(Command{
+        .name = "help",
+        .description = "Display help information",
+        .execute = [&registry](Args const args) -> int { return help_command(registry, args); },
+    });
+}
+
+} // namespace
+
+auto main(int const argc, char const *argv[]) -> int { // NOLINT(bugprone-exception-escape)
+    try {
+        CommandRegistry registry;
+
+        register_commands(registry);
+
+        std::span<char const *const> const args_span{argv, static_cast<std::size_t>(argc)};
+
+        if (argc < 2) {
+            return help_command(registry, {});
+        }
+
+        std::vector<std::string_view> args;
+        args.reserve(args_span.size() - 2);
+
+        for (auto const *arg : args_span.subspan(2)) {
+            args.emplace_back(arg);
+        }
+
+        auto const *const command_name = *std::next(args_span.begin());
+        return registry.execute(command_name, args);
+    }
+    catch (std::exception const &exception) {
+        std::println(stderr, "{}{}{}", azin::ux::color::red, exception.what(),
+                     azin::ux::color::reset);
         return 1;
     }
-
-    if (success != 0) {
-        std::cerr << azin::ux::color::red << "Failed to initialize commands" << azin::ux::color::reset << "\n";
+    catch (...) {
+        std::println(stderr, "{}An unknown error occurred.{}", azin::ux::color::red,
+                     azin::ux::color::reset);
         return 1;
     }
-
-    registry.executeCommand(argv[1], std::vector<std::string>(argv + 2, argv + argc));
 }

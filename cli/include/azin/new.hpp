@@ -1,5 +1,5 @@
-#ifndef AZIN_CLI_NEW_H
-    #define AZIN_CLI_NEW_H
+#pragma once
+#include <span>
+#include <string_view>
 
-    int newCommand(int argc, char* argv[]);
-#endif
+auto new_command(std::span<std::string_view const> args) -> int;

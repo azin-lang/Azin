@@ -1,6 +1,5 @@
-#ifndef AZIN_COMPILER_VERSION_H
-    #define AZIN_COMPILER_VERSION_H
+#pragma once
+#include <span>
+#include <string_view>
 
-    int versionCommand(int argc, char* argv[]);
-
-#endif
+auto version_command(std::span<std::string_view const> args) -> int;
