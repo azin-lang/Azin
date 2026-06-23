@@ -1,3 +1,4 @@
-import os
+import subprocess
 
-os.system("cmake -B build")
+subprocess.run(["cmake", "-B", "build"])
+subprocess.run(["cmake", "--build", "build"])
