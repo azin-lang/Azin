@@ -1,0 +1,15 @@
+Checks: >
+  *,
+  -abseil-*,
+  -altera-*,
+  -android-*,
+  -fuchsia-*,
+  -google-*,
+  -llvm*,
+  -zircon-*,
+  -portability-avoid-pragma-once,
+  -readability-static-accessed-through-instance,
+  -readability-avoid-const-params-in-decls,
+  -misc-non-private-member-variables-in-classes
+
+FormatStyle: file

@@ -13,8 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Clang 22 (apt.llvm.org)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsb-release wget software-properties-common gnupg
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22 all
+
       - name: Configure CMake
-        run: cmake -B build
+        run: |
+          cmake -B build \
+            -DCMAKE_C_COMPILER=clang-22 \
+            -DCMAKE_CXX_COMPILER=clang++-22 \
+            -DAZIN_ENABLE_CLANG_TIDY=OFF
 
       - name: Build
         run: cmake --build build
