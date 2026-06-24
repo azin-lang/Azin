@@ -119,7 +119,6 @@ elseif (AZIN_COMPILER_IS_GCC OR AZIN_COMPILER_IS_CLANG OR AZIN_COMPILER_IS_APPLE
 endif ()
 
 target_compile_definitions(azin_compiler_flags INTERFACE
-
         $<$<CONFIG:Debug,RelWithDebInfo>:_GLIBCXX_ASSERTIONS>
 
         $<$<CONFIG:Debug>:
@@ -135,9 +134,13 @@ target_compile_definitions(azin_compiler_flags INTERFACE
         >
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND UNIX AND NOT APPLE)
-    target_compile_options(azin_compiler_flags INTERFACE -stdlib=libc++)
-    target_link_options(azin_compiler_flags INTERFACE -stdlib=libc++)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND UNIX AND NOT APPLE)
+    target_compile_options(azin_compiler_flags INTERFACE
+            $<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>
+    )
+    target_link_options(azin_compiler_flags INTERFACE
+            $<$<LINK_LANGUAGE:CXX>:-stdlib=libc++>
+    )
 endif ()
 
 if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
