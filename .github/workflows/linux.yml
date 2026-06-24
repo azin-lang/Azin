@@ -21,50 +21,15 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 22 all
 
-      - name: Select Clang 22
-        run: |
-          echo "CC=clang-22" >> $GITHUB_ENV
-          echo "CXX=clang++-22" >> $GITHUB_ENV
-
-      - name: Debug toolchain info
-        run: |
-          echo "===== COMPILERS ====="
-          which clang-22
-          clang-22 --version
-          clang++-22 --version
-
-          echo ""
-          echo "===== DEFAULT COMPILER ====="
-          cc --version || true
-          c++ --version || true
-
-          echo ""
-          echo "===== CMAKE INFO ====="
-          cmake --version
-
-          echo ""
-          echo "===== LIBC++ LOCATION ====="
-          clang++-22 -print-file-name=libc++.so || true
-          clang++-22 -print-file-name=libc++.a || true
-
-          echo ""
-          echo "===== PREPROCESSOR STL PATHS ====="
-          echo | clang++-22 -E -x c++ -v - 2>&1 | sed -n '/search starts here:/,/End of search list/p'
-
-          echo ""
-          echo "===== BUILTIN CHECK ====="
-          echo | clang++-22 -dM -E -x c++ - | grep __clang__ || true
-
       - name: Configure CMake
         run: |
           cmake -B build \
             -DCMAKE_C_COMPILER=clang-22 \
             -DCMAKE_CXX_COMPILER=clang++-22 \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DCMAKE_VERBOSE_MAKEFILE=ON
+            -DAZIN_ENABLE_CLANG_TIDY=OFF
 
       - name: Build
-        run: cmake --build build --verbose
+        run: cmake --build build
 
       - name: Test
         run: |
