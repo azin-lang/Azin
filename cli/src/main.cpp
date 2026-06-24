@@ -25,12 +25,17 @@ struct Command {
 
 class CommandRegistry {
 public:
-    auto add(Command command) -> void {
-        commands_.push_back(std::move(command));
+    CommandRegistry() = default;
+
+    explicit CommandRegistry(std::vector<Command> commands)
+        : commands_(std::move(commands)) {}
+
+    auto add(Command const &command) -> void {
+        commands_.push_back(command);
     }
 
     [[nodiscard]]
-    auto execute(std::string_view const name, Args const args) const -> int {
+    auto execute(std::string_view const name, Args const args) -> int {
         auto const cmd_it = std::ranges::find(commands_, name, &Command::name);
 
         if (cmd_it == commands_.end()) {
@@ -136,7 +141,7 @@ auto main(int const argc, char const *argv[]) -> int { // NOLINT(bugprone-except
             args.emplace_back(arg);
         }
 
-        auto const *const command_name = argv_span.at(1);
+        auto const *const command_name = argv_span[1]; // NOLINT
         return registry.execute(command_name, args);
     }
     catch (std::exception const &exception) {
