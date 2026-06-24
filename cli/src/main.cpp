@@ -14,8 +14,6 @@
 #include <utility>
 #include <vector>
 
-namespace {
-
 using Args = std::span<std::string_view const>;
 using CommandFn = std::function<int(Args)>;
 
@@ -27,18 +25,17 @@ struct Command {
 
 class CommandRegistry {
 public:
-    auto add(Command command) -> void {
+    void add(Command command) {
         commands_.push_back(std::move(command));
     }
 
     [[nodiscard]]
-    auto execute(std::string_view const name, Args const args) const -> int {
+    int execute(std::string_view const name, Args const args) const {
         auto const cmd_it = std::ranges::find(commands_, name, &Command::name);
 
         if (cmd_it == commands_.end()) {
             std::println(stderr, "{}Unknown command: {}{}", azin::ux::color::red, name,
                          azin::ux::color::reset);
-
             return 1;
         }
 
@@ -54,6 +51,8 @@ private:
     std::vector<Command> commands_;
 };
 
+namespace {
+
 auto help_command(CommandRegistry const &registry, Args /* unused */) -> int {
     auto const &commands = registry.commands();
 
@@ -62,13 +61,15 @@ auto help_command(CommandRegistry const &registry, Args /* unused */) -> int {
 
     std::println("{}Available commands:{}", azin::ux::color::cyan, azin::ux::color::reset);
 
-    auto const longest = std::ranges::max(
-        commands | std::views::transform(
-                       [](Command const &command) -> std::size_t { return command.name.size(); }),
-        {}, [](std::size_t const value) -> std::size_t { return value; });
+    std::size_t longest = 0;
+    for (auto const &command : commands) {
+        longest = std::max(longest, command.name.size());
+    }
 
     for (auto const &command : commands) {
-        std::println("  {:<{}}  {}", command.name, longest, command.description);
+        std::string padded = command.name;
+        padded.append(longest - padded.size(), ' ');
+        std::println("  {}  {}", padded, command.description);
     }
 
     return 0;
@@ -124,20 +125,20 @@ auto main(int const argc, char const *argv[]) -> int { // NOLINT(bugprone-except
 
         register_commands(registry);
 
-        std::span<char const *const> const args_span{argv, static_cast<std::size_t>(argc)};
+        std::span<char const *const> const argv_span{argv, static_cast<std::size_t>(argc)};
 
         if (argc < 2) {
             return help_command(registry, {});
         }
 
         std::vector<std::string_view> args;
-        args.reserve(args_span.size() - 2);
+        args.reserve(argv_span.size() > 2 ? argv_span.size() - 2 : 0);
 
-        for (auto const *arg : args_span.subspan(2)) {
+        for (auto const *arg : argv_span.subspan(2)) {
             args.emplace_back(arg);
         }
 
-        auto const *const command_name = *std::next(args_span.begin());
+        auto const command_name = argv_span[1];
         return registry.execute(command_name, args);
     }
     catch (std::exception const &exception) {
