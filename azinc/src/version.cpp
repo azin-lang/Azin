@@ -1,5 +1,6 @@
 #include <azin/colors.hpp>
 #include <azin/version.hpp>
+
 #include <iostream>
 #include <span>
 #include <string_view>

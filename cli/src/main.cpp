@@ -1,7 +1,8 @@
-#include <algorithm>
 #include <azin/colors.hpp>
 #include <azin/new.hpp>
 #include <azin/version.hpp>
+
+#include <algorithm>
 #include <cstddef>
 #include <cstdio>
 #include <exception>

@@ -1,5 +1,6 @@
 #include <azin/colors.hpp>
 #include <azin/helpers.hpp>
+
 #include <expected>
 #include <filesystem>
 #include <fstream>
