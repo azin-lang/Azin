@@ -135,12 +135,9 @@ target_compile_definitions(azin_compiler_flags INTERFACE
 )
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND UNIX AND NOT APPLE)
-    target_compile_options(azin_compiler_flags INTERFACE
-            $<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>
-    )
-    target_link_options(azin_compiler_flags INTERFACE
-            $<$<LINK_LANGUAGE:CXX>:-stdlib=libc++>
-    )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
 endif ()
 
 if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
