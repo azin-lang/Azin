@@ -140,6 +140,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND UNIX AND NOT APPLE)
     target_link_options(azin_compiler_flags INTERFACE -stdlib=libc++)
 endif ()
 
-if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(azin_compiler_flags INTERFACE stdc++exp)
 endif ()

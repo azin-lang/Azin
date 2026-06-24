@@ -5,9 +5,7 @@
 #include <cstdio>
 #include <exception>
 #include <functional>
-#include <iterator>
 #include <print>
-#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
@@ -17,6 +15,8 @@
 using Args = std::span<std::string_view const>;
 using CommandFn = std::function<int(Args)>;
 
+namespace {
+
 struct Command {
     std::string name;
     std::string description;
@@ -25,12 +25,12 @@ struct Command {
 
 class CommandRegistry {
 public:
-    void add(Command command) {
+    auto add(Command command) -> void {
         commands_.push_back(std::move(command));
     }
 
     [[nodiscard]]
-    int execute(std::string_view const name, Args const args) const {
+    auto execute(std::string_view const name, Args const args) const -> int {
         auto const cmd_it = std::ranges::find(commands_, name, &Command::name);
 
         if (cmd_it == commands_.end()) {
@@ -50,8 +50,6 @@ public:
 private:
     std::vector<Command> commands_;
 };
-
-namespace {
 
 auto help_command(CommandRegistry const &registry, Args /* unused */) -> int {
     auto const &commands = registry.commands();
@@ -138,7 +136,7 @@ auto main(int const argc, char const *argv[]) -> int { // NOLINT(bugprone-except
             args.emplace_back(arg);
         }
 
-        auto const command_name = argv_span[1];
+        auto const *const command_name = argv_span.at(1);
         return registry.execute(command_name, args);
     }
     catch (std::exception const &exception) {

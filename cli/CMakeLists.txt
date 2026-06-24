@@ -6,4 +6,3 @@ add_executable(azin
 
 target_include_directories(azin PRIVATE include)
 target_link_libraries(azin PRIVATE Azin::CompilerFlags)
-azin_apply_cxx_standard(azin)

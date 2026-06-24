@@ -61,13 +61,9 @@ if (AZIN_CXX_STANDARD LESS AZIN_MINIMUM_CXX_STANDARD)
     )
 endif ()
 
-function(azin_apply_cxx_standard target)
-    target_compile_features(${target} PUBLIC cxx_std_${AZIN_CXX_STANDARD})
-    set_target_properties(${target} PROPERTIES
-            CXX_STANDARD_REQUIRED ON
-            CXX_EXTENSIONS OFF
-    )
-endfunction()
+set(CMAKE_CXX_STANDARD ${AZIN_CXX_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 message(STATUS "")
 message(STATUS "C++ configuration")
