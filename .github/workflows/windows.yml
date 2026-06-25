@@ -21,6 +21,6 @@ jobs:
 
       - name: Test
         run: |
-          $output = & .\build\apps\azin\azin.exe version 2>&1
+          $output = & .\build\apps\azin\Debug\azin.exe version 2>&1
           Write-Output $output
           if ($output -notmatch "azin 0\.0\.1") { exit 1 }
