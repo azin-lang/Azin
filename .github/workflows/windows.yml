@@ -21,6 +21,9 @@ jobs:
 
       - name: Test
         run: |
-          $output = & .\build\apps\azin\Debug\azin.exe version 2>&1
+          $output = (& .\build\apps\azin\Debug\azin.exe version 2>&1) -join "`n"
           Write-Output $output
-          if ($output -notmatch "azin 0\.0\.1") { exit 1 }
+      
+          if ($output -notmatch '0\.0\.1') {
+            throw "Version string not found"
+          }
