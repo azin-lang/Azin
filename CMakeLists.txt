@@ -8,4 +8,8 @@ include(DetectCompiler)
 include(CompilerOptions)
 include(Analyzers)
 
+add_subdirectory(libs)
+
+add_subdirectory(apps/azc)
 add_subdirectory(apps/azin)
+add_dependencies(azin azc)

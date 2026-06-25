@@ -1,11 +1,12 @@
-#include <azin/colors.hpp>
 #include <azin/new.hpp>
+#include <azin/support/ansi/styled_view.hpp>
 #include <azin/version.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <format>
 #include <functional>
 #include <print>
 #include <span>
@@ -18,6 +19,8 @@ using Args = std::span<std::string_view const>;
 using CommandFn = std::function<int(Args)>;
 
 namespace {
+
+namespace ansi = azin::support::ansi;
 
 struct Command {
     std::string name;
@@ -41,8 +44,7 @@ public:
         auto const cmd_it = std::ranges::find(commands_, name, &Command::name);
 
         if (cmd_it == commands_.end()) {
-            std::println(stderr, "{}Unknown command: {}{}", azin::ux::color::red, name,
-                         azin::ux::color::reset);
+            std::println(stderr, "{}", ansi::red(std::format("Unknown command: {}", name)));
             return 1;
         }
 
@@ -60,10 +62,8 @@ private:
 auto help_command(CommandRegistry const &registry, Args /* unnamed */) -> int {
     auto const &commands = registry.commands();
 
-    std::println("{}Usage: azin <command> [args...]{}\n", azin::ux::color::green,
-                 azin::ux::color::reset);
-
-    std::println("{}Available commands:{}", azin::ux::color::cyan, azin::ux::color::reset);
+    std::println("{}\n", ansi::green("Usage: azin <command> [args...]"));
+    std::println("{}", ansi::cyan("Available commands:"));
 
     std::size_t longest = 0;
     for (auto const &command : commands) {
@@ -143,13 +143,11 @@ auto main(int const argc, char const *argv[]) noexcept(false) -> int {
         return registry.execute(argv_span[1], args); // NOLINT
     }
     catch (std::exception const &exception) {
-        std::println(stderr, "{}{}{}", azin::ux::color::red, exception.what(),
-                     azin::ux::color::reset);
+        std::println(stderr, "{}", ansi::red(exception.what()));
         return 1;
     }
     catch (...) {
-        std::println(stderr, "{}An unknown error occurred.{}", azin::ux::color::red,
-                     azin::ux::color::reset);
+        std::println(stderr, "{}", ansi::red("An unknown error occured."));
         return 1;
     }
 }

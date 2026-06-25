@@ -1,5 +1,5 @@
-#include <azin/colors.hpp>
-#include <azin/helpers.hpp>
+#include <azin/support/ansi/styled_view.hpp>
+#include <azin/support/fs/filesystem.hpp>
 
 #include <expected>
 #include <filesystem>
@@ -9,9 +9,10 @@
 #include <string>
 #include <utility>
 
-namespace fs = std::filesystem;
+namespace ansi = azin::support::ansi;
+namespace fs = azin::support::fs;
 
-using FileError = azin::filesystem::FileError;
+using FileError = fs::FileError;
 using Result = std::expected<void, FileError>;
 
 namespace {
@@ -21,14 +22,14 @@ auto print_usage(int const argc, char const *const *argv) -> bool {
         return true;
     }
 
-    std::cout << azin::ux::color::green << "Usage: " << (argc > 0 ? argv[0] : "azinc") // NOLINT
-              << " <source>" << azin::ux::color::reset << '\n';
+    std::cout << ansi::green(
+        std::format("Usage: {} <source>\n", argc > 0 ? argv[0] : "azinc")); // NOLINT
 
     return false;
 }
 
 auto print_error(FileError const &err) -> void {
-    std::cerr << azin::ux::color::red << err.message << azin::ux::color::reset << '\n';
+    std::cerr << ansi::red(err.message) << '\n';
 }
 
 [[nodiscard]]
@@ -41,15 +42,15 @@ auto ok(Result const &res) -> bool {
 }
 
 [[nodiscard]]
-auto read_file(fs::path const &path) -> std::expected<std::string, FileError> {
-    auto file_result = azin::filesystem::open_source_file(path);
+auto read_file(std::filesystem::path const &path) -> std::expected<std::string, FileError> {
+    auto file_result = fs::open_source_file(path);
     if (!file_result) {
         return std::unexpected(file_result.error());
     }
 
     std::ifstream file = std::move(*file_result);
 
-    return std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+    return std::string{std::istreambuf_iterator(file), std::istreambuf_iterator<char>()};
 }
 
 [[nodiscard]]
@@ -58,13 +59,13 @@ auto run(int const argc, char const *const *argv) -> int {
         return 1;
     }
 
-    fs::path const path{argv[1]}; // NOLINT
+    std::filesystem::path const path{argv[1]}; // NOLINT
 
-    if (!ok(azin::filesystem::check_file_exists(path))) {
+    if (!ok(fs::check_file_exists(path))) {
         return 1;
     }
 
-    if (!ok(azin::filesystem::check_extension(path))) {
+    if (!ok(fs::check_extension(path))) {
         return 1;
     }
 

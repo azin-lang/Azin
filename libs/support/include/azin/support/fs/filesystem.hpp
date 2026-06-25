@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
-namespace azin::filesystem {
+namespace azin::support::fs {
 namespace fs = std::filesystem;
 
 struct FileError {
@@ -17,4 +17,4 @@ auto check_file_exists(fs::path const &source_path) -> Result;
 auto check_extension(fs::path const &source_path) -> Result;
 auto open_source_file(fs::path const &source_path) -> FileResult;
 
-} // namespace azin::filesystem
+} // namespace azin::support::fs
