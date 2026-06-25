@@ -8,4 +8,4 @@ include(DetectCompiler)
 include(CompilerOptions)
 include(Analyzers)
 
-add_subdirectory(cli)
+add_subdirectory(apps/azin)
