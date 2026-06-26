@@ -1,8 +1,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/clion+all,visualstudio,visualstudiocode,c++,cmake,vim,emacs
 # Edit at https://www.toptal.com/developers/gitignore?templates=clion+all,visualstudio,visualstudiocode,c++,cmake,vim,emacs
 
-build/
-
 ### C++ ###
 # Prerequisites
 *.d

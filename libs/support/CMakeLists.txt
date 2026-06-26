@@ -12,10 +12,8 @@ target_link_libraries(support_ansi INTERFACE Azin::CompilerFlags)
 #-------------------------------------------------------------------------------
 
 add_library(support_filesystem STATIC
-    src/filesystem/filesystem.cpp
-    src/filesystem/module_path.cpp
-    include/azin/support/fs/filesystem.hpp
-    include/azin/support/fs/module_path.hpp
+        src/filesystem/filesystem.cpp
+        include/azin/support/fs/filesystem.hpp
 )
 
 add_library(Azin::Support::Filesystem ALIAS support_filesystem)
