@@ -35,7 +35,7 @@ auto cli::run(int const argc, char const* const* argv) -> int {
     source::Manager source{input};
 
     if (!source.load()) {
-        std::println("error: failed to open '{}'", input.string());
+        std::println("{}", ansi::red(std::format("error: failed to open '{}'", input.string())));
         return 1;
     }
 
