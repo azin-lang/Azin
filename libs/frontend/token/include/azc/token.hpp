@@ -4,7 +4,6 @@
 #include <string>
 
 namespace azc::frontend {
-
     enum class token_kind {
         // Identifiers & literals
         identifier,
@@ -14,6 +13,9 @@ namespace azc::frontend {
         // Keywords
         kw_fn,
         kw_var,
+        kw_return,
+
+        kw_char,
         kw_int,
 
         // Arithmetic
@@ -40,7 +42,13 @@ namespace azc::frontend {
         less_equal,
         greater,
         greater_equal,
-        arrow,
+        arrow, // ->
+        dot,
+        question,
+        ampersand,
+        pipe,
+        caret,
+        percent,
 
         eof,
     };
@@ -54,4 +62,80 @@ namespace azc::frontend {
         std::size_t column;
     };
 
+    inline auto token_to_string(token_kind kind) -> std::string {
+        switch (kind) {
+            case token_kind::identifier:
+                return "identifier";
+            case token_kind::integer_literal:
+                return "integer_literal";
+            case token_kind::string_literal:
+                return "string_literal";
+            case token_kind::kw_fn:
+                return "kw_fn";
+            case token_kind::kw_return:
+                return "kw_return";
+            case token_kind::kw_var:
+                return "kw_var";
+            case token_kind::kw_int:
+                return "kw_int";
+            case token_kind::kw_char:
+                return "kw_char";
+            case token_kind::plus:
+                return "plus";
+            case token_kind::minus:
+                return "minus";
+            case token_kind::star:
+                return "star";
+            case token_kind::slash:
+                return "slash";
+            case token_kind::left_paren:
+                return "left_paren";
+            case token_kind::right_paren:
+                return "right_paren";
+            case token_kind::left_brace:
+                return "left_brace";
+            case token_kind::right_brace:
+                return "right_brace";
+            case token_kind::comma:
+                return "comma";
+            case token_kind::semicolon:
+                return "semicolon";
+            case token_kind::colon:
+                return "colon";
+            case token_kind::equal:
+                return "equal";
+            case token_kind::equal_equal:
+                return "equal_equal";
+            case token_kind::bang:
+                return "bang";
+            case token_kind::bang_equal:
+                return "bang_equal";
+            case token_kind::less:
+                return "less";
+            case token_kind::less_equal:
+                return "less_equal";
+            case token_kind::greater:
+                return "greater";
+            case token_kind::greater_equal:
+                return "greater_equal";
+            case token_kind::arrow:
+                return "arrow";
+            case token_kind::dot:
+                return "dot";
+            case token_kind::question:
+                return "question";
+            case token_kind::ampersand:
+                return "ampersand";
+            case token_kind::pipe:
+                return "pipe";
+            case token_kind::caret:
+                return "caret";
+            case token_kind::percent:
+                return "percent";
+            case token_kind::eof:
+                return "eof";
+            default:
+                return "unknown";
+        }
+    }
 } // namespace azc::frontend
