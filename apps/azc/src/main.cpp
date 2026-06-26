@@ -1,5 +1,6 @@
 #include <CLI/CLI.hpp>
 #include <iostream>
+#include <exception>
 
 #include <azc/cli.hpp>
 

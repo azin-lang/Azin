@@ -29,7 +29,7 @@ namespace source {
         auto eof() const noexcept -> bool;
 
         [[nodiscard]]
-        auto remaining() const noexcept -> std::string_view;
+        auto remaining() const -> std::string_view;
 
         [[nodiscard]]
         auto position() const noexcept -> std::size_t;

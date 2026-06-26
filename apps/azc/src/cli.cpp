@@ -1,6 +1,9 @@
 #include <CLI/CLI.hpp>
 
 #include <print>
+#include <cstdio>
+#include <filesystem>
+#include <format>
 
 #include <azc/cli.hpp>
 #include <azc/source.hpp>

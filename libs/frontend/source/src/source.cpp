@@ -1,7 +1,14 @@
 #include <azc/source.hpp>
 
+#include <cstddef>
+#include <filesystem>
+#include <ios>
+#include <string_view>
+#include <utility>
+
 #include <fstream>
 #include <iterator>
+
 
 namespace source {
 
@@ -35,9 +42,11 @@ namespace source {
     auto Manager::peek(std::size_t offset) const noexcept -> char {
         const auto pos = m_position + offset;
 
-        return pos < m_buffer.size()
-            ? m_buffer[pos]
-            : '\0';
+        if (pos >= m_buffer.size()) {
+            return '\0';
+        }
+
+        return m_buffer[pos]; // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
     }
 
     auto Manager::advance() noexcept -> void {
@@ -50,7 +59,7 @@ namespace source {
         return m_position >= m_buffer.size();
     }
 
-    auto Manager::remaining() const noexcept -> std::string_view {
+    auto Manager::remaining() const -> std::string_view {
         return std::string_view{m_buffer}.substr(m_position);
     }
 
