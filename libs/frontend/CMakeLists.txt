@@ -14,6 +14,23 @@ target_link_libraries(frontend_source PRIVATE
         Azin::CompilerFlags
 )
 
+#------------------------------------------------------------------------------
+
+add_library(frontend_token STATIC
+        token/include/azc/token.hpp
+)
+
+add_library(Azin::Frontend::Parser ALIAS frontend_token)
+
+target_include_directories(frontend_token PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/token/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(frontend_token PRIVATE
+        Azin::CompilerFlags
+)
+
 #-------------------------------------------------------------------------------
 
 add_library(frontend_lexer STATIC
