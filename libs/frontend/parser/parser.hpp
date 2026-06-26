@@ -1,7 +1,7 @@
 #pragma once
 #include "ast/nodes/nodes.hpp"
 #include "frontend/lexer/lexer.hpp"
-#include "frontend/source/source.hpp"
+#include "frontend/source/include/azc/source.hpp"
 
 #include <format>
 #include <memory>
