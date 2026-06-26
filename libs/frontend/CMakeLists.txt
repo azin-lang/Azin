@@ -16,6 +16,21 @@ target_link_libraries(frontend_source PRIVATE
 
 #-------------------------------------------------------------------------------
 
+add_library(frontend_token INTERFACE)
+
+add_library(Azin::Frontend::Token ALIAS frontend_token)
+
+target_include_directories(frontend_token INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/token/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(frontend_token INTERFACE
+        Azin::CompilerFlags
+)
+
+#-------------------------------------------------------------------------------
+
 add_library(frontend_lexer STATIC
         lexer/src/lexer.cpp
         lexer/include/azc/lexer.hpp
@@ -30,6 +45,7 @@ target_include_directories(frontend_lexer PUBLIC
 
 target_link_libraries(frontend_lexer PRIVATE
         Azin::CompilerFlags
+        Azin::Frontend::Token
 )
 
 #-------------------------------------------------------------------------------
