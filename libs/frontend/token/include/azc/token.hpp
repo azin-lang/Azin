@@ -15,6 +15,7 @@ namespace azc::frontend {
         kw_fn,
         kw_var,
         kw_return,
+        kw_end,
         kw_char,
         kw_int,
 
@@ -59,6 +60,7 @@ namespace azc::frontend {
             case token_kind::kw_return:        return "kw_return";
             case token_kind::kw_char:          return "kw_char";
             case token_kind::kw_int:           return "kw_int";
+            case token_kind::kw_end:           return "kw_end";
 
             // Operators
             case token_kind::plus:             return "plus";
