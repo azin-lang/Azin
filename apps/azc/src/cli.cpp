@@ -3,8 +3,20 @@
 #include <azc/source.hpp>
 #include <cstdio> // NOLINT
 #include <filesystem>
+
+// Disable the unreachable code warning for MSVC
+#if defined(_MSC_VER) && !defined(__llvm__)
+    #pragma warning(push)
+    #pragma warning(disable : 4702)
+#endif
+
 #include <fmt/base.h>
 #include <fmt/color.h>
+
+#if defined(_MSC_VER) && !defined(__llvm__)
+    #pragma warning(pop)
+#endif
+
 #include <string_view>
 
 namespace cli = azc::cli;
