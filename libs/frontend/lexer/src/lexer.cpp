@@ -110,6 +110,13 @@ auto lexer::scan_token(std::vector<token>& tokens) -> void {
     }
 
     switch (c) {
+        // it doesn't support escape characters like '\n' (yet)
+        case '\'':
+            --m_position;
+            --m_column;
+            character(tokens);
+            return;
+
         case '"':
             --m_position;
             --m_column;
@@ -258,19 +265,79 @@ auto lexer::identifier(std::vector<token>& tokens) -> void {
     });
 }
 
-auto lexer::number(std::vector<token>& tokens) -> void {
+    auto lexer::number(std::vector<token>& tokens) -> void {
+        const auto start = m_position;
+        const auto line = m_line;
+        const auto column = m_column;
+
+        while (std::isdigit(static_cast<unsigned char>(peek()))) {
+            advance();
+        }
+
+        token_kind kind = token_kind::integer_literal;
+
+        if (peek() == '.' &&
+            std::isdigit(static_cast<unsigned char>(peek_next()))) {
+
+            kind = token_kind::float_literal;
+
+            advance(); // consume '.'
+
+            while (std::isdigit(static_cast<unsigned char>(peek()))) {
+                advance();
+            }
+            }
+
+        std::string_view const text =
+            m_source.substr(start, m_position - start);
+
+        tokens.push_back(token{
+            .kind = kind,
+            .lexeme = std::string(text),
+            .offset = start,
+            .line = line,
+            .column = column
+        });
+    }
+
+    auto lexer::character(std::vector<token>& tokens) -> void {
     const auto start = m_position;
     const auto line = m_line;
     const auto column = m_column;
 
-    while (std::isdigit(static_cast<unsigned char>(peek()))) {
-        advance();
+    advance(); // opening '
+
+    if (is_at_end()) {
+        throw std::runtime_error(
+            std::format(
+                "{}:{}:{}: Unterminated character literal.",
+                m_filename,
+                line,
+                column
+            )
+        );
     }
 
-    std::string_view const text = m_source.substr(start, m_position - start);
+    advance(); // character
+
+    if (peek() != '\'') {
+        throw std::runtime_error(
+            std::format(
+                "{}:{}:{}: Character literal must contain exactly one character.",
+                m_filename,
+                line,
+                column
+            )
+        );
+    }
+
+    advance(); // closing '
+
+    std::string_view const text =
+        m_source.substr(start, m_position - start);
 
     tokens.push_back(token{
-        .kind = token_kind::integer_literal,
+        .kind = token_kind::character_literal,
         .lexeme = std::string(text),
         .offset = start,
         .line = line,
@@ -283,7 +350,11 @@ auto lexer::string(std::vector<token>& tokens) -> void {
     const auto line = m_line;
     const auto column = m_column;
 
-    advance();
+    advance(); // opening "
+
+    while (!is_at_end() && peek() != '"') {
+        advance();
+    }
 
     if (is_at_end()) {
         throw std::runtime_error(
@@ -296,11 +367,7 @@ auto lexer::string(std::vector<token>& tokens) -> void {
         );
     }
 
-    advance();
-
-    if (!is_at_end()) {
-        advance();
-    }
+    advance(); // closing "
 
     std::string_view const text = m_source.substr(start, m_position - start);
 
@@ -337,6 +404,8 @@ auto lexer::identifier_kind(std::string_view lexeme) noexcept
     if (lexeme == "end")    return token_kind::kw_end;
     if (lexeme == "char")   return token_kind::kw_char;
     if (lexeme == "int")    return token_kind::kw_int;
+    if (lexeme == "float")  return token_kind::kw_float;
+    if (lexeme == "string") return token_kind::kw_string;
 
     return token_kind::identifier;
 }

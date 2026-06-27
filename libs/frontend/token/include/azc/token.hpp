@@ -11,6 +11,8 @@ namespace azc::frontend {
         identifier,
         integer_literal,
         string_literal,
+        float_literal,
+        character_literal,
 
         // Keywords
         kw_fn,
@@ -19,6 +21,8 @@ namespace azc::frontend {
         kw_end,
         kw_char,
         kw_int,
+        kw_string,
+        kw_float,
 
         // Operators
         plus,
@@ -54,6 +58,8 @@ namespace azc::frontend {
             case token_kind::identifier:       return "identifier";
             case token_kind::integer_literal:  return "integer_literal";
             case token_kind::string_literal:   return "string_literal";
+            case token_kind::float_literal:   return "float_literal";
+            case token_kind::character_literal: return "character_literal";
 
             // Keywords
             case token_kind::kw_fn:            return "kw_fn";
@@ -62,6 +68,8 @@ namespace azc::frontend {
             case token_kind::kw_char:          return "kw_char";
             case token_kind::kw_int:           return "kw_int";
             case token_kind::kw_end:           return "kw_end";
+            case token_kind::kw_string:        return "kw_string";
+            case token_kind::kw_float:         return "kw_float";
 
             // Operators
             case token_kind::plus:             return "plus";

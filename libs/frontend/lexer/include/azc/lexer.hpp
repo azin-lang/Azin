@@ -43,6 +43,8 @@ namespace azc::frontend {
 
         auto number(std::vector<token>& tokens) -> void;
 
+        auto character(std::vector<token>& tokens) -> void;
+
         auto string(std::vector<token>& tokens) -> void;
 
         [[nodiscard]]
