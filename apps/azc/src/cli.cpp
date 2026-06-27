@@ -3,7 +3,7 @@
 #include <CLI/CLI.hpp>
 #include <azc/cli.hpp>
 #include <azc/source.hpp>
-#include <cstdio>
+#include <cstdio> // NOLINT
 #include <filesystem>
 #include <format>
 #include <print>
