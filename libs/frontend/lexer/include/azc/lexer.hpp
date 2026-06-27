@@ -55,6 +55,14 @@ namespace azc::frontend {
             std::size_t column
         ) const -> token;
 
+        auto emit(
+            std::vector<token>& tokens,
+            token_kind kind,
+            std::size_t start,
+            std::size_t line,
+            std::size_t column
+        ) const -> void;
+
         [[nodiscard]]
         static auto identifier_kind(std::string_view lexeme) noexcept
             -> token_kind;

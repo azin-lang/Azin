@@ -104,7 +104,7 @@ namespace azc::frontend {
 
     struct token {
         token_kind kind;
-        std::string lexeme;
+        std::string_view lexeme;
 
         std::size_t offset;
         std::size_t line;

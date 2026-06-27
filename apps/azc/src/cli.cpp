@@ -30,7 +30,7 @@ void errprintln(std::string_view const msg) {
     fmt::print(stderr, fg(fmt::color::red), "error: {}\n", msg);
 }
 
-auto print_token_stream(std::span<const azc::frontend::token> tokens
+auto print_token_stream(std::span<azc::frontend::token const> tokens
     ) -> void {
     for (const auto& token : tokens) {
         fmt::println(
