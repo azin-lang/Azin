@@ -3,6 +3,9 @@
 #include <azc/source.hpp>
 #include <cstdio> // NOLINT
 #include <filesystem>
+#include <azc/lexer.hpp>
+#include <azc/token.hpp>
+#include <iostream>
 
 // Disable the unreachable code warning for MSVC
 #if defined(_MSC_VER) && !defined(__llvm__)
@@ -62,7 +65,15 @@ auto cli::run(int const argc, char const *const *argv) -> int {
     }
 
     fmt::println("Loaded {} bytes", source.text().size());
-    fmt::println("File Content:\n{}", source.text());
+    frontend::lexer lexer{source.text()};
+    auto tokens = lexer.tokenize();
+
+    for (const auto& token : tokens) {
+        std::cout
+            << frontend::token_kind_to_string(token.kind)
+            << " \"" << token.lexeme << "\""
+            << " (" << token.line << ':' << token.column << ")\n";
+    }
 
     return 0;
 }

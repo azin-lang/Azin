@@ -16,7 +16,10 @@ target_link_libraries(azc PRIVATE
         Azin::CompilerFlags
         fmt
         Azin::Support::Filesystem
+
         Azin::Frontend::Source
+        Azin::Frontend::Lexer
+
         CLI11::CLI11
 )
 azin_enable_analyzers(azc)

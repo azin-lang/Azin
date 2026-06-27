@@ -2,10 +2,11 @@
 
 #include <cstddef>
 #include <string>
+#include <cstdint>
 
 namespace azc::frontend {
 
-    enum class token_kind {
+    enum class token_kind: std::uint8_t {
         // Identifiers & literals
         identifier,
         integer_literal,
@@ -47,7 +48,7 @@ namespace azc::frontend {
     };
 
     [[nodiscard]]
-    constexpr std::string_view token_kind_to_string(token_kind kind) noexcept {
+    constexpr auto token_kind_to_string(token_kind kind) noexcept -> std::string_view {
         switch (kind) {
             // Identifiers & literals
             case token_kind::identifier:       return "identifier";
