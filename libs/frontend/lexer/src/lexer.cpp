@@ -279,40 +279,39 @@ auto lexer::identifier(std::vector<token>& tokens) -> void {
     });
 }
 
-    auto lexer::number(std::vector<token>& tokens) -> void {
-        const auto start = m_position;
-        const auto line = m_line;
-        const auto column = m_column;
+auto lexer::number(std::vector<token>& tokens) -> void {
+    const auto start = m_position;
+    const auto line = m_line;
+    const auto column = m_column;
+
+    while (std::isdigit(static_cast<unsigned char>(peek()))) {
+        advance();
+    }
+
+    token_kind kind = token_kind::integer_literal;
+
+    if (peek() == '.' && std::isdigit(static_cast<unsigned char>(peek_next()))) {
+
+        kind = token_kind::float_literal;
+
+        advance(); // consume '.'
 
         while (std::isdigit(static_cast<unsigned char>(peek()))) {
             advance();
         }
-
-        token_kind kind = token_kind::integer_literal;
-
-        if (peek() == '.' &&
-            std::isdigit(static_cast<unsigned char>(peek_next()))) {
-
-            kind = token_kind::float_literal;
-
-            advance(); // consume '.'
-
-            while (std::isdigit(static_cast<unsigned char>(peek()))) {
-                advance();
-            }
-            }
-
-        std::string_view const text =
-            m_source.substr(start, m_position - start);
-
-        tokens.push_back(token{
-            .kind = kind,
-            .lexeme = text,
-            .offset = start,
-            .line = line,
-            .column = column
-        });
     }
+
+    std::string_view const text =
+        m_source.substr(start, m_position - start);
+
+    tokens.push_back(token{
+        .kind = kind,
+        .lexeme = text,
+        .offset = start,
+        .line = line,
+        .column = column
+    });
+}
 
     auto lexer::character(std::vector<token>& tokens) -> void {
     const auto start = m_position;
