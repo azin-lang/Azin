@@ -2,7 +2,7 @@
 #include <azc/token.hpp>
 #include <azc/lexer.hpp>
 #include <stdexcept>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <string_view>
 
 namespace azc::frontend {
