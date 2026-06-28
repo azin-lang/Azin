@@ -1,74 +1,78 @@
-#include <azc/source.hpp>
-
+#include <azin/source.hpp>
 #include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <ios>
+#include <iterator>
 #include <string_view>
 #include <utility>
 
-#include <fstream>
-#include <iterator>
-
-
 namespace source {
 
-    Manager::Manager(std::filesystem::path path)
-        : m_path(std::move(path)) {}
+Manager::Manager(std::filesystem::path path)
+    : m_path(std::move(path)) {
+}
 
-    auto Manager::load() -> bool {
-        std::ifstream file(m_path, std::ios::binary);
+auto Manager::load() -> bool {
+    std::ifstream file(m_path, std::ios::binary);
 
-        if (!file) {
-            return false;
-        }
-
-        m_buffer.assign(
-            std::istreambuf_iterator<char>{file},
-            std::istreambuf_iterator<char>{}
-        );
-
-        m_position = 0;
-        return true;
+    if (!file) {
+        return false;
     }
 
-    auto Manager::text() const noexcept -> std::string_view {
-        return m_buffer;
+    m_buffer.assign(std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{});
+
+    m_position = 0;
+    return true;
+}
+
+auto Manager::text() const noexcept -> std::string_view {
+    return m_buffer;
+}
+
+auto Manager::current() const noexcept -> char {
+    return peek();
+}
+
+auto Manager::peek(std::size_t offset) const noexcept -> char {
+    auto const pos = m_position + offset;
+
+    if (pos >= m_buffer.size()) {
+        return '\0';
     }
 
-    auto Manager::current() const noexcept -> char {
-        return peek();
+    return m_buffer[pos]; // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+}
+
+auto Manager::advance() noexcept -> void {
+    if (!eof()) {
+        ++m_position;
     }
+}
 
-    auto Manager::peek(std::size_t offset) const noexcept -> char {
-        const auto pos = m_position + offset;
+auto Manager::eof() const noexcept -> bool {
+    return m_position >= m_buffer.size();
+}
 
-        if (pos >= m_buffer.size()) {
-            return '\0';
-        }
+auto Manager::remaining() const -> std::string_view {
+    return std::string_view{m_buffer}.substr(m_position);
+}
 
-        return m_buffer[pos]; // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-    }
+auto Manager::position() const noexcept -> std::size_t {
+    return m_position;
+}
 
-    auto Manager::advance() noexcept -> void {
-        if (!eof()) {
-            ++m_position;
-        }
-    }
+auto Manager::reset() noexcept -> void {
+    m_position = 0;
+}
 
-    auto Manager::eof() const noexcept -> bool {
-        return m_position >= m_buffer.size();
-    }
+auto Manager::path() const noexcept -> const std::filesystem::path & {
+    return m_path;
+}
 
-    auto Manager::remaining() const -> std::string_view {
-        return std::string_view{m_buffer}.substr(m_position);
-    }
+auto Manager::file_name() const noexcept -> std::string {
+    return m_path.filename().string();
+}
 
-    auto Manager::position() const noexcept -> std::size_t {
-        return m_position;
-    }
-
-    auto Manager::reset() noexcept -> void {
-        m_position = 0;
-    }
 
 } // namespace source

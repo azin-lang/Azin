@@ -1,15 +1,30 @@
+/**
+ * @file token.hpp
+ * @brief Defines lexical token types used by the Azin frontend.
+ */
+
 #pragma once
 
 #include <cstddef>
 #include <string>
+#include <cstdint>
 
 namespace azc::frontend {
 
-    enum class token_kind {
+    /**
+     * @brief Enumerates every token recognized by the lexer.
+     *
+     * Each value represents a distinct lexical element of the Azin language,
+     * including identifiers, literals, keywords, operators, delimiters,
+     * and the end-of-file marker.
+     */
+    enum class token_kind: std::uint8_t {
         // Identifiers & literals
         identifier,
         integer_literal,
         string_literal,
+        float_literal,
+        character_literal,
 
         // Keywords
         kw_fn,
@@ -18,6 +33,8 @@ namespace azc::frontend {
         kw_end,
         kw_char,
         kw_int,
+        kw_string,
+        kw_float,
 
         // Operators
         plus,
@@ -46,13 +63,24 @@ namespace azc::frontend {
         eof,
     };
 
+
+    /**
+     * @brief Returns a human-readable name for a token kind.
+     *
+     * Primarily intended for debugging, diagnostics, and logging.
+     *
+     * @param kind Token kind.
+     * @return String representation of the token kind.
+     */
     [[nodiscard]]
-    constexpr std::string_view token_kind_to_string(token_kind kind) noexcept {
+    constexpr auto token_kind_to_string(token_kind kind) noexcept -> std::string_view {
         switch (kind) {
             // Identifiers & literals
             case token_kind::identifier:       return "identifier";
             case token_kind::integer_literal:  return "integer_literal";
             case token_kind::string_literal:   return "string_literal";
+            case token_kind::float_literal:   return "float_literal";
+            case token_kind::character_literal: return "character_literal";
 
             // Keywords
             case token_kind::kw_fn:            return "kw_fn";
@@ -61,6 +89,8 @@ namespace azc::frontend {
             case token_kind::kw_char:          return "kw_char";
             case token_kind::kw_int:           return "kw_int";
             case token_kind::kw_end:           return "kw_end";
+            case token_kind::kw_string:        return "kw_string";
+            case token_kind::kw_float:         return "kw_float";
 
             // Operators
             case token_kind::plus:             return "plus";
@@ -92,10 +122,15 @@ namespace azc::frontend {
         return "unknown";
     }
 
-
+    /**
+     * @brief Represents a lexical token produced by the lexer.
+     *
+     * A token stores its type, the corresponding source text,
+     * and its location within the original source file.
+     */
     struct token {
         token_kind kind;
-        std::string lexeme;
+        std::string_view lexeme;
 
         std::size_t offset;
         std::size_t line;

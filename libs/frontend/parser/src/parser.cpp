@@ -2,4 +2,4 @@
 // Created by alexs on 6/26/2026.
 //
 
-#include "../include/azc/parser.hpp"
+#include "../include/azin/parser.hpp"
