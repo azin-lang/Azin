@@ -102,6 +102,8 @@ namespace azc::frontend {
             case token_kind::tilde:            return "tilde";
             case token_kind::right_bracket:    return "right_bracket";
             case token_kind::left_bracket:     return "left_bracket";
+            case token_kind::logical_or:       return "logical_or";
+            case token_kind::logical_and:      return "logical_and";
 
             // Delimiters
             case token_kind::left_paren:       return "left_paren";
