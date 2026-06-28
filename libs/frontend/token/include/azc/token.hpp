@@ -38,6 +38,16 @@ namespace azc::frontend {
         greater,
         greater_equal,
         arrow,
+        modulo,
+        pipe,
+        logical_or,
+        logical_and,
+        ampersand,
+        caret, // ^, bitwise XOR
+        tilde, // ~, bitwise NOT
+        dot,
+        left_bracket,
+        right_bracket,
 
         // Delimiters
         left_paren,
@@ -85,6 +95,13 @@ namespace azc::frontend {
             case token_kind::greater:          return "greater";
             case token_kind::greater_equal:    return "greater_equal";
             case token_kind::arrow:            return "arrow";
+            case token_kind::modulo:           return "modulo";
+            case token_kind::ampersand:        return "ampersand";
+            case token_kind::pipe:             return "pipe";
+            case token_kind::caret:            return "caret";
+            case token_kind::tilde:            return "tilde";
+            case token_kind::right_bracket:    return "right_bracket";
+            case token_kind::left_bracket:     return "left_bracket";
 
             // Delimiters
             case token_kind::left_paren:       return "left_paren";
