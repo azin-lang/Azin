@@ -1,15 +1,17 @@
 #include <cctype>
 #include <azc/token.hpp>
 #include <azc/lexer.hpp>
-#include <stdexcept>
 #include <fmt/format.h>
 #include <string_view>
+#include <azc/diagnostic.hpp>
+#include <azc/diagnostic_engine.hpp>
 
 namespace azc::frontend {
 
-lexer::lexer(std::string_view source, std::string_view filename)
+lexer::lexer(std::string_view source, std::string_view filename, diagnostic_engine& diagnostics)
     : m_source(source),
-      m_filename(filename) {}
+      m_filename(filename),
+      m_diagnostics(diagnostics) {}
 
 auto lexer::tokenize() -> std::vector<token> {
     std::vector<token> tokens;
@@ -72,6 +74,22 @@ auto lexer::match(char expected) noexcept -> bool {
     advance();
     return true;
 }
+
+auto lexer::recover_to(char delimiter) noexcept -> void {
+    while (!is_at_end()) {
+        if (peek() == delimiter) {
+            advance(); // consume delimiter
+            return;
+        }
+
+        if (peek() == '\n') {
+            return;
+        }
+
+        advance();
+    }
+}
+
 
 auto lexer::skip_whitespace() noexcept -> void {
     while (!is_at_end()) {
@@ -164,14 +182,17 @@ auto lexer::scan_token(std::vector<token>& tokens) -> void {
                 }
 
                 if (is_at_end()) {
-                    throw std::runtime_error(
-                        fmt::format(
+                    m_diagnostics.report({
+                        .severity = diagnostic_severity::error,
+                        .message = fmt::format(
                             "{}:{}:{}: Unterminated block comment.",
                             m_filename,
                             line,
                             column
                         )
-                    );
+                    });
+
+                    return;
                 }
             } else {
                 emit(tokens, token_kind::slash, start, line, column);
@@ -246,15 +267,16 @@ auto lexer::scan_token(std::vector<token>& tokens) -> void {
             //
             // 2 |     var x = 5 @ 10;
             //   |               ^
-            throw std::runtime_error(
-                fmt::format(
+            m_diagnostics.report({
+                .severity = diagnostic_severity::error,
+                .message = fmt::format(
                     "{}:{}:{}: Unexpected character '{}'.",
                     m_filename,
                     line,
                     column,
                     c
                 )
-            );
+            });
     }
 }
 
@@ -321,27 +343,34 @@ auto lexer::number(std::vector<token>& tokens) -> void {
     advance(); // opening '
 
     if (is_at_end()) {
-        throw std::runtime_error(
-            fmt::format(
+        m_diagnostics.report({
+            .severity = diagnostic_severity::error,
+            .message = fmt::format(
                 "{}:{}:{}: Unterminated character literal.",
                 m_filename,
                 line,
                 column
             )
-        );
+        });
+
+        return;
     }
 
     advance(); // character
 
     if (peek() != '\'') {
-        throw std::runtime_error(
-            fmt::format(
+        m_diagnostics.report({
+            .severity = diagnostic_severity::error,
+            .message = fmt::format(
                 "{}:{}:{}: Character literal must contain exactly one character.",
                 m_filename,
                 line,
                 column
             )
-        );
+        });
+
+        recover_to('\'');
+        return;
     }
 
     advance(); // closing '
@@ -365,19 +394,23 @@ auto lexer::string(std::vector<token>& tokens) -> void {
 
     advance(); // opening "
 
-    while (!is_at_end() && peek() != '"') {
+    while (!is_at_end() && peek() != '"' && peek() != '\n') {
         advance();
     }
 
     if (is_at_end()) {
-        throw std::runtime_error(
-            fmt::format(
+        m_diagnostics.report({
+            .severity = diagnostic_severity::error,
+            .message = fmt::format(
                 "{}:{}:{}: Unterminated string literal.",
                 m_filename,
                 line,
                 column
             )
-        );
+        });
+
+        recover_to('"');
+        return;
     }
 
     advance(); // closing "

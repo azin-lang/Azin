@@ -4,12 +4,13 @@
 #include <vector>
 
 #include <azc/token.hpp>
+#include <azc/diagnostic_engine.hpp>
 
 namespace azc::frontend {
 
     class lexer {
     public:
-        explicit lexer(std::string_view source, std::string_view filename);
+        explicit lexer(std::string_view source, std::string_view filename, diagnostic_engine& diagnostics);
 
         [[nodiscard]]
         auto tokenize() -> std::vector<token>;
@@ -17,6 +18,7 @@ namespace azc::frontend {
     private:
         std::string_view m_source;
         std::string_view m_filename;
+        diagnostic_engine& m_diagnostics; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         std::size_t m_position{0};
         std::size_t m_line{1};
@@ -46,6 +48,8 @@ namespace azc::frontend {
         auto character(std::vector<token>& tokens) -> void;
 
         auto string(std::vector<token>& tokens) -> void;
+
+        auto recover_to(char delimiter) noexcept -> void;
 
         [[nodiscard]]
         auto make_token(

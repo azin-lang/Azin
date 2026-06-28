@@ -31,6 +31,25 @@ target_link_libraries(frontend_token INTERFACE
 
 #-------------------------------------------------------------------------------
 
+add_library(frontend_diagnostic STATIC)
+
+add_library(Azin::Frontend::Diagnostic ALIAS frontend_diagnostic)
+
+target_include_directories(frontend_diagnostic PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/diagnostic/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_sources(frontend_diagnostic PRIVATE
+        diagnostic/src/diagnostic_engine.cpp
+)
+
+target_link_libraries(frontend_diagnostic PRIVATE
+        Azin::CompilerFlags
+)
+
+#-------------------------------------------------------------------------------
+
 add_library(frontend_lexer STATIC
         lexer/src/lexer.cpp
         lexer/include/azc/lexer.hpp
@@ -47,6 +66,7 @@ target_link_libraries(frontend_lexer PUBLIC
         Azin::CompilerFlags
         Azin::Frontend::Token
         fmt::fmt
+        Azin::Frontend::Diagnostic
 )
 
 #-------------------------------------------------------------------------------
