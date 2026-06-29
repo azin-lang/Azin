@@ -274,7 +274,7 @@ auto lexer::scan_token(std::vector<token>& tokens) -> void {
             emit(tokens, token_kind::left_bracket, start, line, column);
             break;
         case ']':
-            emit(tokens, token_kind::left_bracket, start, line, column);
+            emit(tokens, token_kind::right_bracket, start, line, column);
             break;
         case '|':
             if (match('|')) {
