@@ -7,6 +7,7 @@ include(ProjectOptions)
 include(DetectCompiler)
 include(CompilerOptions)
 include(Analyzers)
+include(Doxygen)
 
 include(Dependencies)
 
