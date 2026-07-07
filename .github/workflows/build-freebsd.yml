@@ -1,0 +1,41 @@
+name: FreeBSD
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (FreeBSD)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and Test in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          mem: 4096
+          prepare: | 
+            pkg update
+            pkg install -y cmake git ninja
+          run: |
+            cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+            cmake --build build --config Release -j $(sysctl -n hw.ncpu)
+            
+            output=$(./build/apps/azc/azc --version 2>&1)
+            echo "$output"
+            
+            if echo "$output" | grep -qi "azc 0.1.0"; then
+              echo "Version check passed!"
+            else
+              echo "Version string not found!"
+              exit 1
+            fi
