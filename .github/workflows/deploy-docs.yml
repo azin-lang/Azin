@@ -9,28 +9,39 @@ on:
       - dev
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docs:
+    name: Generate documentation
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install prerequisites
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build doxygen graphviz
 
-      - name: Configure CMake
+      - name: Configure
         run: cmake -S . -B build -G Ninja
 
-      - name: Generate documentation
+      - name: Build docs
         run: cmake --build build --target docs
 
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-html
+          path: build/docs/html
+
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    name: Deploy documentation
     needs: docs
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     permissions:
@@ -38,21 +49,13 @@ jobs:
       deployments: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Download docs
+        uses: actions/download-artifact@v4
+        with:
+          name: doxygen-html
+          path: build/docs/html
 
-      - name: Install prerequisites
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build doxygen graphviz
-
-      - name: Configure CMake
-        run: cmake -S . -B build -G Ninja
-
-      - name: Generate documentation
-        run: cmake --build build --target docs
-
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
