@@ -57,8 +57,14 @@ jobs:
 
       - name: Test
         run: |
-          output=$(./build/apps/azc/azc --version 2>&1)
-          echo "$output"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            EXE=./build/apps/azc/azc.exe
+          else
+            EXE=./build/apps/azc/azc
+          fi
+      
+          output=$("$EXE" --version 2>&1)
+          echo "$output"  
           
           if echo "$output" | grep -qi "azc 0.1.0"; then
             echo "Version check passed!"
