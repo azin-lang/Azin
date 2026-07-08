@@ -1,4 +1,5 @@
 #include <cctype>
+#include <unordered_map>
 #include <azin/token.hpp>
 #include <azin/lexer.hpp>
 #include <fmt/format.h>
