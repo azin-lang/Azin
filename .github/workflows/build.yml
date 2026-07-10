@@ -1,0 +1,67 @@
+name: CI
+
+on:
+    push:
+        branches: [ main, dev ]
+    pull_request:
+        branches: [ main, dev ]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+env:
+    BUILD_TYPE: Release
+
+jobs:
+    build:
+        name: Build and test (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, macos-latest, windows-latest]
+
+        defaults:
+            run:
+                shell: bash
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                go-version: 'stable'
+
+            - name: Build (Linux/macOS)
+              if: runner.os != 'Windows'
+              run: |
+                go build -o build/apps/azc/azc ./cmd/azc
+
+            - name: Build (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                go build -o build/apps/azc/azc.exe ./cmd/azc
+
+            - name: Test (Linux/macOS)
+              if: runner.os != 'Windows'
+              run: |
+                output=$(./build/apps/azc/azc --version)
+                echo "$output"
+                echo "$output" | grep -qi "azc 0.1.0"
+
+            - name: Test (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                $output = .\build\apps\azc\azc.exe --version
+                $output
+                if ($output -notmatch 'azc 0\.1\.0') {
+                  throw "Version string not found!"
+                }
