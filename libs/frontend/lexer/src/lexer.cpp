@@ -342,8 +342,6 @@ auto lexer::scan_slash(token_start start) -> std::optional<token> {
 auto lexer::skip_line_comment() noexcept -> void {
     while (!is_at_end() && peek() != '\n') {
         advance();
-    if (match('=')) {
-        return make_token(token_kind::slash_equal, start);
     }
 }
   
