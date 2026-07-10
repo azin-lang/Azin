@@ -62,7 +62,7 @@ jobs:
               if: runner.os == 'Windows'
               shell: pwsh
               run: |
-                go build -o azc.exe .\cmd\azc
+                go build -o azc.exe .\cmd\compiler
                 $output = .\azc.exe --version
                 $output
                 if ($output -ne "azc 0.1.0") {
