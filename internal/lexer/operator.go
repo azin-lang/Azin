@@ -53,8 +53,7 @@ func (l *Lexer) lexOperator(ch rune, size uint32, start token.Position) token.To
 	case '"':
 		return l.lexString(start)
 	default:
-		l.diag.ReportError(start, size, "unexpected character %q", ch)
-		return l.emit(token.Unknown, start)
+		return l.lexUnknown(start)
 	}
 }
 
@@ -79,4 +78,38 @@ func (l *Lexer) lexMinus(start token.Position) token.Token {
 		return l.emit(token.Arrow, start)
 	}
 	return l.emit(token.Minus, start)
+}
+
+func (l *Lexer) lexUnknown(start token.Position) token.Token {
+	l.consumeWhile(func(r rune) bool {
+		// Stop on EOF
+		if r == 0 {
+			return false
+		}
+
+		// Stop on whitespace
+		if r == ' ' || r == '\t' || r == '\n' || r == '\r' {
+			return false
+		}
+
+		// Stop on any character that could start a valid token
+		if isIdentifierStart(r) || isDigit(r) || isPunctuation(r) {
+			return false
+		}
+
+		// Stop on valid operator characters and quotes
+		switch r {
+		case '+', '-', '*', '/', '%', '=', '!', '<', '>', '&', '|', '"':
+			return false
+		}
+
+		// Otherwise, it's more garbage. Keep eating it!
+		return true
+	})
+
+	length := l.cursor - start.Offset
+	text := string(l.file.Slice(start.Offset, l.cursor))
+
+	l.diag.ReportError(start, length, "unexpected characters: %q", text)
+	return l.emit(token.Unknown, start)
 }
