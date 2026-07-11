@@ -6,7 +6,11 @@ import (
 	"os"
 
 	"github.com/azin-lang/Azin/internal/compiler"
+	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/fs"
+	"github.com/azin-lang/Azin/internal/lexer"
+	"github.com/azin-lang/Azin/internal/source"
+	"github.com/azin-lang/Azin/internal/token"
 )
 
 const Version = "0.2.3-dev"
@@ -43,14 +47,28 @@ func main() {
 		printDebug()
 	}
 
-	source := mustReadSource(flag.Arg(0))
+	filename := flag.Arg(0)
+	data := mustReadSource(filename)
+	file := source.New(filename, data)
 
-	if err := compiler.Compile(source, *printTokens); err != nil {
+	diag := diagnostics.New(file)
+	tokens := lexer.New(file, diag).Tokenize()
+	if *printTokens {
+		for _, tok := range tokens {
+			fmt.Println(formatToken(file, tok))
+		}
+	}
+
+	if err := compiler.Compile(file); err != nil {
+		fatal(err)
+	}
+
+	if err := diag.Err(); err != nil {
 		fatal(err)
 	}
 
 	if *debug {
-		fmt.Printf("Compiled %.2f KiB\n", float64(len(source))/1024)
+		fmt.Printf("Compiled %.2f KiB\n", float64(file.Len())/1024)
 	}
 }
 
@@ -71,4 +89,23 @@ func mustReadSource(filename string) []byte {
 func fatal(err error) {
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)
+}
+
+func formatToken(f *source.File, tok token.Token) string {
+	line, column := f.LineColumn(tok.Position.Offset)
+
+	s := fmt.Sprintf(
+		"%-18s %4d:%4d [%d:%d]",
+		tok.Kind,
+		line,
+		column,
+		tok.Position.Offset,
+		tok.Length,
+	)
+
+	if tok.Kind.HasText() {
+		s += fmt.Sprintf(" %q", f.Text(tok))
+	}
+
+	return s
 }
