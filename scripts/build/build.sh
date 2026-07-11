@@ -1,6 +1,8 @@
 #!/bin/bash
-# Usage: ./build.sh
 
 AZC_SOURCE=./cmd/compiler
+BUILD_DIR=./build
 
-go build -o azc $AZC_SOURCE
+mkdir -p "$BUILD_DIR"
+
+go build -o "$BUILD_DIR/azc" "$AZC_SOURCE"

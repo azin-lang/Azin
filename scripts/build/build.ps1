@@ -1,5 +1,6 @@
-# Usage: ./build.ps1
-
 $AZC_SOURCE = ".\cmd\compiler"
+$BUILD_DIR = ".\build"
 
-go build -o azc $AZC_SOURCE
+New-Item -ItemType Directory -Path $BUILD_DIR -Force | Out-Null
+
+go build -o "$BUILD_DIR\azc.exe" $AZC_SOURCE
