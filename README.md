@@ -12,8 +12,9 @@ A modern, high-performance systems programming language engineered for structura
 
 Azin bridges the gap between low-level performance-critical systems development and modern, highly expressive syntax language mechanics.
 
-* **Explicit Block Scoping:** Replaces traditional brace nesting (`{}`) with clean, `do` / `end` scope structures.
+* **Explicit Block Scoping:** Replaces traditional brace nesting (`{}`) with clean, unambiguous `do` / `end` scope structures.
 * **Statically Typed:** Highly rigid compiler-enforced types to eliminate runtime type safety bugs.
+* **Minimalist Punctuation:** Intentionally engineered to limit visual noises like required line-ending semicolons or excessive symbol chains where structures are already implied.
 * **Systems Architecture Native:** Completely free from heavy runtime garbage collection constraints, built for direct compilation targets.
 
 ---
