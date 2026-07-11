@@ -43,7 +43,6 @@ func (l *Lexer) Tokenize() []token.Token {
 	return tokens
 }
 
-// nextToken lexes and returns the next token from the input stream.
 func (l *Lexer) nextToken() token.Token {
 	l.skipWhitespace()
 
@@ -66,7 +65,6 @@ func (l *Lexer) nextToken() token.Token {
 	}
 }
 
-// lexSymbol lexes punctuation and operator tokens beginning with ch.
 func (l *Lexer) lexSymbol(ch byte, start token.Position) token.Token {
 	switch ch {
 	case '(':
@@ -160,7 +158,6 @@ func (l *Lexer) lexSymbol(ch byte, start token.Position) token.Token {
 	}
 }
 
-// lexPlus lexes '+', '+=', and '++' tokens.
 func (l *Lexer) lexPlus(start token.Position) token.Token {
 	if l.match('=') {
 		return l.token(token.PlusEqual, start)
@@ -171,7 +168,6 @@ func (l *Lexer) lexPlus(start token.Position) token.Token {
 	return l.token(token.Plus, start)
 }
 
-// lexMinus lexes '-', '-=', '--', and '->' tokens.
 func (l *Lexer) lexMinus(start token.Position) token.Token {
 	if l.match('=') {
 		return l.token(token.MinusEqual, start)
@@ -185,7 +181,6 @@ func (l *Lexer) lexMinus(start token.Position) token.Token {
 	return l.token(token.Minus, start)
 }
 
-// lexIdentifier lexes an identifier or keyword beginning at start.
 func (l *Lexer) lexIdentifier(start token.Position) token.Token {
 	for isAlphaNumeric(l.peek()) {
 		l.advance()
@@ -200,7 +195,6 @@ func (l *Lexer) lexIdentifier(start token.Position) token.Token {
 	return l.token(token.Identifier, start)
 }
 
-// lexInteger lexes a decimal integer literal.
 func (l *Lexer) lexInteger(start token.Position) token.Token {
 	for isDigit(l.peek()) {
 		l.advance()
@@ -209,19 +203,6 @@ func (l *Lexer) lexInteger(start token.Position) token.Token {
 	return l.token(token.IntegerLiteral, start)
 }
 
-// lexString lexes a double-quoted string literal.
-//
-// Supported escape sequences are:
-//
-//   - \\
-//   - \"
-//   - \n
-//   - \r
-//   - \t
-//   - \0
-//
-// If the string is unterminated or contains an invalid escape sequence,
-// a diagnostic is reported before the token is returned.
 func (l *Lexer) lexString(start token.Position) token.Token {
 	for !l.eof() {
 		switch ch := l.advance(); ch {
@@ -275,7 +256,6 @@ func (l *Lexer) lexString(start token.Position) token.Token {
 	return l.token(token.StringLiteral, start)
 }
 
-// eofToken returns the end-of-file token.
 func (l *Lexer) eofToken() token.Token {
 	return token.Token{
 		Kind:     token.EOF,
@@ -283,7 +263,6 @@ func (l *Lexer) eofToken() token.Token {
 	}
 }
 
-// eof reports whether the lexer has reached the end of the source file.
 func (l *Lexer) eof() bool {
 	return l.file.EOF(l.offset)
 }
@@ -298,7 +277,6 @@ func (l *Lexer) peek() byte {
 	return l.file.Byte(l.offset)
 }
 
-// match consumes ch if it is the next byte and reports whether it matched.
 func (l *Lexer) match(ch byte) bool {
 	if l.peek() != ch {
 		return false
@@ -308,8 +286,6 @@ func (l *Lexer) match(ch byte) bool {
 	return true
 }
 
-// advance consumes and returns the next byte.
-// It returns 0 if the end of the file has been reached.
 func (l *Lexer) advance() byte {
 	if l.eof() {
 		return 0
@@ -321,7 +297,6 @@ func (l *Lexer) advance() byte {
 	return ch
 }
 
-// skipWhitespace consumes consecutive whitespace characters.
 func (l *Lexer) skipWhitespace() {
 	for !l.eof() {
 		switch l.peek() {
@@ -333,7 +308,6 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-// token constructs a token of kind beginning at start.
 func (l *Lexer) token(kind token.Kind, start token.Position) token.Token {
 	return token.Token{
 		Kind:     kind,
@@ -342,26 +316,22 @@ func (l *Lexer) token(kind token.Kind, start token.Position) token.Token {
 	}
 }
 
-// position returns the current position within the source file.
 func (l *Lexer) position() token.Position {
 	return token.Position{
 		Offset: l.offset,
 	}
 }
 
-// isAlpha reports whether ch is an ASCII letter or underscore.
 func isAlpha(ch byte) bool {
 	return ch == '_' ||
 		(ch >= 'a' && ch <= 'z') ||
 		(ch >= 'A' && ch <= 'Z')
 }
 
-// isDigit reports whether ch is an ASCII decimal digit.
 func isDigit(ch byte) bool {
 	return ch >= '0' && ch <= '9'
 }
 
-// isAlphaNumeric reports whether ch is an ASCII letter, digit, or underscore.
 func isAlphaNumeric(ch byte) bool {
 	return isAlpha(ch) || isDigit(ch)
 }
