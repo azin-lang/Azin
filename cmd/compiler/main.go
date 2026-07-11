@@ -54,8 +54,8 @@ func main() {
 	diag := diagnostics.New(file)
 
 	if *printTokens {
-		tokens := lexer.New(file, diag).Tokenize()
-		for _, tok := range tokens {
+		lx := lexer.New(file, diag)
+		for tok := range lx.Tokens() {
 			fmt.Println(formatToken(file, tok))
 		}
 	}
