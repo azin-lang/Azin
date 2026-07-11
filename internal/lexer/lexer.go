@@ -86,6 +86,8 @@ func (l *Lexer) lexSymbol(ch byte, start token.Position) token.Token {
 		return l.lexPlus(start)
 	case '-':
 		return l.lexMinus(start)
+	case '"':
+		return l.lexString(start)
 
 	case '=':
 		if l.match('=') {
@@ -194,6 +196,31 @@ func (l *Lexer) lexInteger(start token.Position) token.Token {
 	}
 
 	return l.token(token.IntegerLiteral, start)
+}
+
+func (l *Lexer) lexString(start token.Position) token.Token {
+	for !l.eof() {
+		ch := l.advance()
+
+		switch ch {
+		case '\\':
+			// Skip the escaped character.
+			if !l.eof() {
+				l.advance()
+			}
+
+		case '"':
+			// Closing quote.
+			return l.token(token.StringLiteral, start)
+
+		case '\n', '\r':
+			l.diag.ReportError(start, l.offset-start.Offset, "unterminated string literal")
+			return l.token(token.StringLiteral, start)
+		}
+	}
+
+	l.diag.ReportError(start, l.offset-start.Offset, "unterminated string literal")
+	return l.token(token.StringLiteral, start)
 }
 
 func (l *Lexer) eofToken() token.Token {
