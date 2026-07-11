@@ -75,18 +75,26 @@ func (p *Parser) parseFunc() ast.Stmt {
 	tok := p.advance()
 	name := p.parseIdentifier()
 
-	p.match(token.LeftParen)
 	params := []*ast.FieldDecl{}
-	for !p.isAtEnd() && !p.check(token.RightParen) {
-		pName := p.parseIdentifier()
-		p.match(token.Colon)
-		pType := p.parseIdentifier()
-		params = append(params, &ast.FieldDecl{Name: pName, Type: pType})
-		if !p.check(token.RightParen) {
-			p.match(token.Comma)
+
+	if p.match(token.LeftParen) {
+		for !p.isAtEnd() && !p.check(token.RightParen) {
+			pName := p.parseIdentifier()
+			p.match(token.Colon)
+			pType := p.parseIdentifier()
+
+			params = append(params, &ast.FieldDecl{
+				Name: pName,
+				Type: pType,
+			})
+
+			if !p.check(token.RightParen) {
+				p.match(token.Comma)
+			}
 		}
+
+		p.match(token.RightParen)
 	}
-	p.advance()
 	p.match(token.Colon)
 
 	var retType *ast.Identifier
