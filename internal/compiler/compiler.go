@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/azin-lang/Azin/internal/ast"
@@ -15,13 +16,128 @@ import (
 	"github.com/azin-lang/Azin/internal/source"
 )
 
-func Compile(file *source.File, outputPath string) error {
+func runMSVC(cl, sourcePath, exeName string) error {
+	cmd := exec.Command(
+		cl,
+		"/nologo",
+		"/O2",
+		"/Fe:"+exeName,
+		sourcePath,
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("[MSVC] Compiling...")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("cl.exe compilation failed: %w", err)
+	}
+
+	fmt.Printf("[Success] %s\n", exeName)
+	return nil
+}
+
+func runClang(clang, sourcePath, exeName string) error {
+	cmd := exec.Command(
+		clang,
+		"-std=c23",
+		"-O2",
+		sourcePath,
+		"-o",
+		exeName,
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("[Clang] Compiling...")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("clang compilation failed: %w", err)
+	}
+
+	fmt.Printf("[Success] %s\n", exeName)
+	return nil
+}
+
+func runGCC(gcc, sourcePath, exeName string) error {
+	cmd := exec.Command(
+		gcc,
+		"-std=c23",
+		"-O2",
+		sourcePath,
+		"-o",
+		exeName,
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	fmt.Println("[GCC] Compiling...")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("gcc compilation failed: %w", err)
+	}
+
+	fmt.Printf("[Success] %s\n", exeName)
+	return nil
+}
+
+func runCompiler(sourcePath, exeName string) error {
+	switch runtime.GOOS {
+	case "windows":
+		if cl, err := exec.LookPath("cl.exe"); err == nil {
+			return runMSVC(cl, sourcePath, exeName)
+		}
+		if gcc, err := exec.LookPath("gcc"); err == nil {
+			return runGCC(gcc, sourcePath, exeName)
+		}
+		if clang, err := exec.LookPath("clang"); err == nil {
+			return runClang(clang, sourcePath, exeName)
+		}
+
+	case "darwin":
+		// Apple's default compiler is Clang.
+		if clang, err := exec.LookPath("clang"); err == nil {
+			return runClang(clang, sourcePath, exeName)
+		}
+		if gcc, err := exec.LookPath("gcc"); err == nil {
+			return runGCC(gcc, sourcePath, exeName)
+		}
+
+	default: // Linux, BSD, etc
+		if gcc, err := exec.LookPath("gcc"); err == nil {
+			return runGCC(gcc, sourcePath, exeName)
+		}
+		if clang, err := exec.LookPath("clang"); err == nil {
+			return runClang(clang, sourcePath, exeName)
+		}
+	}
+
+	return fmt.Errorf("no supported C compiler found (searched for gcc, clang, and cl.exe)")
+}
+
+func Compile(file *source.File, outputPath string, emitC bool) error {
 	program, err := parseSource(file)
 	if err != nil {
 		return err
 	}
 
 	cCode := transpileToC(program)
+	if emitC {
+		if outputPath == "" {
+			outputPath = "output.c"
+		}
+
+		if filepath.Ext(outputPath) != ".c" {
+			outputPath += ".c"
+		}
+
+		if err := os.WriteFile(outputPath, []byte(cCode), 0644); err != nil {
+			return fmt.Errorf("failed to write C source: %w", err)
+		}
+
+		fmt.Printf("[Success] Generated C source: %s\n", outputPath)
+		return nil
+	}
 	exeName := resolveExeName(outputPath)
 
 	tmpPath, err := writeToTempFile(cCode)
@@ -53,11 +169,20 @@ func transpileToC(program *ast.Program) string {
 
 func resolveExeName(outputPath string) string {
 	if outputPath == "" {
-		return "output.exe"
+		if runtime.GOOS == "windows" {
+			return "output.exe"
+		}
+		return "output"
 	}
+
 	if strings.HasSuffix(outputPath, ".c") {
-		return strings.TrimSuffix(outputPath, ".c") + ".exe"
+		outputPath = strings.TrimSuffix(outputPath, ".c")
 	}
+
+	if runtime.GOOS == "windows" && filepath.Ext(outputPath) != ".exe" {
+		outputPath += ".exe"
+	}
+
 	return outputPath
 }
 
@@ -72,18 +197,4 @@ func writeToTempFile(content string) (string, error) {
 		return "", fmt.Errorf("failed to populate compile buffer: %w", err)
 	}
 	return tmpFile.Name(), nil
-}
-
-func runCompiler(sourcePath, exeName string) error {
-	cmd := exec.Command("cl.exe", "/nologo", "/O2", "/Fe:"+exeName, sourcePath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	fmt.Printf("[MSVC] Compiling memory buffer via transient path %s...\n", filepath.Base(sourcePath))
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("cl.exe compilation failed: %w", err)
-	}
-
-	fmt.Printf("[Success] Executable generated directly to binary file: %s\n", exeName)
-	return nil
 }

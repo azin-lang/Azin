@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/azin-lang/Azin/internal/ast"
 	"github.com/azin-lang/Azin/internal/compiler"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/fs"
 	"github.com/azin-lang/Azin/internal/lexer"
+	"github.com/azin-lang/Azin/internal/parser"
 	"github.com/azin-lang/Azin/internal/source"
 	"github.com/azin-lang/Azin/internal/token"
 )
@@ -18,9 +20,11 @@ const Version = "0.2.3-dev"
 var (
 	debug           = flag.Bool("debug", false, "Enable debug output")
 	printTokens     = flag.Bool("tokens", false, "Print lexer tokens")
+	printAST        = flag.Bool("print-ast", false, "Print the parsed AST")
 	output          = flag.String("o", "", "Output file")
 	ignoreExtension = flag.Bool("ignore-extension", false, "Ignore source file extension")
 	version         = flag.Bool("version", false, "Print compiler version")
+	emitC           = flag.Bool("emit-c", false, "Generate C source instead of compiling")
 )
 
 func init() {
@@ -53,14 +57,28 @@ func main() {
 
 	diag := diagnostics.New(file)
 
+	tokens := lexer.New(file, diag).Tokenize()
+
+	if err := diag.Err(); err != nil {
+		fatal(err)
+	}
+
 	if *printTokens {
-		tokens := lexer.New(file, diag).Tokenize()
 		for _, tok := range tokens {
 			fmt.Println(formatToken(file, tok))
 		}
+		return
 	}
 
-	err := compiler.Compile(file, *output)
+	if *printAST {
+		p := parser.New(string(file.Slice(0, file.Len())), tokens)
+		program := p.ParseProgram()
+
+		ast.Print(program)
+		return
+	}
+
+	err := compiler.Compile(file, *output, *emitC)
 	if err != nil {
 		fatal(err)
 	}
@@ -78,6 +96,7 @@ func printDebug() {
 	fmt.Printf("Debug: %t\n", *debug)
 	fmt.Printf("Print tokens: %t\n", *printTokens)
 	fmt.Printf("Output: %q\n", *output)
+	fmt.Printf("Emit C: %t\n", *emitC)
 }
 
 func mustReadSource(filename string) []byte {
