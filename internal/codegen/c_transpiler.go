@@ -7,14 +7,17 @@ import (
 	"github.com/azin-lang/Azin/internal/ast"
 )
 
+// the Transpiler struct is responsible for transpiling the AST to C code.
 type Transpiler struct {
 	buf bytes.Buffer
 }
 
+// create a new Transpiler.
 func New() *Transpiler {
 	return &Transpiler{}
 }
 
+// Transpile transpiles the AST to C code.
 func (t *Transpiler) Transpile(program *ast.Program) string {
 	for _, stmt := range program.Statements {
 		if s, ok := stmt.(*ast.StructStmt); ok {
@@ -30,6 +33,7 @@ func (t *Transpiler) Transpile(program *ast.Program) string {
 
 	return t.buf.String()
 }
+
 func (t *Transpiler) compileStruct(s *ast.StructStmt) {
 	fmt.Fprintf(&t.buf, "typedef struct {\n")
 	for _, f := range s.Fields {

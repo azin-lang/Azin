@@ -115,6 +115,7 @@ func runCompiler(sourcePath, exeName string) error {
 	return fmt.Errorf("no supported C compiler found (searched for gcc, clang, and cl.exe)")
 }
 
+// compile the given source file to a C executable.
 func Compile(file *source.File, outputPath string, emitC bool) error {
 	program, err := parseSource(file)
 	if err != nil {
@@ -175,8 +176,8 @@ func resolveExeName(outputPath string) string {
 		return "output"
 	}
 
-	if strings.HasSuffix(outputPath, ".c") {
-		outputPath = strings.TrimSuffix(outputPath, ".c")
+	if before, ok := strings.CutSuffix(outputPath, ".c"); ok {
+		outputPath = before
 	}
 
 	if runtime.GOOS == "windows" && filepath.Ext(outputPath) != ".exe" {
