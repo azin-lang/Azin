@@ -1,0 +1,73 @@
+name: Deploy API Docs
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: Generate documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Install doc2go
+        run: go install go.abhg.dev/doc2go@latest
+
+      - name: Generate documentation
+        run: |
+          $(go env GOPATH)/bin/doc2go \
+            -internal \
+            -out build/docs/html \
+            ./...
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc2go-html
+          path: build/docs/html
+          retention-days: 7
+
+  deploy:
+    name: Deploy documentation
+    needs: generate
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Download docs
+        uses: actions/download-artifact@v4
+        with:
+          name: doc2go-html
+          path: build/docs/html
+
+      - name: Deploy
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: internals-docs
+          directory: build/docs/html
