@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"unicode/utf8"
 
 	"github.com/azin-lang/Azin/internal/token"
 )
@@ -51,6 +52,12 @@ func (f *File) EOF(offset uint32) bool {
 // Byte returns the character at the given offset.
 func (f *File) Byte(offset uint32) byte {
 	return f.text[offset]
+}
+
+// Rune returns the rune at the given offset, along with the byte count
+func (f *File) Rune(offset uint32) (rune, uint32) {
+	r, size := utf8.DecodeRune(f.text[offset:])
+	return r, uint32(size)
 }
 
 // Slice returns the byte slice between start and end offsets.

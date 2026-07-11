@@ -1,20 +1,19 @@
-// Package lexer converts Azin source text into lexical tokens.
 package lexer
 
 import (
+	"unicode"
+
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/source"
 	"github.com/azin-lang/Azin/internal/token"
 )
 
-// Lexer breaks source code into tokens.
 type Lexer struct {
 	file   *source.File
 	offset uint32
 	diag   *diagnostics.Engine
 }
 
-// New returns a new Lexer for the given file.
 func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	return &Lexer{
 		file: file,
@@ -22,7 +21,6 @@ func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	}
 }
 
-// Tokenize reads the entire file and returns its tokens.
 func (l *Lexer) Tokenize() []token.Token {
 	tokens := make([]token.Token, 0, 128)
 
@@ -46,21 +44,21 @@ func (l *Lexer) nextToken() token.Token {
 	}
 
 	start := l.position()
-	ch := l.advance()
+	ch, size := l.advance()
 
 	switch {
-	case isAlpha(ch):
+	case isIdentifierStart(ch):
 		return l.lexIdentifier(start)
 
 	case isDigit(ch):
 		return l.lexInteger(start)
 
 	default:
-		return l.lexSymbol(ch, start)
+		return l.lexSymbol(ch, size, start)
 	}
 }
 
-func (l *Lexer) lexSymbol(ch byte, start token.Position) token.Token {
+func (l *Lexer) lexSymbol(ch rune, size uint32, start token.Position) token.Token {
 	switch ch {
 	case '(':
 		return l.token(token.LeftParen, start)
@@ -148,7 +146,13 @@ func (l *Lexer) lexSymbol(ch byte, start token.Position) token.Token {
 		return l.token(token.Pipe, start)
 
 	default:
-		l.diag.ReportError(start, 1, "unexpected character %q", ch)
+		l.diag.ReportError(
+			start,
+			size,
+			"unexpected character %q",
+			ch,
+		)
+
 		return l.token(token.Unknown, start)
 	}
 }
@@ -177,8 +181,8 @@ func (l *Lexer) lexMinus(start token.Position) token.Token {
 }
 
 func (l *Lexer) lexIdentifier(start token.Position) token.Token {
-	for isAlphaNumeric(l.peek()) {
-		l.advance()
+	for isIdentifierContinue(l.peek()) {
+		_, _ = l.advance()
 	}
 
 	text := string(l.file.Slice(start.Offset, l.offset))
@@ -192,7 +196,7 @@ func (l *Lexer) lexIdentifier(start token.Position) token.Token {
 
 func (l *Lexer) lexInteger(start token.Position) token.Token {
 	for isDigit(l.peek()) {
-		l.advance()
+		_, _ = l.advance()
 	}
 
 	return l.token(token.IntegerLiteral, start)
@@ -200,17 +204,15 @@ func (l *Lexer) lexInteger(start token.Position) token.Token {
 
 func (l *Lexer) lexString(start token.Position) token.Token {
 	for !l.eof() {
-		ch := l.advance()
+		ch, _ := l.advance()
 
 		switch ch {
 		case '\\':
-			// Skip the escaped character.
 			if !l.eof() {
 				l.advance()
 			}
 
 		case '"':
-			// Closing quote.
 			return l.token(token.StringLiteral, start)
 
 		case '\n', '\r':
@@ -234,39 +236,40 @@ func (l *Lexer) eof() bool {
 	return l.file.EOF(l.offset)
 }
 
-func (l *Lexer) peek() byte {
+func (l *Lexer) peek() rune {
 	if l.eof() {
 		return 0
 	}
 
-	return l.file.Byte(l.offset)
+	r, _ := l.file.Rune(l.offset)
+	return r
 }
 
-func (l *Lexer) match(ch byte) bool {
+func (l *Lexer) match(ch rune) bool {
 	if l.peek() != ch {
 		return false
 	}
 
-	l.advance()
+	_, _ = l.advance()
 	return true
 }
 
-func (l *Lexer) advance() byte {
+func (l *Lexer) advance() (rune, uint32) {
 	if l.eof() {
-		return 0
+		return 0, 0
 	}
 
-	ch := l.file.Byte(l.offset)
-	l.offset++
+	r, size := l.file.Rune(l.offset)
+	l.offset += size
 
-	return ch
+	return r, size
 }
 
 func (l *Lexer) skipWhitespace() {
 	for !l.eof() {
 		switch l.peek() {
 		case ' ', '\t', '\r', '\n':
-			l.advance()
+			_, _ = l.advance()
 		default:
 			return
 		}
@@ -287,16 +290,14 @@ func (l *Lexer) position() token.Position {
 	}
 }
 
-func isAlpha(ch byte) bool {
-	return ch == '_' ||
-		(ch >= 'a' && ch <= 'z') ||
-		(ch >= 'A' && ch <= 'Z')
+func isIdentifierStart(r rune) bool {
+	return r == '_' || unicode.IsLetter(r)
 }
 
-func isDigit(ch byte) bool {
-	return ch >= '0' && ch <= '9'
+func isIdentifierContinue(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsMark(r)
 }
 
-func isAlphaNumeric(ch byte) bool {
-	return isAlpha(ch) || isDigit(ch)
+func isDigit(r rune) bool {
+	return unicode.IsDigit(r)
 }
