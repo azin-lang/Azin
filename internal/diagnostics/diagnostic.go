@@ -1,3 +1,5 @@
+// Package diagnostics provides structures and engines to record, format,
+// and report compiler errors, warnings, and informational notes.
 package diagnostics
 
 import (
@@ -6,6 +8,7 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
+// DiagnosticKind is the severity level of a diagnostic.
 type DiagnosticKind uint8
 
 const (
@@ -14,11 +17,12 @@ const (
 	Error
 )
 
+// A Diagnostic represents a single compiler message at a specific location.
 type Diagnostic struct {
-	Kind     DiagnosticKind
-	Message  string
-	Position token.Position
-	Length   uint32
+	Kind     DiagnosticKind //  kind
+	Message  string         // diagnostic message
+	Position token.Position // position at which the diagnostic was emited
+	Length   uint32         // length of the offending
 }
 
 func (k DiagnosticKind) String() string {

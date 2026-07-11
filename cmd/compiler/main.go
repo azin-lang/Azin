@@ -1,3 +1,4 @@
+// Package main provides the command-line interface for the Azin compiler.
 package main
 
 import (

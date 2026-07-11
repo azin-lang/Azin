@@ -8,25 +8,22 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
+// Engine collects diagnostics for a source file.
 type Engine struct {
 	file        *source.File
 	diagnostics []Diagnostic
 	hasErrors   bool
 }
 
+// New returns a new Engine for the given file.
 func New(file *source.File) *Engine {
 	return &Engine{
 		file: file,
 	}
 }
 
-func (e *Engine) Report(
-	kind DiagnosticKind,
-	pos token.Position,
-	length uint32,
-	format string,
-	args ...any,
-) {
+// Report adds a diagnostic to the engine.
+func (e *Engine) Report(kind DiagnosticKind, pos token.Position, length uint32, format string, args ...any) {
 	if kind == Error {
 		e.hasErrors = true
 	}
@@ -39,26 +36,32 @@ func (e *Engine) Report(
 	})
 }
 
+// ReportError logs an error-level diagnostic.
 func (e *Engine) ReportError(pos token.Position, length uint32, format string, args ...any) {
 	e.Report(Error, pos, length, format, args...)
 }
 
+// ReportWarning logs a warning-level diagnostic.
 func (e *Engine) ReportWarning(pos token.Position, length uint32, format string, args ...any) {
 	e.Report(Warning, pos, length, format, args...)
 }
 
+// ReportNote logs a note-level diagnostic.
 func (e *Engine) ReportNote(pos token.Position, length uint32, format string, args ...any) {
 	e.Report(Note, pos, length, format, args...)
 }
 
+// Diagnostics returns all recorded diagnostics.
 func (e *Engine) Diagnostics() []Diagnostic {
 	return e.diagnostics
 }
 
+// HasErrors reports whether any errors have been recorded.
 func (e *Engine) HasErrors() bool {
 	return e.hasErrors
 }
 
+// Err returns the engine as an error if it contains errors, or nil otherwise.
 func (e *Engine) Err() error {
 	if !e.HasErrors() {
 		return nil
@@ -66,18 +69,7 @@ func (e *Engine) Err() error {
 	return e
 }
 
-func (e *Engine) LineColumn(pos token.Position) (line, column uint32) {
-	return e.file.LineColumn(pos.Offset)
-}
-
-func (e *Engine) Text(tok token.Token) []byte {
-	return e.file.Text(tok)
-}
-
-func (e *Engine) Line(line uint32) []byte {
-	return e.file.Line(line)
-}
-
+// Formats all diagnostics into a readable string.
 func (e *Engine) Error() string {
 	var b strings.Builder
 
@@ -88,22 +80,13 @@ func (e *Engine) Error() string {
 
 		line, column := e.file.LineColumn(d.Position.Offset)
 
-		fmt.Fprintf(
-			&b,
-			"%s:%d:%d: %s: %s\n",
-			e.file.Name(),
-			line,
-			column,
-			d.Kind,
-			d.Message,
-		)
+		fmt.Fprintf(&b, "%s:%d:%d: %s: %s\n", e.file.Name(), line, column, d.Kind, d.Message)
 
 		src := e.file.Line(line)
 		b.Write(src)
 		b.WriteByte('\n')
 
 		prefix := src[:column-1]
-
 		for _, ch := range prefix {
 			if ch == '\t' {
 				b.WriteByte('\t')

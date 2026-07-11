@@ -1,3 +1,4 @@
+// Package lexer converts Azin source text into lexical tokens.
 package lexer
 
 import (
@@ -6,12 +7,14 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
+// Lexer breaks source code into tokens.
 type Lexer struct {
 	file   *source.File
 	offset uint32
 	diag   *diagnostics.Engine
 }
 
+// New returns a new Lexer for the given file.
 func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	return &Lexer{
 		file: file,
@@ -19,8 +22,8 @@ func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	}
 }
 
+// Tokenize reads the entire file and returns its tokens.
 func (l *Lexer) Tokenize() []token.Token {
-	// Added a small capacity to prevent early reallocations
 	tokens := make([]token.Token, 0, 128)
 
 	for {
