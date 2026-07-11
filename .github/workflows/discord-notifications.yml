@@ -1,0 +1,38 @@
+name: Pull Request Discord Notification
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Send Webhook
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Embed Message
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{
+                 "embeds": [{
+                   "title": "Pull Request ${{ github.event.action }}: #${{ github.event.pull_request.number }}",
+                   "description": "**${{ github.event.pull_request.title }}**\n\nBranch: `${{ github.event.pull_request.head.ref }}` into `${{ github.event.pull_request.base.ref }}`",
+                   "url": "${{ github.event.pull_request.html_url }}",
+                   "color": 5814783,
+                   "author": {
+                     "name": "${{ github.event.pull_request.user.login }}",
+                     "icon_url": "${{ github.event.pull_request.user.avatar_url }}"
+                   },
+                   "footer": {
+                     "text": "Repository: ${{ github.repository }}"
+                   }
+                 }]
+               }' \
+               "${{ secrets.DISCORD_WEBHOOK_URL }}"
