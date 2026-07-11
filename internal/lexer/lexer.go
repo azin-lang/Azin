@@ -200,26 +200,54 @@ func (l *Lexer) lexInteger(start token.Position) token.Token {
 
 func (l *Lexer) lexString(start token.Position) token.Token {
 	for !l.eof() {
-		ch := l.advance()
-
-		switch ch {
-		case '\\':
-			// Skip the escaped character.
-			if !l.eof() {
-				l.advance()
-			}
+		switch ch := l.advance(); ch {
 
 		case '"':
 			// Closing quote.
 			return l.token(token.StringLiteral, start)
 
+		case '\\':
+			// '\' cannot be the final character
+			if l.eof() {
+				l.diag.ReportError(
+					token.Position{Offset: l.offset - 1},
+					1,
+					"unterminated escape sequence",
+				)
+				return l.token(token.StringLiteral, start)
+			}
+
+			escape := l.advance()
+
+			switch escape {
+			case '"', '\\', 'n', 'r', 't', '0':
+				// Valid escape sequence
+
+			default:
+				l.diag.ReportError(
+					token.Position{Offset: l.offset - 1},
+					1,
+					"invalid escape sequence \\%c",
+					escape,
+				)
+			}
+
 		case '\n', '\r':
-			l.diag.ReportError(start, l.offset-start.Offset, "unterminated string literal")
+			l.diag.ReportError(
+				start,
+				l.offset-start.Offset,
+				"unterminated string literal",
+			)
 			return l.token(token.StringLiteral, start)
 		}
 	}
 
-	l.diag.ReportError(start, l.offset-start.Offset, "unterminated string literal")
+	l.diag.ReportError(
+		start,
+		l.offset-start.Offset,
+		"unterminated string literal",
+	)
+
 	return l.token(token.StringLiteral, start)
 }
 
