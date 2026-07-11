@@ -221,7 +221,7 @@ func (l *Lexer) lexString(start token.Position) token.Token {
 				return l.token(token.StringLiteral, start)
 			}
 
-			escape := l.advance()
+			escape, _ := l.advance()
 
 			switch escape {
 			case '"', '\\', 'n', 'r', 't', '0':
