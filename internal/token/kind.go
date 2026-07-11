@@ -2,7 +2,7 @@ package token
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=Kind -linecomment
 
-// Kind represents the kind of a token.
+// represents the kind of a token.
 type Kind uint8
 
 const (

@@ -1,5 +1,6 @@
 package token
 
+// map of keyword strings to their corresponding token kinds.
 var Keywords = map[string]Kind{
 	"fn":     KwFn,
 	"do":     KwDo,

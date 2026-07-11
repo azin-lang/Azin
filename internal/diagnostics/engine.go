@@ -4,22 +4,25 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/azin-lang/Azin/internal/source"
+	"github.com/azin-lang/Azin/internal/source" //
 	"github.com/azin-lang/Azin/internal/token"
 )
 
+// the Engine struct is responsible for reporting diagnostics.
 type Engine struct {
 	file        *source.File
 	diagnostics []Diagnostic
 	hasErrors   bool
 }
 
+// creates a new diagnostic engine for the given file.
 func New(file *source.File) *Engine {
 	return &Engine{
 		file: file,
 	}
 }
 
+// reports a diagnostic message.
 func (e *Engine) Report(
 	kind DiagnosticKind,
 	pos token.Position,
@@ -39,26 +42,32 @@ func (e *Engine) Report(
 	})
 }
 
+// reports an error diagnostic message.
 func (e *Engine) ReportError(pos token.Position, length uint32, format string, args ...any) {
 	e.Report(Error, pos, length, format, args...)
 }
 
+// reports a warning diagnostic message.
 func (e *Engine) ReportWarning(pos token.Position, length uint32, format string, args ...any) {
 	e.Report(Warning, pos, length, format, args...)
 }
 
+// reports a note diagnostic message.
 func (e *Engine) ReportNote(pos token.Position, length uint32, format string, args ...any) {
 	e.Report(Note, pos, length, format, args...)
 }
 
+// returns the list of diagnostics.
 func (e *Engine) Diagnostics() []Diagnostic {
 	return e.diagnostics
 }
 
+// returns whether the engine has errors.
 func (e *Engine) HasErrors() bool {
 	return e.hasErrors
 }
 
+// returns the error if the engine has errors, otherwise nil.
 func (e *Engine) Err() error {
 	if !e.HasErrors() {
 		return nil
@@ -66,18 +75,22 @@ func (e *Engine) Err() error {
 	return e
 }
 
+// returns the line and column of the given position.
 func (e *Engine) LineColumn(pos token.Position) (line, column uint32) {
 	return e.file.LineColumn(pos.Offset)
 }
 
+// returns the text of the given token.
 func (e *Engine) Text(tok token.Token) []byte {
 	return e.file.Text(tok)
 }
 
+// returns the line of the given line number.
 func (e *Engine) Line(line uint32) []byte {
 	return e.file.Line(line)
 }
 
+// returns the error message if the engine has errors, otherwise nil.
 func (e *Engine) Error() string {
 	var b strings.Builder
 

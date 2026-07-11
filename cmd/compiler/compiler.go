@@ -23,6 +23,7 @@ var (
 	version         = flag.Bool("version", false, "Print compiler version")
 )
 
+// init sets the usage function for the flag package.
 func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] <file>\n\n", os.Args[0])
@@ -30,6 +31,7 @@ func init() {
 	}
 }
 
+// main is the entry point of the compiler.
 func main() {
 	flag.Parse()
 
@@ -72,12 +74,15 @@ func main() {
 	}
 }
 
+// printDebug prints the debug information.
 func printDebug() {
 	fmt.Printf("Debug: %t\n", *debug)
 	fmt.Printf("Print tokens: %t\n", *printTokens)
 	fmt.Printf("Output: %q\n", *output)
 }
 
+// mustReadSource reads the source file and returns its contents as a byte slice.
+// It exits the program if the file cannot be read.
 func mustReadSource(filename string) []byte {
 	source, err := fs.ReadSourceFile(filename, *ignoreExtension)
 	if err != nil {
@@ -86,11 +91,13 @@ func mustReadSource(filename string) []byte {
 	return source
 }
 
+// fatal prints the error and exits the program.
 func fatal(err error) {
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)
 }
 
+// formatToken formats a token as a string for debugging purposes.
 func formatToken(f *source.File, tok token.Token) string {
 	line, column := f.LineColumn(tok.Position.Offset)
 

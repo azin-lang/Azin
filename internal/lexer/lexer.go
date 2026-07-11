@@ -1,17 +1,20 @@
+// the lexer package is a lexical analyzer that tokenizes source code.
 package lexer
 
 import (
-	"github.com/azin-lang/Azin/internal/diagnostics"
-	"github.com/azin-lang/Azin/internal/source"
-	"github.com/azin-lang/Azin/internal/token"
+	"github.com/azin-lang/Azin/internal/diagnostics" // diagnostics package is used for reporting errors
+	"github.com/azin-lang/Azin/internal/source"      // source package is used for representing source files
+	"github.com/azin-lang/Azin/internal/token"       // token package is used for representing tokens
 )
 
+// represents a lexical analyzer that tokenizes source code.
 type Lexer struct {
 	file   *source.File
 	offset uint32
 	diag   *diagnostics.Engine
 }
 
+// creates a new Lexer for the given source file and diagnostics engine.
 func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	return &Lexer{
 		file: file,
@@ -19,6 +22,7 @@ func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	}
 }
 
+// tokenizes the source code and returns a slice of tokens.
 func (l *Lexer) Tokenize() []token.Token {
 	// Added a small capacity to prevent early reallocations
 	tokens := make([]token.Token, 0, 128)
@@ -35,6 +39,7 @@ func (l *Lexer) Tokenize() []token.Token {
 	return tokens
 }
 
+// nextToken is a helper function that returns the next token from the source code.
 func (l *Lexer) nextToken() token.Token {
 	l.skipWhitespace()
 
@@ -148,6 +153,7 @@ func (l *Lexer) lexSymbol(ch byte, start token.Position) token.Token {
 	}
 }
 
+// lexes a plus token, handling plus equal and plus plus cases.
 func (l *Lexer) lexPlus(start token.Position) token.Token {
 	if l.match('=') {
 		return l.token(token.PlusEqual, start)
@@ -158,6 +164,7 @@ func (l *Lexer) lexPlus(start token.Position) token.Token {
 	return l.token(token.Plus, start)
 }
 
+// lexes a minus token, handling minus equal, minus minus, and arrow cases.
 func (l *Lexer) lexMinus(start token.Position) token.Token {
 	if l.match('=') {
 		return l.token(token.MinusEqual, start)
@@ -171,6 +178,7 @@ func (l *Lexer) lexMinus(start token.Position) token.Token {
 	return l.token(token.Minus, start)
 }
 
+// lexes an identifier token, handling keywords and regular identifiers.
 func (l *Lexer) lexIdentifier(start token.Position) token.Token {
 	for isAlphaNumeric(l.peek()) {
 		l.advance()
@@ -185,6 +193,7 @@ func (l *Lexer) lexIdentifier(start token.Position) token.Token {
 	return l.token(token.Identifier, start)
 }
 
+// lexes an integer token, handling integer literals.
 func (l *Lexer) lexInteger(start token.Position) token.Token {
 	for isDigit(l.peek()) {
 		l.advance()
@@ -193,6 +202,7 @@ func (l *Lexer) lexInteger(start token.Position) token.Token {
 	return l.token(token.IntegerLiteral, start)
 }
 
+// returns the end-of-file token.
 func (l *Lexer) eofToken() token.Token {
 	return token.Token{
 		Kind:     token.EOF,
@@ -200,10 +210,12 @@ func (l *Lexer) eofToken() token.Token {
 	}
 }
 
+// returns true if the lexer is at the end of the file.
 func (l *Lexer) eof() bool {
 	return l.file.EOF(l.offset)
 }
 
+// returns the next byte in the file without advancing the offset.
 func (l *Lexer) peek() byte {
 	if l.eof() {
 		return 0
@@ -212,6 +224,7 @@ func (l *Lexer) peek() byte {
 	return l.file.Byte(l.offset)
 }
 
+// returns true if the next byte in the file matches the given byte, and advances the offset if it does.
 func (l *Lexer) match(ch byte) bool {
 	if l.peek() != ch {
 		return false
@@ -221,6 +234,7 @@ func (l *Lexer) match(ch byte) bool {
 	return true
 }
 
+// advances the lexer's offset by one byte and returns the byte that was advanced.
 func (l *Lexer) advance() byte {
 	if l.eof() {
 		return 0
@@ -232,6 +246,7 @@ func (l *Lexer) advance() byte {
 	return ch
 }
 
+// skips over whitespace characters in the file.
 func (l *Lexer) skipWhitespace() {
 	for !l.eof() {
 		switch l.peek() {
@@ -243,6 +258,7 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+// returns a token with the given kind and start position.
 func (l *Lexer) token(kind token.Kind, start token.Position) token.Token {
 	return token.Token{
 		Kind:     kind,
@@ -251,22 +267,26 @@ func (l *Lexer) token(kind token.Kind, start token.Position) token.Token {
 	}
 }
 
+// returns the current position in the file.
 func (l *Lexer) position() token.Position {
 	return token.Position{
 		Offset: l.offset,
 	}
 }
 
+// returns true if the given byte is an alphabetic character (letter or underscore).
 func isAlpha(ch byte) bool {
 	return ch == '_' ||
 		(ch >= 'a' && ch <= 'z') ||
 		(ch >= 'A' && ch <= 'Z')
 }
 
+// returns true if the given byte is a digit.
 func isDigit(ch byte) bool {
 	return ch >= '0' && ch <= '9'
 }
 
+// returns true if the given byte is an alphanumeric character (letter, digit, or underscore).
 func isAlphaNumeric(ch byte) bool {
 	return isAlpha(ch) || isDigit(ch)
 }

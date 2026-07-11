@@ -6,6 +6,7 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
+// represents the kind of diagnostic.
 type DiagnosticKind uint8
 
 const (
@@ -14,6 +15,7 @@ const (
 	Error
 )
 
+// represents a diagnostic message.
 type Diagnostic struct {
 	Kind     DiagnosticKind
 	Message  string
@@ -21,6 +23,7 @@ type Diagnostic struct {
 	Length   uint32
 }
 
+// returns the string representation of the diagnostic kind.
 func (k DiagnosticKind) String() string {
 	switch k {
 	case Error:
@@ -34,6 +37,7 @@ func (k DiagnosticKind) String() string {
 	}
 }
 
+// returns the string representation of the diagnostic.
 func (d Diagnostic) Error() string {
 	return fmt.Sprintf("%s: %s", d.Kind, d.Message)
 }
