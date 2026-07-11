@@ -50,6 +50,9 @@ go.work
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 
+# docs
+docs/
+
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
@@ -208,7 +211,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/go,goland+all,visualstudiocode,linux,windows,macos
 
 azin_old/
-build/
+/build/
 
 *.sum
 CONVERSATION.md
