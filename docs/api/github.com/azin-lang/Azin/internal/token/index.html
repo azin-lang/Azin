@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../../_/icons/favicon.ico"><title>token</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../../..">github.com</a>/<a href="../../..">azin-lang</a>/<a href="../..">Azin</a>/<a href="..">internal</a>/token<span class="navbar-right">
+          <a href="../../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main>
+<h2 id="pkg-overview">package token</h2>
+
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/azin-lang/Azin/internal/token&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#pkg-variables">Variables</a></li><li>
+      <a href="#Kind">type Kind</a>
+      <ul>
+          <li><a href="#Kind.String">func (i Kind) String() string</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Token">type Token</a>
+      <ul>
+          <li><a href="#Token.Format">func (t Token) Format(source []byte) string</a></li>
+          <li><a href="#Token.String">func (t Token) String() string</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-variables">Variables</h3>
+  
+  
+  
+  <pre class="chroma"><span class="kd">var</span><span class="w"> </span><span id="Keywords"><span class="nx">Keywords</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">]</span><a href="#Kind"><span class="nx">Kind</span></a><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;fn&#34;</span><span class="p">:</span><span class="w">     </span><a href="#KwFn"><span class="nx">KwFn</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;do&#34;</span><span class="p">:</span><span class="w">     </span><a href="#KwDo"><span class="nx">KwDo</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;var&#34;</span><span class="p">:</span><span class="w">    </span><a href="#KwVar"><span class="nx">KwVar</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;return&#34;</span><span class="p">:</span><span class="w"> </span><a href="#KwReturn"><span class="nx">KwReturn</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;end&#34;</span><span class="p">:</span><span class="w">    </span><a href="#KwEnd"><span class="nx">KwEnd</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;char&#34;</span><span class="p">:</span><span class="w">   </span><a href="#KwChar"><span class="nx">KwChar</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;int&#34;</span><span class="p">:</span><span class="w">    </span><a href="#KwInt"><span class="nx">KwInt</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;str&#34;</span><span class="p">:</span><span class="w">    </span><a href="#KwString"><span class="nx">KwString</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;float&#34;</span><span class="p">:</span><span class="w">  </span><a href="#KwFloat"><span class="nx">KwFloat</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;if&#34;</span><span class="p">:</span><span class="w">     </span><a href="#KwIf"><span class="nx">KwIf</span></a><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="s">&#34;then&#34;</span><span class="p">:</span><span class="w">   </span><a href="#KwThen"><span class="nx">KwThen</span></a><span class="p">,</span><span class="w">
+</span><span class="p">}</span></pre>
+  <p>map of keywords to their token kinds
+regen
+ok
+<h3 id="pkg-types">Types</h3>
+  
+  <h4 id="Kind">type Kind</h4>
+    
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Kind</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#uint8"><span class="kt">uint8</span></a></pre>
+    
+  
+  <pre class="chroma"><span class="kd">const</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span><span class="w">	</span><span id="Unknown"><span class="nx">Unknown</span></span><span class="w"> </span><a href="#Kind"><span class="nx">Kind</span></a><span class="w"> </span><span class="p">=</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#iota"><span class="kc">iota</span></a><span class="w"> </span><span class="c1">// unknown</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="Identifier"><span class="nx">Identifier</span></span><span class="w">       </span><span class="c1">// identifier</span><span class="w">
+</span><span class="w">	</span><span id="IntegerLiteral"><span class="nx">IntegerLiteral</span></span><span class="w">   </span><span class="c1">// integer_literal</span><span class="w">
+</span><span class="w">	</span><span id="StringLiteral"><span class="nx">StringLiteral</span></span><span class="w">    </span><span class="c1">// string_literal</span><span class="w">
+</span><span class="w">	</span><span id="FloatLiteral"><span class="nx">FloatLiteral</span></span><span class="w">     </span><span class="c1">// float_literal</span><span class="w">
+</span><span class="w">	</span><span id="CharacterLiteral"><span class="nx">CharacterLiteral</span></span><span class="w"> </span><span class="c1">// character_literal</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="KwFn"><span class="nx">KwFn</span></span><span class="w">     </span><span class="c1">// kw_fn</span><span class="w">
+</span><span class="w">	</span><span id="KwDo"><span class="nx">KwDo</span></span><span class="w">     </span><span class="c1">// kw_do</span><span class="w">
+</span><span class="w">	</span><span id="KwVar"><span class="nx">KwVar</span></span><span class="w">    </span><span class="c1">// kw_var</span><span class="w">
+</span><span class="w">	</span><span id="KwReturn"><span class="nx">KwReturn</span></span><span class="w"> </span><span class="c1">// kw_return</span><span class="w">
+</span><span class="w">	</span><span id="KwEnd"><span class="nx">KwEnd</span></span><span class="w">    </span><span class="c1">// kw_end</span><span class="w">
+</span><span class="w">	</span><span id="KwChar"><span class="nx">KwChar</span></span><span class="w">   </span><span class="c1">// kw_char</span><span class="w">
+</span><span class="w">	</span><span id="KwInt"><span class="nx">KwInt</span></span><span class="w">    </span><span class="c1">// kw_int</span><span class="w">
+</span><span class="w">	</span><span id="KwString"><span class="nx">KwString</span></span><span class="w"> </span><span class="c1">// kw_string</span><span class="w">
+</span><span class="w">	</span><span id="KwFloat"><span class="nx">KwFloat</span></span><span class="w">  </span><span class="c1">// kw_float</span><span class="w">
+</span><span class="w">	</span><span id="KwIf"><span class="nx">KwIf</span></span><span class="w">     </span><span class="c1">// kw_if</span><span class="w">
+</span><span class="w">	</span><span id="KwThen"><span class="nx">KwThen</span></span><span class="w">   </span><span class="c1">// kw_then</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="Plus"><span class="nx">Plus</span></span><span class="w">           </span><span class="c1">// plus</span><span class="w">
+</span><span class="w">	</span><span id="Minus"><span class="nx">Minus</span></span><span class="w">          </span><span class="c1">// minus</span><span class="w">
+</span><span class="w">	</span><span id="Star"><span class="nx">Star</span></span><span class="w">           </span><span class="c1">// star</span><span class="w">
+</span><span class="w">	</span><span id="Slash"><span class="nx">Slash</span></span><span class="w">          </span><span class="c1">// slash</span><span class="w">
+</span><span class="w">	</span><span id="Equal"><span class="nx">Equal</span></span><span class="w">          </span><span class="c1">// equal</span><span class="w">
+</span><span class="w">	</span><span id="EqualEqual"><span class="nx">EqualEqual</span></span><span class="w">     </span><span class="c1">// equal_equal</span><span class="w">
+</span><span class="w">	</span><span id="Bang"><span class="nx">Bang</span></span><span class="w">           </span><span class="c1">// bang</span><span class="w">
+</span><span class="w">	</span><span id="BangEqual"><span class="nx">BangEqual</span></span><span class="w">      </span><span class="c1">// bang_equal</span><span class="w">
+</span><span class="w">	</span><span id="Less"><span class="nx">Less</span></span><span class="w">           </span><span class="c1">// less</span><span class="w">
+</span><span class="w">	</span><span id="LessEqual"><span class="nx">LessEqual</span></span><span class="w">      </span><span class="c1">// less_equal</span><span class="w">
+</span><span class="w">	</span><span id="Greater"><span class="nx">Greater</span></span><span class="w">        </span><span class="c1">// greater</span><span class="w">
+</span><span class="w">	</span><span id="GreaterEqual"><span class="nx">GreaterEqual</span></span><span class="w">   </span><span class="c1">// greater_equal</span><span class="w">
+</span><span class="w">	</span><span id="Arrow"><span class="nx">Arrow</span></span><span class="w">          </span><span class="c1">// arrow</span><span class="w">
+</span><span class="w">	</span><span id="Modulo"><span class="nx">Modulo</span></span><span class="w">         </span><span class="c1">// modulo</span><span class="w">
+</span><span class="w">	</span><span id="Pipe"><span class="nx">Pipe</span></span><span class="w">           </span><span class="c1">// pipe</span><span class="w">
+</span><span class="w">	</span><span id="LogicalOr"><span class="nx">LogicalOr</span></span><span class="w">      </span><span class="c1">// logical_or</span><span class="w">
+</span><span class="w">	</span><span id="LogicalAnd"><span class="nx">LogicalAnd</span></span><span class="w">     </span><span class="c1">// logical_and</span><span class="w">
+</span><span class="w">	</span><span id="Ampersand"><span class="nx">Ampersand</span></span><span class="w">      </span><span class="c1">// ampersand</span><span class="w">
+</span><span class="w">	</span><span id="Caret"><span class="nx">Caret</span></span><span class="w">          </span><span class="c1">// caret</span><span class="w">
+</span><span class="w">	</span><span id="Tilde"><span class="nx">Tilde</span></span><span class="w">          </span><span class="c1">// tilde</span><span class="w">
+</span><span class="w">	</span><span id="PlusEqual"><span class="nx">PlusEqual</span></span><span class="w">      </span><span class="c1">// plus_equal</span><span class="w">
+</span><span class="w">	</span><span id="MinusEqual"><span class="nx">MinusEqual</span></span><span class="w">     </span><span class="c1">// minus_equal</span><span class="w">
+</span><span class="w">	</span><span id="StarEqual"><span class="nx">StarEqual</span></span><span class="w">      </span><span class="c1">// star_equal</span><span class="w">
+</span><span class="w">	</span><span id="SlashEqual"><span class="nx">SlashEqual</span></span><span class="w">     </span><span class="c1">// slash_equal</span><span class="w">
+</span><span class="w">	</span><span id="ModuloEqual"><span class="nx">ModuloEqual</span></span><span class="w">    </span><span class="c1">// modulo_equal</span><span class="w">
+</span><span class="w">	</span><span id="CaretEqual"><span class="nx">CaretEqual</span></span><span class="w">     </span><span class="c1">// caret_equal</span><span class="w">
+</span><span class="w">	</span><span id="PipeEqual"><span class="nx">PipeEqual</span></span><span class="w">      </span><span class="c1">// pipe_equal</span><span class="w">
+</span><span class="w">	</span><span id="AmpersandEqual"><span class="nx">AmpersandEqual</span></span><span class="w"> </span><span class="c1">// ampersand_equal</span><span class="w">
+</span><span class="w">	</span><span id="PlusPlus"><span class="nx">PlusPlus</span></span><span class="w">       </span><span class="c1">// plus_plus</span><span class="w">
+</span><span class="w">	</span><span id="MinusMinus"><span class="nx">MinusMinus</span></span><span class="w">     </span><span class="c1">// minus_minus</span><span class="w">
+</span><span class="w">	</span><span id="LessLess"><span class="nx">LessLess</span></span><span class="w">       </span><span class="c1">// less_less</span><span class="w">
+</span><span class="w">	</span><span id="GreaterGreater"><span class="nx">GreaterGreater</span></span><span class="w"> </span><span class="c1">// greater_greater</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="LeftParen"><span class="nx">LeftParen</span></span><span class="w">    </span><span class="c1">// left_paren</span><span class="w">
+</span><span class="w">	</span><span id="RightParen"><span class="nx">RightParen</span></span><span class="w">   </span><span class="c1">// right_paren</span><span class="w">
+</span><span class="w">	</span><span id="LeftBrace"><span class="nx">LeftBrace</span></span><span class="w">    </span><span class="c1">// left_brace</span><span class="w">
+</span><span class="w">	</span><span id="RightBrace"><span class="nx">RightBrace</span></span><span class="w">   </span><span class="c1">// right_brace</span><span class="w">
+</span><span class="w">	</span><span id="Comma"><span class="nx">Comma</span></span><span class="w">        </span><span class="c1">// comma</span><span class="w">
+</span><span class="w">	</span><span id="Semicolon"><span class="nx">Semicolon</span></span><span class="w">    </span><span class="c1">// semicolon</span><span class="w">
+</span><span class="w">	</span><span id="Colon"><span class="nx">Colon</span></span><span class="w">        </span><span class="c1">// colon</span><span class="w">
+</span><span class="w">	</span><span id="Dot"><span class="nx">Dot</span></span><span class="w">          </span><span class="c1">// dot</span><span class="w">
+</span><span class="w">	</span><span id="LeftBracket"><span class="nx">LeftBracket</span></span><span class="w">  </span><span class="c1">// left_bracket</span><span class="w">
+</span><span class="w">	</span><span id="RightBracket"><span class="nx">RightBracket</span></span><span class="w"> </span><span class="c1">// right_bracket</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="EOF"><span class="nx">EOF</span></span><span class="w"> </span><span class="c1">// eof</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="Error"><span class="nx">Error</span></span><span class="w"> </span><span class="c1">// error</span><span class="w">
+</span><span class="p">)</span></pre>
+  <h5 id="Kind.String">func (Kind) String</h5>
+  
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><a href="#Kind"><span class="nx">Kind</span></a><span class="p">)</span><span class="w"> </span><span class="nf">String</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Token">type Token</h4>
+    
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Token</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Token.Kind"><span class="nx">Kind</span></span><span class="w">   </span><a href="#Kind"><span class="nx">Kind</span></a><span class="w">
+</span><span class="w">	</span><span id="Token.Offset"><span class="nx">Offset</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="w">
+</span><span class="w">	</span><span id="Token.Length"><span class="nx">Length</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="w">
+</span><span class="w">	</span><span id="Token.Line"><span class="nx">Line</span></span><span class="w">   </span><a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="w">
+</span><span class="w">	</span><span id="Token.Column"><span class="nx">Column</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="w">
+</span><span class="p">}</span></pre>
+    <h5 id="Token.Format">func (Token) Format</h5>
+  
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><a href="#Token"><span class="nx">Token</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Format</span><span class="p">(</span><span class="nx">source</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h5 id="Token.String">func (Token) String</h5>
+  
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><a href="#Token"><span class="nx">Token</span></a><span class="p">)</span><span class="w"> </span><span class="nf">String</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  </main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../../_/js/permalink.js"></script></body>
+</html>
