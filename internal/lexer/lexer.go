@@ -36,25 +36,88 @@ func (l *Lexer) Tokenize() []token.Token {
 	return tokens
 }
 
-func (l *Lexer) nextToken() token.Token {
-	l.skipWhitespace()
+func (l *Lexer) skipComment(start token.Position) bool {
+	switch l.peek() {
 
-	if l.eof() {
-		return l.eofToken()
+	// //
+	case '/':
+		l.advance()
+
+		for !l.eof() {
+			switch l.peek() {
+			case '\n', '\r':
+				return true
+			default:
+				l.advance()
+			}
+		}
+
+		return true
+
+	// /*
+	case '*':
+		l.advance()
+
+		depth := 1
+
+		for !l.eof() {
+			ch, _ := l.advance()
+
+			switch ch {
+			case '/':
+				if l.match('*') {
+					depth++
+				}
+
+			case '*':
+				if l.match('/') {
+					depth--
+
+					if depth == 0 {
+						return true
+					}
+				}
+			}
+		}
+
+		l.diag.ReportError(
+			start,
+			l.offset-start.Offset,
+			"unterminated block comment",
+		)
+
+		return true
 	}
 
-	start := l.position()
-	ch, size := l.advance()
+	return false
+}
 
-	switch {
-	case isIdentifierStart(ch):
-		return l.lexIdentifier(start)
+func (l *Lexer) nextToken() token.Token {
+	for {
+		l.skipWhitespace()
 
-	case isDigit(ch):
-		return l.lexInteger(start)
+		if l.eof() {
+			return l.eofToken()
+		}
 
-	default:
-		return l.lexSymbol(ch, size, start)
+		start := l.position()
+		ch, size := l.advance()
+
+		// comments
+		if ch == '/' && l.skipComment(start) {
+			continue
+		}
+
+		switch {
+		case isIdentifierStart(ch):
+			return l.lexIdentifier(start)
+
+		case isDigit(ch):
+			return l.lexInteger(start)
+
+		default:
+			return l.lexSymbol(ch, size, start)
+		}
 	}
 }
 
