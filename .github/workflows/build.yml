@@ -1,0 +1,64 @@
+name: CI
+
+on:
+    push:
+        branches: [ main, dev ]
+    pull_request:
+        branches: [ main, dev ]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    build:
+        name: Go (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, macos-latest, windows-latest]
+
+        defaults:
+            run:
+                shell: bash
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                go-version: 'stable'
+                cache: true
+
+            - name: Verify formatting
+              if: runner.os != 'Windows'
+              run: |
+                test -z "$(gofmt -l .)"
+
+            - name: Run go vet
+              run: go vet ./...
+
+            - name: Run tests
+              run: go test ./...
+
+            - name: Build
+              run: go build -o azc ./cmd/compiler
+
+            - name: Verify version (Unix)
+              if: runner.os != 'Windows'
+              run: |
+                bash ./scripts/test/test.sh
+
+            - name: Verify version (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                .\scripts\test\test.ps1
+
+
