@@ -39,7 +39,7 @@ func (l *Lexer) Tokenize() []token.Token {
 }
 
 func (l *Lexer) nextToken() token.Token {
-	l.skipWhitespace()
+	l.skipTrivia()
 
 	if l.eof() {
 		return l.eofToken()
@@ -270,6 +270,14 @@ func (l *Lexer) peek() byte {
 	return l.file.Byte(l.offset)
 }
 
+func (l *Lexer) peekNext() byte {
+	if l.offset+1 >= uint32(l.file.Len()) {
+		return 0
+	}
+
+	return l.file.Byte(l.offset + 1)
+}
+
 func (l *Lexer) match(ch byte) bool {
 	if l.peek() != ch {
 		return false
@@ -290,11 +298,73 @@ func (l *Lexer) advance() byte {
 	return ch
 }
 
-func (l *Lexer) skipWhitespace() {
+func (l *Lexer) skipLineComment() {
+	l.advance() // /
+	l.advance() // /
+
+	for !l.eof() {
+		if l.peek() == '\n' {
+			return
+		}
+		l.advance()
+	}
+}
+
+func (l *Lexer) skipBlockComment() {
+	start := l.position()
+
+	l.advance() // /
+	l.advance() // *
+
+	depth := 1
+
+	for !l.eof() {
+		switch {
+		case l.peek() == '/' && l.peekNext() == '*':
+			l.advance()
+			l.advance()
+			depth++
+
+		case l.peek() == '*' && l.peekNext() == '/':
+			l.advance()
+			l.advance()
+			depth--
+
+			if depth == 0 {
+				return
+			}
+
+		default:
+			l.advance()
+		}
+	}
+
+	l.diag.ReportError(
+		start,
+		l.offset-start.Offset,
+		"unterminated block comment",
+	)
+}
+
+func (l *Lexer) skipTrivia() {
 	for !l.eof() {
 		switch l.peek() {
 		case ' ', '\t', '\r', '\n':
 			l.advance()
+
+		case '/':
+			if l.peekNext() == '/' {
+				l.skipLineComment()
+				continue
+			}
+
+			if l.peekNext() == '*' {
+				l.skipBlockComment()
+				continue
+			}
+
+			return
+
 		default:
 			return
 		}
