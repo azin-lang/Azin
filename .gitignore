@@ -208,6 +208,8 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/go,goland+all,visualstudiocode,linux,windows,macos
 
 azin_old/
+build/
+
 *.sum
 CONVERSATION.md
 test.txt
