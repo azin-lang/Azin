@@ -1,8 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Usage: ./build.sh
 
-AZC_SOURCE=./cmd/compiler
-BUILD_DIR=./build
+set -euo pipefail
+
+readonly BUILD_DIR="build"
+readonly OUTPUT="${BUILD_DIR}/azc"
+readonly SOURCE="./cmd/compiler"
 
 mkdir -p "$BUILD_DIR"
 
-go build -o "$BUILD_DIR/azc" "$AZC_SOURCE"
+echo "Building Azin compiler..."
+go build \
+    -trimpath \
+    -o "$OUTPUT" \
+    "$SOURCE"
+
+echo "Done: $OUTPUT"

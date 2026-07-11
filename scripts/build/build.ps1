@@ -1,6 +1,20 @@
-$AZC_SOURCE = ".\cmd\compiler"
-$BUILD_DIR = ".\build"
+# Usage: .\scripts\build\build.ps1
 
-New-Item -ItemType Directory -Path $BUILD_DIR -Force | Out-Null
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 
-go build -o "$BUILD_DIR\azc.exe" $AZC_SOURCE
+$BuildDir = "build"
+$Output = Join-Path $BuildDir "azc.exe"
+$Source = "./cmd/compiler"
+
+New-Item -ItemType Directory -Path $BuildDir -Force | Out-Null
+
+Write-Host "Building Azin compiler..."
+
+
+go build `
+    -trimpath `
+    -o "$Output" `
+    "$Source"
+
+Write-Host "Done: $Output"
