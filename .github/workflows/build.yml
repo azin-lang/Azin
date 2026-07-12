@@ -48,7 +48,7 @@ jobs:
               run: go test ./...
 
             - name: Build
-              run: go build -o azc ./cmd/compiler
+              run: go build -o azc ./cmd/azc
 
             - name: Verify version (Unix)
               if: runner.os != 'Windows'

@@ -1,4 +1,3 @@
-// Package main provides the command-line interface for the Azin compiler.
 package main
 
 import (
@@ -6,10 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/azin-lang/Azin/internal/ast"
 	"github.com/azin-lang/Azin/internal/compiler"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/fs"
 	"github.com/azin-lang/Azin/internal/lexer"
+	"github.com/azin-lang/Azin/internal/parser"
 	"github.com/azin-lang/Azin/internal/source"
 	"github.com/azin-lang/Azin/internal/token"
 )
@@ -19,14 +20,16 @@ const Version = "0.2.3-dev"
 var (
 	debug           = flag.Bool("debug", false, "Enable debug output")
 	printTokens     = flag.Bool("tokens", false, "Print lexer tokens")
+	printAST        = flag.Bool("print-ast", false, "Print the parsed AST")
 	output          = flag.String("o", "", "Output file")
 	ignoreExtension = flag.Bool("ignore-extension", false, "Ignore source file extension")
 	version         = flag.Bool("version", false, "Print compiler version")
+	emitC           = flag.Bool("emit-c", false, "Generate C source instead of compiling")
 )
 
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] <file>\n\n", os.Args[0])
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] <file>\n\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 }
@@ -53,14 +56,30 @@ func main() {
 	file := source.New(filename, data)
 
 	diag := diagnostics.New(file)
-	tokens := lexer.New(file, diag).Tokenize()
-	if *printTokens {
-		for _, tok := range tokens {
-			fmt.Println(formatToken(file, tok))
-		}
+
+	l := lexer.New(file, diag)
+
+	if err := diag.Err(); err != nil {
+		fatal(err)
 	}
 
-	if err := compiler.Compile(file); err != nil {
+	if *printTokens {
+		for tok := range l.Tokens() {
+			fmt.Println(formatToken(file, tok))
+		}
+		return
+	}
+
+	if *printAST {
+		p := parser.New(string(file.Slice(0, file.Len())), l.Tokenize())
+		program := p.ParseProgram()
+
+		ast.Print(program, false, ".")
+		return
+	}
+
+	err := compiler.Compile(file, *output, *emitC)
+	if err != nil {
 		fatal(err)
 	}
 
@@ -77,18 +96,19 @@ func printDebug() {
 	fmt.Printf("Debug: %t\n", *debug)
 	fmt.Printf("Print tokens: %t\n", *printTokens)
 	fmt.Printf("Output: %q\n", *output)
+	fmt.Printf("Emit C: %t\n", *emitC)
 }
 
 func mustReadSource(filename string) []byte {
-	source, err := fs.ReadSourceFile(filename, *ignoreExtension)
+	data, err := fs.ReadSourceFile(filename, *ignoreExtension)
 	if err != nil {
 		fatal(err)
 	}
-	return source
+	return data
 }
 
 func fatal(err error) {
-	fmt.Fprintln(os.Stderr, err)
+	_, _ = fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)
 }
 

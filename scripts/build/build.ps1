@@ -5,7 +5,7 @@ Set-StrictMode -Version Latest
 
 $BuildDir = "build"
 $Output = Join-Path $BuildDir "azc.exe"
-$Source = "./cmd/compiler"
+$Source = "./cmd/azc"
 
 New-Item -ItemType Directory -Path $BuildDir -Force | Out-Null
 

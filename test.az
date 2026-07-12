@@ -1,0 +1,17 @@
+importc "stdio.h"
+importc "stdlib.h"
+importc "math.h"
+
+struct Point is
+    x: int;
+    y: int;
+end
+
+fn distance(a: Point, b: Point): int do
+    return abs(a.x - b.x) + abs(a.y - b.y);
+end
+
+fn main: int do
+    printf("hello world\n");
+    return 0;
+end
