@@ -57,9 +57,13 @@ func (p *Parser) parseVar() ast.Stmt {
 		typ = p.parseType()
 	}
 
-	p.expect(token.Equal, "expected '=' after variable declaration")
+	var value ast.Expr
 
-	value := p.parseExpression(0)
+	if p.match(token.Equal) {
+		value = p.parseExpression(0)
+	} else if typ == nil {
+		panic("expected '=' or explicit type in variable declaration")
+	}
 
 	p.statementEnd()
 
@@ -169,19 +173,38 @@ func (p *Parser) parseStruct() ast.Stmt {
 	name := p.parseIdentifier()
 
 	p.expect(token.KwIs, "expected 'is'")
+	p.skipNewlines()
 
 	fields := []*ast.FieldDecl{}
-	for !p.isAtEnd() && !p.check(token.KwEnd) {
+
+	for !p.isAtEnd() {
+		p.skipNewlines()
+
+		if p.check(token.KwEnd) {
+			break
+		}
+
 		fName := p.parseIdentifier()
-		p.match(token.Colon)
+
+		p.expect(token.Colon, "expected ':' after field name")
 
 		tName := p.parseType()
+
 		p.statementEnd()
 
-		fields = append(fields, &ast.FieldDecl{Name: fName, Type: tName})
+		fields = append(fields, &ast.FieldDecl{
+			Name: fName,
+			Type: tName,
+		})
 	}
+
 	p.expect(token.KwEnd, "expected 'end'")
-	return &ast.StructStmt{Token: tok, Name: name, Fields: fields}
+
+	return &ast.StructStmt{
+		Token:  tok,
+		Name:   name,
+		Fields: fields,
+	}
 }
 
 func (p *Parser) parseType() *ast.Identifier {
@@ -420,13 +443,16 @@ func (p *Parser) parseExpression(precedence int) ast.Expr {
 }
 
 func (p *Parser) parseIdentifier() *ast.Identifier {
-	tok := p.advance()
+	tok := p.expect(token.Identifier, "expected identifier")
 
 	start := tok.Position.Offset
 	end := start + tok.Length
 	realValue := p.source[start:end]
 
-	return &ast.Identifier{Token: tok, Value: realValue}
+	return &ast.Identifier{
+		Token: tok,
+		Value: realValue,
+	}
 }
 
 func (p *Parser) parseIntegerLiteral() *ast.IntegerLiteral {
