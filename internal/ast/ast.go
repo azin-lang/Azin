@@ -135,8 +135,9 @@ func (*ExpressionStmt) stmtNode() {}
 // FieldDecl represents either a parameter declaration
 // or a struct field declaration.
 type FieldDecl struct {
-	Name *Identifier
-	Type *Identifier
+	Name    *Identifier
+	Type    *Identifier
+	Mutable bool
 }
 
 func (f *FieldDecl) TokenLiteral() string {

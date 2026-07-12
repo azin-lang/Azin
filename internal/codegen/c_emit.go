@@ -51,6 +51,8 @@ func emitType(name string) string {
 		return "const char *"
 
 	default:
-		panic("unknown type: " + name)
+		// assume it's a user defined type
+		// TODO: check if it is, instead of assuming and letting C handle it
+		return name
 	}
 }

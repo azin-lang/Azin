@@ -18,6 +18,7 @@ func (t *Transpiler) compileStruct(s *ast.StructStmt) {
 
 	t.popIndent()
 	t.printf("} %s;\n", s.Name.Value)
+	t.newline()
 }
 
 func (t *Transpiler) compileStatement(stmt ast.Stmt) {
