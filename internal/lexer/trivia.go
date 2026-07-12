@@ -7,7 +7,7 @@ import "github.com/azin-lang/Azin/internal/token"
 func (l *Lexer) skipTrivia() {
 	for {
 		l.consumeWhile(func(r rune) bool {
-			return r == ' ' || r == '\t' || r == '\n' || r == '\r'
+			return r == ' ' || r == '\t'
 		})
 
 		if l.peek() == '/' {

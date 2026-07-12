@@ -56,7 +56,7 @@ func (p *Parser) parseVar() ast.Stmt {
 
 	value := p.parseExpression(0)
 
-	p.match(token.Semicolon)
+	p.statementEnd()
 
 	return &ast.VarStmt{
 		Token: tok,
@@ -67,24 +67,43 @@ func (p *Parser) parseVar() ast.Stmt {
 }
 
 func (p *Parser) parseImportC() ast.Stmt {
-	tok := p.advance() // consume 'import'
+	tok := p.advance()
 
-	p.match(token.LeftParen)
-
-	// Parse the path string literal
-	strTok := p.advance()
-	pathExpr := &ast.StringLiteral{
-		Token: strTok,
-		Value: p.source[strTok.Position.Offset : strTok.Position.Offset+strTok.Length], // Slices the path clean
+	if !p.check(token.StringLiteral) {
+		panic("expected C header after 'importC'")
 	}
 
-	p.match(token.RightParen)
-	p.match(token.Semicolon) // Match optional or explicit trailing semicolon if required
+	path := p.parseStringLiteral()
 
-	return &ast.ImportCStmt{Token: tok, Path: pathExpr}
+	p.statementEnd()
+
+	return &ast.ImportCStmt{
+		Token: tok,
+		Path:  path,
+	}
+}
+
+func (p *Parser) statementEnd() {
+	if p.match(token.Semicolon) {
+		return
+	}
+
+	if p.match(token.Newline) {
+		p.skipNewlines()
+		return
+	}
+
+	if p.check(token.EOF) ||
+		p.check(token.KwEnd) ||
+		p.check(token.KwElse) {
+		return
+	}
+
+	panic("expected end of statement")
 }
 
 func (p *Parser) parseStatement() ast.Stmt {
+	p.skipNewlines()
 	switch {
 	case p.check(token.KwVar):
 		return p.parseVar()
@@ -109,7 +128,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 			return nil
 		}
 
-		p.match(token.Semicolon)
+		p.statementEnd()
 
 		return &ast.ExpressionStmt{
 			Token:      p.previous(),
@@ -122,7 +141,7 @@ func (p *Parser) parseStruct() ast.Stmt {
 	tok := p.advance()
 	name := p.parseIdentifier()
 
-	p.match(token.KwIs)
+	p.expect(token.KwIs, "expected 'is'")
 
 	fields := []*ast.FieldDecl{}
 	for !p.isAtEnd() && !p.check(token.KwEnd) {
@@ -130,11 +149,11 @@ func (p *Parser) parseStruct() ast.Stmt {
 		p.match(token.Colon)
 
 		tName := p.parseType()
-		p.match(token.Semicolon)
+		p.statementEnd()
 
 		fields = append(fields, &ast.FieldDecl{Name: fName, Type: tName})
 	}
-	p.match(token.KwEnd)
+	p.expect(token.KwEnd, "expected 'end'")
 	return &ast.StructStmt{Token: tok, Name: name, Fields: fields}
 }
 
@@ -184,11 +203,11 @@ func (p *Parser) parseFunc() ast.Stmt {
 			})
 
 			if !p.check(token.RightParen) {
-				p.match(token.Comma)
+				p.expect(token.Comma, "expected ','")
 			}
 		}
 
-		p.match(token.RightParen)
+		p.expect(token.RightParen, "expected ')'")
 	}
 	var retType *ast.Identifier
 
@@ -197,6 +216,8 @@ func (p *Parser) parseFunc() ast.Stmt {
 	}
 
 	p.expect(token.KwDo, "expected 'do' after function declaration")
+
+	p.skipNewlines()
 
 	body := []ast.Stmt{}
 	for !p.isAtEnd() && !p.check(token.KwEnd) {
@@ -207,7 +228,7 @@ func (p *Parser) parseFunc() ast.Stmt {
 			p.advance()
 		}
 	}
-	p.match(token.KwEnd)
+	p.expect(token.KwEnd, "expected 'end'")
 
 	return &ast.FuncStmt{Token: tok, Name: name, Params: params, ReturnType: retType, Body: body}
 }
@@ -216,15 +237,25 @@ func (p *Parser) parseReturn() ast.Stmt {
 	tok := p.advance()
 
 	var value ast.Expr
-	if !p.check(token.Semicolon) {
+	if !p.checkAny(
+		token.Semicolon,
+		token.Newline,
+		token.KwEnd,
+		token.EOF,
+	) {
 		value = p.parseExpression(0)
 	}
 
-	p.match(token.Semicolon)
+	p.statementEnd()
 
 	return &ast.ReturnStmt{
 		Token: tok,
 		Value: value,
+	}
+}
+
+func (p *Parser) skipNewlines() {
+	for p.match(token.Newline) {
 	}
 }
 
@@ -233,7 +264,9 @@ func (p *Parser) parseIf() ast.Stmt {
 
 	condition := p.parseExpression(0)
 
-	p.match(token.KwThen)
+	p.expect(token.KwThen, "expected 'then'")
+
+	p.skipNewlines()
 
 	var thenBody []ast.Stmt
 
@@ -248,6 +281,8 @@ func (p *Parser) parseIf() ast.Stmt {
 	var elseBody []ast.Stmt
 
 	if p.match(token.KwElse) {
+		p.skipNewlines()
+
 		for !p.isAtEnd() && !p.check(token.KwEnd) {
 			if stmt := p.parseStatement(); stmt != nil {
 				elseBody = append(elseBody, stmt)
@@ -257,7 +292,11 @@ func (p *Parser) parseIf() ast.Stmt {
 		}
 	}
 
-	p.match(token.KwEnd)
+	p.skipNewlines()
+
+	p.expect(token.KwEnd, "expected 'end'")
+
+	p.skipNewlines()
 
 	return &ast.IfStmt{
 		Token:     tok,
@@ -291,10 +330,21 @@ func (p *Parser) parseExpression(precedence int) ast.Expr {
 	}
 
 	for !p.isAtEnd() {
+
+		if p.checkAny(
+			token.Newline,
+			token.Semicolon,
+			token.KwEnd,
+			token.KwElse,
+			token.KwThen,
+			token.EOF,
+		) {
+			break
+		}
+
 		nextPrec := getPrecedence(p.peek().Kind)
 
-		// If the next token isn't an operator, or its precedence is lower/equal, stop.
-		if precedence >= nextPrec || nextPrec == 0 {
+		if nextPrec == 0 || precedence >= nextPrec {
 			break
 		}
 
@@ -305,7 +355,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expr {
 			for !p.check(token.RightParen) {
 				args = append(args, p.parseExpression(0))
 				if !p.check(token.RightParen) {
-					p.match(token.Comma)
+					p.expect(token.Comma, "expected ','")
 				}
 			}
 			p.advance()
@@ -469,13 +519,27 @@ func (p *Parser) match(kinds ...token.Kind) bool {
 func getPrecedence(kind token.Kind) int {
 	switch kind {
 	case token.LeftParen:
-		return 4
+		return 6
+
 	case token.Dot:
-		return 3
+		return 5
+
+	case token.Star, token.Slash:
+		return 4
+
 	case token.Plus, token.Minus:
+		return 3
+
+	case token.Less,
+		token.LessEqual,
+		token.Greater,
+		token.GreaterEqual:
 		return 2
-	case token.Greater, token.GreaterEqual, token.Less, token.LessEqual:
+
+	case token.EqualEqual,
+		token.BangEqual:
 		return 1
+
 	default:
 		return 0
 	}

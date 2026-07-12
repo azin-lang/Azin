@@ -14,6 +14,15 @@ func (l *Lexer) nextToken() token.Token {
 	ch, size := l.advance()
 
 	switch {
+	case ch == '\n':
+		return l.emit(token.Newline, start)
+
+	case ch == '\r':
+		if l.peek() == '\n' {
+			l.advance() // consume the LF of CRLF
+		}
+		return l.emit(token.Newline, start)
+
 	case ch == '"':
 		return l.lexString(start)
 

@@ -75,6 +75,7 @@ const (
 	Dot          // dot
 	LeftBracket  // left_bracket
 	RightBracket // right_bracket
+	Newline      // newline
 
 	EOF // eof
 
