@@ -57,7 +57,7 @@ func (t *Transpiler) compileStatement(stmt ast.Stmt) {
 		t.writeIndent()
 
 		if n.Type == nil {
-			panic("internal compiler error: variable has no resolved type")
+			panic("internal compiler error: variable '" + n.Name.Value + "' has no resolved type")
 		}
 
 		t.printf("%s %s", emitType(n.Type.Value), n.Name.Value)

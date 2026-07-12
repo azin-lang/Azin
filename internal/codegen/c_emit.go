@@ -37,15 +37,20 @@ func emitType(name string) string {
 	switch name {
 	case "unit":
 		return "void"
+
 	case "int":
 		return "int"
+
 	case "float":
 		return "float"
+
 	case "char":
 		return "char"
+
 	case "string":
-		return "char*"
+		return "const char *"
+
 	default:
-		return name
+		panic("unknown type: " + name)
 	}
 }
