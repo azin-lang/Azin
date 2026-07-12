@@ -79,18 +79,24 @@ func (t *Transpiler) compileStruct(s *ast.StructStmt) {
 }
 
 func (t *Transpiler) compileStatement(stmt ast.Stmt) {
-	switch s := stmt.(type) {
+	switch n := stmt.(type) {
+
+	case *ast.StructStmt:
+		// already emitted
+
+	case *ast.IfStmt:
+		t.compileIf(n)
+
 	case *ast.FuncStmt:
-		t.compileFunc(s)
-		t.newline()
+		t.compileFunc(n)
 
 	case *ast.ReturnStmt:
 		t.writeIndent()
 		t.write("return")
 
-		if s.Value != nil {
+		if n.Value != nil {
 			t.write(" ")
-			t.compileExpression(s.Value)
+			t.compileExpression(n.Value)
 		}
 
 		t.write(";")
@@ -98,7 +104,7 @@ func (t *Transpiler) compileStatement(stmt ast.Stmt) {
 
 	case *ast.ExpressionStmt:
 		t.writeIndent()
-		t.compileExpression(s.Expression)
+		t.compileExpression(n.Expression)
 		t.write(";")
 		t.newline()
 
@@ -118,7 +124,8 @@ func (t *Transpiler) compileFunc(fn *ast.FuncStmt) {
 		t.printf("%s %s", emitType(p.Type.Value), p.Name.Value)
 	}
 
-	t.write(") {\n")
+	t.write(")")
+	t.write(" {\n")
 
 	t.pushIndent()
 
@@ -171,6 +178,43 @@ func (t *Transpiler) compileExpression(expr ast.Expr) {
 	default:
 		panic(fmt.Sprintf("unsupported expression %T", expr))
 	}
+}
+
+func (t *Transpiler) compileIf(n *ast.IfStmt) {
+	t.writeIndent()
+	t.write("if (")
+
+	t.compileExpression(n.Condition)
+
+	t.write(") {\n")
+
+	t.pushIndent()
+
+	for _, stmt := range n.Then {
+		t.compileStatement(stmt)
+	}
+
+	t.popIndent()
+
+	t.writeIndent()
+	t.write("}")
+
+	if len(n.Else) > 0 {
+		t.write(" else {\n")
+
+		t.pushIndent()
+
+		for _, stmt := range n.Else {
+			t.compileStatement(stmt)
+		}
+
+		t.popIndent()
+
+		t.writeIndent()
+		t.write("}")
+	}
+
+	t.newline()
 }
 
 func emitOperator(kind token.Kind) string {
