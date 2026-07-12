@@ -2,91 +2,114 @@ package ast
 
 import "github.com/azin-lang/Azin/internal/token"
 
-// Node is the interface for all AST nodes.
+// Node is the interface implemented by every AST node.
 type Node interface {
 	TokenLiteral() string
 }
 
-// Expr is the interface for all expression nodes.
+// Expr represents an expression node.
 type Expr interface {
 	Node
 	exprNode()
 }
 
-// Stmt is the interface for all statement nodes.
+// Stmt represents a statement node.
 type Stmt interface {
 	Node
 	stmtNode()
 }
 
-// Program is the root node of the AST.
+// Program is the root of the AST.
 type Program struct {
 	Statements []Stmt
 }
 
-// TokenLiteral returns the token literal of the program.
 func (p *Program) TokenLiteral() string {
-	if len(p.Statements) > 0 {
-		return p.Statements[0].TokenLiteral()
+	if len(p.Statements) == 0 {
+		return ""
 	}
-	return ""
+	return p.Statements[0].TokenLiteral()
 }
 
-// StructStmt represents a struct statement node.
+//
+// Statements
+//
+
+// StructStmt represents a struct declaration.
 type StructStmt struct {
-	Token  token.Token // kw_struct
+	Token  token.Token // struct
 	Name   *Identifier
 	Fields []*FieldDecl
 }
 
-// TokenLiteral returns the token literal of the struct statement.
 func (s *StructStmt) TokenLiteral() string {
 	return s.Token.Kind.String()
 }
 
-func (s *StructStmt) stmtNode() {}
+func (*StructStmt) stmtNode() {}
 
-// FieldDecl represents a field declaration.
-type FieldDecl struct {
-	Name *Identifier
-	Type *Identifier
-}
-
-// TokenLiteral returns the token literal of the field declaration.
-func (f *FieldDecl) TokenLiteral() string {
-	return f.Name.TokenLiteral()
-}
-
-func (f *FieldDecl) exprNode() {}
-
-// FuncStmt represents a function statement node.
+// FuncStmt represents a function declaration.
 type FuncStmt struct {
-	Token      token.Token // kw_fn
+	Token      token.Token // fn
 	Name       *Identifier
 	Params     []*FieldDecl
 	ReturnType *Identifier
 	Body       []Stmt
 }
 
-// TokenLiteral returns the token kind of the function statement.
 func (f *FuncStmt) TokenLiteral() string {
 	return f.Token.Kind.String()
 }
 
-func (f *FuncStmt) stmtNode() {}
+func (*FuncStmt) stmtNode() {}
 
 // ReturnStmt represents a return statement.
 type ReturnStmt struct {
-	Token token.Token // kw_return
+	Token token.Token // return
 	Value Expr
 }
 
-// TokenLiteral returns the token kind of the return statement.
 func (r *ReturnStmt) TokenLiteral() string {
 	return r.Token.Kind.String()
 }
 
-func (r *ReturnStmt) stmtNode() {}
+func (*ReturnStmt) stmtNode() {}
+
+// ExpressionStmt represents an expression used as a statement.
+//
+// Example:
+//
+//	printf("hello");
+//	foo();
+type ExpressionStmt struct {
+	Token      token.Token
+	Expression Expr
+}
+
+func (e *ExpressionStmt) TokenLiteral() string {
+	return e.Token.Kind.String()
+}
+
+func (*ExpressionStmt) stmtNode() {}
+
+//
+// Declarations
+//
+
+// FieldDecl represents either a parameter declaration
+// or a struct field declaration.
+type FieldDecl struct {
+	Name *Identifier
+	Type *Identifier
+}
+
+func (f *FieldDecl) TokenLiteral() string {
+	return f.Name.TokenLiteral()
+}
+
+//
+// Expressions
+//
 
 // Identifier represents an identifier.
 type Identifier struct {
@@ -94,49 +117,73 @@ type Identifier struct {
 	Value string
 }
 
-// TokenLiteral returns the token literal of the identifier.
 func (i *Identifier) TokenLiteral() string {
 	return i.Token.Kind.String()
 }
 
-func (i *Identifier) exprNode() {}
+func (*Identifier) exprNode() {}
 
-// CallExpr represents a call expression.
+// IntegerLiteral represents an integer literal.
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (i *IntegerLiteral) TokenLiteral() string {
+	return i.Token.Kind.String()
+}
+
+func (*IntegerLiteral) exprNode() {}
+
+// StringLiteral represents a string literal.
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (s *StringLiteral) TokenLiteral() string {
+	return s.Token.Kind.String()
+}
+
+func (*StringLiteral) exprNode() {}
+
+// CallExpr represents a function call.
 type CallExpr struct {
 	Function *Identifier
 	Args     []Expr
 }
 
-// TokenLiteral returns the token literal of the call expression.
 func (c *CallExpr) TokenLiteral() string {
 	return c.Function.TokenLiteral()
 }
 
-func (c *CallExpr) exprNode() {}
+func (*CallExpr) exprNode() {}
 
-// BinaryExpr represents a binary expression.
+// BinaryExpr represents a binary operator expression.
 type BinaryExpr struct {
 	Left     Expr
 	Operator token.Token
 	Right    Expr
 }
 
-// TokenLiteral returns the token literal of the binary expression.
 func (b *BinaryExpr) TokenLiteral() string {
 	return b.Operator.Kind.String()
 }
 
-func (b *BinaryExpr) exprNode() {}
+func (*BinaryExpr) exprNode() {}
 
-// MemberExpr represents a member expression.
+// MemberExpr represents a member access expression.
+//
+// Example:
+//
+//	person.name
 type MemberExpr struct {
 	Object   Expr
 	Property *Identifier
 }
 
-// TokenLiteral returns the token literal of the member expression.
 func (m *MemberExpr) TokenLiteral() string {
 	return m.Property.TokenLiteral()
 }
 
-func (m *MemberExpr) exprNode() {}
+func (*MemberExpr) exprNode() {}
