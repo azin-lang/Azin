@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# BIN="go run ./cmd/compiler"
+# BIN="go run ./cmd/azc"
 
-go run ./cmd/compiler -version
+go run ./cmd/azc -version
