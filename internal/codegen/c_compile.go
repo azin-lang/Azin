@@ -75,6 +75,14 @@ func (t *Transpiler) compileStatement(stmt ast.Stmt) {
 		t.write(";")
 		t.newline()
 
+	case *ast.AssignmentStmt:
+		t.writeIndent()
+		t.compileExpression(n.Left)
+		t.write(" = ")
+		t.compileExpression(n.Value)
+		t.write(";")
+		t.newline()
+
 	default:
 		panic(fmt.Sprintf("unsupported statement %T", stmt))
 	}
