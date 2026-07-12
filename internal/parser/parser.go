@@ -45,6 +45,9 @@ func (p *Parser) parseStatement() ast.Stmt {
 	case p.check(token.KwReturn):
 		return p.parseReturn()
 
+	case p.check(token.KwIf):
+		return p.parseIf()
+
 	default:
 		expr := p.parseExpression(0)
 		if expr == nil {
@@ -143,6 +146,48 @@ func (p *Parser) parseReturn() ast.Stmt {
 	return &ast.ReturnStmt{Token: tok, Value: val}
 }
 
+func (p *Parser) parseIf() ast.Stmt {
+	tok := p.advance() // if
+
+	condition := p.parseExpression(0)
+
+	p.match(token.KwThen)
+
+	var thenBody []ast.Stmt
+
+	for !p.isAtEnd() &&
+		!p.check(token.KwElse) &&
+		!p.check(token.KwEnd) {
+
+		if stmt := p.parseStatement(); stmt != nil {
+			thenBody = append(thenBody, stmt)
+		} else {
+			p.advance()
+		}
+	}
+
+	var elseBody []ast.Stmt
+
+	if p.match(token.KwElse) {
+		for !p.isAtEnd() && !p.check(token.KwEnd) {
+			if stmt := p.parseStatement(); stmt != nil {
+				elseBody = append(elseBody, stmt)
+			} else {
+				p.advance()
+			}
+		}
+	}
+
+	p.match(token.KwEnd)
+
+	return &ast.IfStmt{
+		Token:     tok,
+		Condition: condition,
+		Then:      thenBody,
+		Else:      elseBody,
+	}
+}
+
 func (p *Parser) parseExpression(precedence int) ast.Expr {
 	var left ast.Expr
 
@@ -171,7 +216,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expr {
 				}
 			}
 			p.advance()
-			left = &ast.CallExpr{Function: left.(*ast.Identifier), Args: args}
+			left = &ast.CallExpr{Callee: left, Args: args}
 			continue
 		}
 
