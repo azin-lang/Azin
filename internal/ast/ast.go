@@ -75,6 +75,20 @@ func (r *ReturnStmt) TokenLiteral() string {
 
 func (*ReturnStmt) stmtNode() {}
 
+// IfStmt represents an if/else statement.
+type IfStmt struct {
+	Token     token.Token // if
+	Condition Expr
+	Then      []Stmt
+	Else      []Stmt
+}
+
+func (i *IfStmt) TokenLiteral() string {
+	return i.Token.Kind.String()
+}
+
+func (*IfStmt) stmtNode() {}
+
 // ExpressionStmt represents an expression used as a statement.
 //
 // Example:
