@@ -149,6 +149,18 @@ func (i *IntegerLiteral) TokenLiteral() string {
 
 func (*IntegerLiteral) exprNode() {}
 
+// FloatLiteral represents a floating point literal.
+type FloatLiteral struct {
+	Token token.Token
+	Value float64
+}
+
+func (i *FloatLiteral) TokenLiteral() string {
+	return i.Token.Kind.String()
+}
+
+func (*FloatLiteral) exprNode() {}
+
 // StringLiteral represents a string literal.
 type StringLiteral struct {
 	Token token.Token

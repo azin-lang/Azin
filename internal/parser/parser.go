@@ -198,6 +198,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expr {
 	case p.check(token.IntegerLiteral):
 		left = p.parseIntegerLiteral()
 
+	case p.check(token.FloatLiteral):
+		left = p.parseFloatLiteral()
+
 	case p.check(token.StringLiteral):
 		left = p.parseStringLiteral()
 
@@ -267,6 +270,22 @@ func (p *Parser) parseIntegerLiteral() *ast.IntegerLiteral {
 	}
 
 	return &ast.IntegerLiteral{
+		Token: tok,
+		Value: value,
+	}
+}
+
+func (p *Parser) parseFloatLiteral() *ast.FloatLiteral {
+	tok := p.advance()
+
+	start := tok.Position.Offset
+	end := start + tok.Length
+
+	text := p.source[start:end]
+
+	value, _ := strconv.ParseFloat(text, 64)
+
+	return &ast.FloatLiteral{
 		Token: tok,
 		Value: value,
 	}
