@@ -5,7 +5,7 @@ set -euo pipefail
 
 readonly BUILD_DIR="build"
 readonly OUTPUT="${BUILD_DIR}/azc"
-readonly SOURCE="./cmd/compiler"
+readonly SOURCE="./cmd/azc"
 
 mkdir -p "$BUILD_DIR"
 
