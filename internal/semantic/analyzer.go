@@ -19,6 +19,9 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 	case *ast.FloatLiteral:
 		return &ast.Identifier{Value: "float"}
 
+	case *ast.CharacterLiteral:
+		return &ast.Identifier{Value: "char"}
+
 	case *ast.StringLiteral:
 		return &ast.Identifier{Value: "string"}
 

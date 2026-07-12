@@ -283,6 +283,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expr {
 	case p.check(token.StringLiteral):
 		left = p.parseStringLiteral()
 
+	case p.check(token.CharacterLiteral):
+		left = p.parseCharacterLiteral()
+
 	default:
 		return nil
 	}
@@ -387,6 +390,25 @@ func (p *Parser) parseStringLiteral() *ast.StringLiteral {
 	}
 
 	return &ast.StringLiteral{
+		Token: tok,
+		Value: value,
+	}
+}
+
+func (p *Parser) parseCharacterLiteral() *ast.CharacterLiteral {
+	tok := p.advance()
+
+	start := tok.Position.Offset
+	end := start + tok.Length
+
+	raw := p.source[start:end]
+
+	value, _, _, err := strconv.UnquoteChar(raw[1:len(raw)-1], '\'')
+	if err != nil {
+		panic(err)
+	}
+
+	return &ast.CharacterLiteral{
 		Token: tok,
 		Value: value,
 	}

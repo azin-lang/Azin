@@ -14,6 +14,12 @@ func (l *Lexer) nextToken() token.Token {
 	ch, size := l.advance()
 
 	switch {
+	case ch == '"':
+		return l.lexString(start)
+
+	case ch == '\'':
+		return l.lexCharacter(start)
+
 	case isIdentifierStart(ch):
 		return l.lexIdentifier(start)
 

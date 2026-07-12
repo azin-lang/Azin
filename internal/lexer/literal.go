@@ -29,9 +29,74 @@ func (l *Lexer) lexNumber(start token.Position) token.Token {
 	return l.emit(token.IntegerLiteral, start)
 }
 
+func (l *Lexer) lexCharacter(start token.Position) token.Token {
+	if l.eof() {
+		l.diag.ReportError(start, 1, "unterminated character literal")
+		return l.emit(token.CharacterLiteral, start)
+	}
+
+	ch, _ := l.advance()
+
+	// Reject ''
+	if ch == '\'' {
+		l.diag.ReportError(start, 2, "empty character literal")
+		return l.emit(token.CharacterLiteral, start)
+	}
+
+	if ch == '\\' {
+		if l.eof() {
+			l.diag.ReportError(start, 1, "unterminated escape sequence")
+			return l.emit(token.CharacterLiteral, start)
+		}
+
+		escape, _ := l.advance()
+
+		switch escape {
+		case '\'', '"', '\\', 'a', 'b', 'f', 'n', 'r', 't', 'v', '0':
+			// valid escape
+		default:
+			l.diag.ReportError(
+				token.Position{Offset: l.cursor - 1},
+				1,
+				"invalid escape sequence \\%c",
+				escape,
+			)
+		}
+	}
+
+	if l.eof() {
+		l.diag.ReportError(start, l.cursor-start.Offset, "unterminated character literal")
+		return l.emit(token.CharacterLiteral, start)
+	}
+
+	if l.peek() != '\'' {
+		l.diag.ReportError(
+			token.Position{Offset: l.cursor},
+			1,
+			"character literal may contain exactly one character",
+		)
+
+		// Recover by skipping to the closing quote or newline.
+		for !l.eof() && l.peek() != '\'' && l.peek() != '\n' && l.peek() != '\r' {
+			l.advance()
+		}
+	}
+
+	if l.peek() == '\'' {
+		l.advance()
+	}
+
+	return l.emit(token.CharacterLiteral, start)
+}
+
 func (l *Lexer) lexString(start token.Position) token.Token {
 	for !l.eof() {
 		ch, _ := l.advance()
+
+		if ch == '\n' || ch == '\r' {
+			l.diag.ReportError(start, l.cursor-start.Offset, "unterminated character literal")
+			return l.emit(token.CharacterLiteral, start)
+		}
 
 		switch ch {
 		case '"':

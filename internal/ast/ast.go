@@ -182,6 +182,18 @@ func (s *StringLiteral) TokenLiteral() string {
 
 func (*StringLiteral) exprNode() {}
 
+// CharacterLiteral represents a character literal.
+type CharacterLiteral struct {
+	Token token.Token
+	Value rune
+}
+
+func (c *CharacterLiteral) TokenLiteral() string {
+	return c.Token.Kind.String()
+}
+
+func (*CharacterLiteral) exprNode() {}
+
 // CallExpr represents a function call.
 type CallExpr struct {
 	Callee Expr

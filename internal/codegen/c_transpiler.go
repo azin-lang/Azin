@@ -194,6 +194,9 @@ func (t *Transpiler) compileExpression(expr ast.Expr) {
 	case *ast.StringLiteral:
 		t.printf("%q", n.Value)
 
+	case *ast.CharacterLiteral:
+		t.printf("%q", n.Value)
+
 	case *ast.MemberExpr:
 		t.compileExpression(n.Object)
 		t.write(".")
