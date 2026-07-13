@@ -20,8 +20,7 @@ type Parser struct {
 
 func Parse(source string, tokens []token.Token, diag *diagnostics.Engine) (*ast.Program, error) {
 	p := New(source, tokens, diag)
-	program := p.ParseProgram()
-	return program, p.Err()
+	return p.ParseProgram(), p.diag.Err()
 }
 
 func New(source string, tokens []token.Token, diag *diagnostics.Engine) *Parser {
