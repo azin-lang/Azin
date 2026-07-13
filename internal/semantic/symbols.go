@@ -8,6 +8,7 @@ const (
 	SymbolVariable SymbolKind = iota
 	SymbolFunction
 	SymbolStruct
+	SymbolEnum
 )
 
 type Symbol struct {
@@ -18,6 +19,7 @@ type Symbol struct {
 
 	Function *ast.FuncStmt
 	Struct   *ast.StructStmt
+	Enum     *ast.EnumStmt
 
 	Inferring bool
 }

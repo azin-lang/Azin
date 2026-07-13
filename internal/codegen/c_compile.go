@@ -21,10 +21,34 @@ func (t *Transpiler) compileStruct(s *ast.StructStmt) {
 	t.newline()
 }
 
+func (t *Transpiler) compileEnum(e *ast.EnumStmt) {
+	t.enums[e.Name.Value] = true
+
+	t.write("typedef enum {\n")
+	t.pushIndent()
+
+	// C enums are unscoped, so variants are prefixed with the enum name
+	for i, v := range e.Variants {
+		t.writeIndent()
+		t.printf("%s_%s", e.Name.Value, v.Value)
+		if i < len(e.Variants)-1 {
+			t.write(",")
+		}
+		t.newline()
+	}
+
+	t.popIndent()
+	t.printf("} %s;\n", e.Name.Value)
+	t.newline()
+}
+
 func (t *Transpiler) compileStatement(stmt ast.Stmt) {
 	switch n := stmt.(type) {
 
 	case *ast.StructStmt:
+		// already emitted
+
+	case *ast.EnumStmt:
 		// already emitted
 
 	case *ast.ImportCStmt:
@@ -140,6 +164,13 @@ func (t *Transpiler) compileExpression(expr ast.Expr) {
 		t.printf("%q", n.Value)
 
 	case *ast.MemberExpr:
+		// FIXME: name match only, this will break if a local variable shadows an enum name. I will fix it later as it is 6:23 AM while I add this crap (or maybe someone else can do it)
+		// - Bryson
+		if id, ok := n.Object.(*ast.Identifier); ok && t.enums[id.Value] {
+			t.printf("%s_%s", id.Value, n.Property.Value)
+			return
+		}
+
 		t.compileExpression(n.Object)
 		t.write(".")
 		t.write(n.Property.Value)

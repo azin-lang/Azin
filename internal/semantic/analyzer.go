@@ -4,16 +4,18 @@ import (
 	"strconv"
 
 	"github.com/azin-lang/Azin/internal/ast"
+	"github.com/azin-lang/Azin/internal/diagnostics"
 )
 
 type Analyzer struct {
 	scopes []*Scope
+	diag   *diagnostics.Engine
 
 	currentFunction *ast.FuncStmt
 }
 
-func New() *Analyzer {
-	return &Analyzer{}
+func New(diag *diagnostics.Engine) *Analyzer {
+	return &Analyzer{diag: diag}
 }
 
 func (a *Analyzer) Analyze(program *ast.Program) error {
@@ -38,6 +40,13 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 				Kind:   SymbolStruct,
 				Struct: n,
 			})
+
+		case *ast.EnumStmt:
+			a.declare(&Symbol{
+				Name: n.Name.Value,
+				Kind: SymbolEnum,
+				Enum: n,
+			})
 		}
 	}
 
@@ -55,7 +64,7 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 		}
 	}
 
-	return nil
+	return a.diag.Err()
 }
 
 func (a *Analyzer) lookupStruct(name string) *ast.StructStmt {
@@ -390,6 +399,25 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 		return left
 
 	case *ast.MemberExpr:
+		// Enum.Variant, the object is a type name used as a namespace, so it must be resolved before type inference
+		if id, ok := n.Object.(*ast.Identifier); ok {
+			if sym := a.lookup(id.Value); sym != nil && sym.Kind == SymbolEnum {
+				for _, v := range sym.Enum.Variants {
+					if v.Value == n.Property.Value {
+						return &ast.Identifier{Value: sym.Enum.Name.Value}
+					}
+				}
+				a.diag.ReportError(
+					n.Property.Token.Position,
+					n.Property.Token.Length,
+					"enum '%s' has no variant '%s'",
+					sym.Enum.Name.Value,
+					n.Property.Value,
+				)
+				return nil
+			}
+		}
+
 		objectType := a.inferExprType(n.Object)
 		if objectType == nil {
 			return nil

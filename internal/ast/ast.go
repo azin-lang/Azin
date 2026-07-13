@@ -61,6 +61,19 @@ func (s *StructStmt) TokenLiteral() string {
 
 func (*StructStmt) stmtNode() {}
 
+// EnumStmt represents a scoped enum declaration
+type EnumStmt struct {
+	Token    token.Token // enum
+	Name     *Identifier
+	Variants []*Identifier
+}
+
+func (e *EnumStmt) TokenLiteral() string {
+	return e.Token.Kind.String()
+}
+
+func (*EnumStmt) stmtNode() {}
+
 // FuncStmt represents a function declaration.
 type FuncStmt struct {
 	Token      token.Token // fn

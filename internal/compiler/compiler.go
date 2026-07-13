@@ -132,12 +132,14 @@ func writeCOutput(code, output string) error {
 
 // Compile compiles the given source file to a C executable.
 func Compile(file *source.File, outputPath string, emitC bool) error {
-	program, err := parseSource(file)
+	diag := diagnostics.New(file)
+
+	program, err := parseSource(file, diag)
 	if err != nil {
 		return err
 	}
 
-	analyzer := semantic.New()
+	analyzer := semantic.New(diag)
 
 	if err := analyzer.Analyze(program); err != nil {
 		return err
@@ -165,9 +167,7 @@ func Compile(file *source.File, outputPath string, emitC bool) error {
 	return runCompiler(tmpPath, exeName)
 }
 
-func parseSource(file *source.File) (*ast.Program, error) {
-	diag := diagnostics.New(file)
-
+func parseSource(file *source.File, diag *diagnostics.Engine) (*ast.Program, error) {
 	tokens := lexer.New(file, diag).Tokenize()
 	if err := diag.Err(); err != nil {
 		return nil, err

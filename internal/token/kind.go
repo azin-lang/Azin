@@ -32,6 +32,7 @@ const (
 	KwStruct  // kw_struct
 	KwIs      // kw_is
 	KwImportC // kw_import
+	KwEnum    // kw_enum
 
 	Plus           // plus
 	Minus          // minus
@@ -120,6 +121,8 @@ func (k Kind) DisplayName() string {
 		return "'is'"
 	case KwImportC:
 		return "'importC'"
+	case KwEnum:
+		return "'enum'"
 
 	case Identifier:
 		return "identifier"

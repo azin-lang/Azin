@@ -38,6 +38,7 @@ func (p *Parser) synchronize() {
 		switch p.peek().Kind {
 		case token.KwFn,
 			token.KwStruct,
+			token.KwEnum,
 			token.KwVar,
 			token.KwIf,
 			token.KwReturn,
@@ -213,6 +214,9 @@ func (p *Parser) parseStatement() ast.Stmt {
 	case p.check(token.KwStruct):
 		return p.parseStruct()
 
+	case p.check(token.KwEnum):
+		return p.parseEnum()
+
 	case p.check(token.KwFn):
 		return p.parseFunc()
 
@@ -325,6 +329,50 @@ func (p *Parser) parseStruct() ast.Stmt {
 		Token:  tok,
 		Name:   name,
 		Fields: fields,
+	}
+}
+
+func (p *Parser) parseEnum() ast.Stmt {
+	tok := p.advance()
+	name := p.parseIdentifier()
+	if name == nil {
+		return nil
+	}
+
+	if _, ok := p.expect(token.KwIs, "after enum name"); !ok {
+		return nil
+	}
+	p.skipNewlines()
+
+	variants := []*ast.Identifier{}
+
+	for !p.isAtEnd() {
+		p.skipNewlines()
+
+		if p.check(token.KwEnd) {
+			break
+		}
+
+		v := p.parseIdentifier()
+		if v == nil {
+			return nil
+		}
+
+		if !p.statementEnd() {
+			return nil
+		}
+
+		variants = append(variants, v)
+	}
+
+	if _, ok := p.expect(token.KwEnd, "to close enum"); !ok {
+		return nil
+	}
+
+	return &ast.EnumStmt{
+		Token:    tok,
+		Name:     name,
+		Variants: variants,
 	}
 }
 

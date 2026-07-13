@@ -19,4 +19,5 @@ var Keywords = map[string]Kind{
 	"struct":  KwStruct,
 	"is":      KwIs,
 	"importc": KwImportC,
+	"enum":    KwEnum,
 }
