@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/azin-lang/Azin/internal/token"
+	"github.com/fatih/color"
 )
 
 // DiagnosticKind is the severity level of a diagnostic.
@@ -28,13 +29,13 @@ type Diagnostic struct {
 func (k DiagnosticKind) String() string {
 	switch k {
 	case Error:
-		return "error"
+		return color.New(color.FgRed, color.Bold).Sprint("error")
 	case Warning:
-		return "warning"
+		return color.New(color.FgHiBlue, color.Bold).Sprint("warning")
 	case Note:
-		return "note"
+		return color.New(color.FgGreen, color.Bold).Sprint("note")
 	default:
-		return "unknown"
+		return color.New(color.FgRed, color.Bold).Sprint("unknown")
 	}
 }
 
