@@ -1,21 +1,35 @@
 package semantic
 
 import (
-	"strconv"
-
 	"github.com/azin-lang/Azin/internal/ast"
+	"github.com/azin-lang/Azin/internal/diagnostics"
+	"github.com/azin-lang/Azin/internal/token"
 )
 
+/*
+- The Analyzer struct is responsible for performing semantic analysis on the AST of a program.
+- It maintains a stack of scopes, keeps track of the current function being analyzed,
+- and uses a diagnostics engine to report errors and warnings.
+*/
 type Analyzer struct {
 	scopes []*Scope
 
 	currentFunction *ast.FuncStmt
+	diag            *diagnostics.Engine
 }
 
-func New() *Analyzer {
-	return &Analyzer{}
+// New creates a new Analyzer instance with the provided diagnostics engine.
+func New(diag *diagnostics.Engine) *Analyzer {
+	return &Analyzer{
+		diag: diag,
+	}
 }
 
+func (a *Analyzer) errorf(format string, args ...any) {
+	a.diag.ReportError(token.Position{}, 0, format, args...)
+}
+
+// Analyze performs semantic analysis on the given AST program.
 func (a *Analyzer) Analyze(program *ast.Program) error {
 	a.pushScope()
 	defer a.popScope()
@@ -80,6 +94,9 @@ func (a *Analyzer) lookupField(strct *ast.StructStmt, name string) *ast.FieldDec
 func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 	switch n := stmt.(type) {
 
+	case *ast.BadStmt:
+		return
+
 	case *ast.FuncStmt:
 		old := a.currentFunction
 		a.currentFunction = n
@@ -117,11 +134,10 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		expected := a.currentFunction.ReturnType
 
 		if expected != nil && actual != nil && expected.Value != actual.Value {
-			panic(
-				"return type mismatch: expected " +
-					expected.Value +
-					", got " +
-					actual.Value,
+			a.errorf(
+				"return type mismatch: expected %s, got %s",
+				expected.Value,
+				actual.Value,
 			)
 		}
 
@@ -132,13 +148,11 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			got := a.inferExprType(n.Value)
 
 			if got != nil && got.Value != n.Type.Value {
-				panic(
-					"cannot initialize variable '" +
-						n.Name.Value +
-						"' of type " +
-						n.Type.Value +
-						"' with value of type " +
-						got.Value,
+				a.errorf(
+					"cannot initialize variable '%s' of type '%s' with value of type '%s'",
+					n.Name.Value,
+					n.Type.Value,
+					got.Value,
 				)
 			}
 		}
@@ -170,84 +184,76 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 	case *ast.AssignmentStmt:
 		switch left := n.Left.(type) {
 
+		case *ast.BadExpr:
+			// Skip type checking for malformed assignment targets
+			return
+
 		case *ast.Identifier:
 			sym := a.lookup(left.Value)
 			if sym == nil {
-				panic("unknown variable: " + left.Value)
+				a.errorf("unknown variable: %s", left.Value)
 			}
 
 			if sym.Kind != SymbolVariable {
-				panic(left.Value + " is not a variable")
+				a.errorf("%s is not a variable", left.Value)
 			}
 
 			if !sym.Mutable {
-				panic("cannot assign to immutable variable '" + left.Value + "'")
+				a.errorf("cannot assign to immutable variable '%s'", left.Value)
 			}
 
 			got := a.inferExprType(n.Value)
 
 			if got != nil && sym.Type != nil && got.Value != sym.Type.Value {
-				panic(
-					"cannot assign " +
-						got.Value +
-						" to variable '" +
-						left.Value +
-						"' of type " +
-						sym.Type.Value,
+				a.errorf(
+					"cannot assign %s to variable '%s' of type %s",
+					got.Value,
+					left.Value,
+					sym.Type.Value,
 				)
 			}
 
 		case *ast.MemberExpr:
 			objectType := a.inferExprType(left.Object)
 			if objectType == nil {
-				panic("cannot determine type of member access")
+				a.errorf("cannot determine type of member access")
 			}
 
 			strct := a.lookupStruct(objectType.Value)
 			if strct == nil {
-				panic("'" + objectType.Value + "' is not a struct")
+				a.errorf("'%s' is not a struct", objectType.Value)
 			}
 
 			field := a.lookupField(strct, left.Property.Value)
 			if field == nil {
-				panic(
-					"struct '" +
-						strct.Name.Value +
-						"' has no field '" +
-						left.Property.Value +
-						"'",
-				)
+				a.errorf("struct '%s' has no field '%s'", strct.Name.Value, left.Property.Value)
 			}
 
 			if !field.Mutable {
-				panic(
-					"cannot assign to immutable field '" +
-						field.Name.Value +
-						"'",
-				)
+				a.errorf("cannot assign to immutable field '%s'", field.Name.Value)
 			}
 
 			got := a.inferExprType(n.Value)
 
 			if got != nil && got.Value != field.Type.Value {
-				panic(
-					"cannot assign " +
-						got.Value +
-						" to field '" +
-						field.Name.Value +
-						"' of type " +
-						field.Type.Value,
+				a.errorf(
+					"cannot assign %s to field '%s' of type %s",
+					got.Value,
+					field.Name.Value,
+					field.Type.Value,
 				)
 			}
 
 		default:
-			panic("left side of assignment is not assignable")
+			a.errorf("left side of assignment is not assignable")
 		}
 	}
 }
 
 func (a *Analyzer) findReturnType(stmt ast.Stmt) *ast.Identifier {
 	switch n := stmt.(type) {
+	case *ast.BadStmt:
+		return nil
 
 	case *ast.ReturnStmt:
 		if n.Value == nil {
@@ -311,6 +317,9 @@ func (a *Analyzer) inferFunctionReturnType(fn *ast.FuncStmt) {
 func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 	switch n := expr.(type) {
 
+	case *ast.BadExpr:
+		return nil
+
 	case *ast.IntegerLiteral:
 		return &ast.Identifier{Value: "int"}
 
@@ -336,7 +345,8 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 
 		sym := a.lookup(id.Value)
 		if sym == nil || sym.Kind != SymbolFunction {
-			panic("unknown function: " + id.Value)
+			a.errorf("unknown function: %s", id.Value)
+			return nil
 		}
 
 		if sym.Inferring {
@@ -348,7 +358,8 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 		}
 
 		if len(n.Args) != len(sym.Function.Params) {
-			panic("wrong number of arguments to " + id.Value)
+			a.errorf("wrong number of arguments to %s", id.Value)
+			return nil
 		}
 
 		for i, arg := range n.Args {
@@ -360,15 +371,12 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 			}
 
 			if got.Value != want.Value {
-				panic(
-					"argument " +
-						strconv.Itoa(i+1) +
-						" of " +
-						id.Value +
-						": expected " +
-						want.Value +
-						", got " +
-						got.Value,
+				a.errorf(
+					"argument %d of %s: expected %s, got %s",
+					i+1,
+					id.Value,
+					want.Value,
+					got.Value,
 				)
 			}
 		}
@@ -397,7 +405,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 
 		strct := a.lookupStruct(objectType.Value)
 		if strct == nil {
-			panic("'" + objectType.Value + "' is not a struct")
+			a.errorf("'%s' is not a struct", objectType.Value)
 		}
 
 		for _, field := range strct.Fields {
@@ -406,13 +414,8 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 			}
 		}
 
-		panic(
-			"struct '" +
-				strct.Name.Value +
-				"' has no field '" +
-				n.Property.Value +
-				"'",
-		)
+		a.errorf("struct '%s' has no field '%s'", strct.Name.Value, n.Property.Value)
+		return nil
 	}
 
 	return nil
