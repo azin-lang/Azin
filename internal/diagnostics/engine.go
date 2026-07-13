@@ -2,6 +2,7 @@ package diagnostics
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/azin-lang/Azin/internal/source"
@@ -77,18 +78,30 @@ func (e *Engine) Error() string {
 
 	var b strings.Builder
 
+	maxLine := 1
+
+	for _, d := range e.diagnostics {
+		line, _ := e.file.LineColumn(d.Position.Offset)
+		if int(line) > maxLine {
+			maxLine = int(line)
+		}
+	}
+
+	gutter := len(strconv.Itoa(maxLine))
+
 	for i, d := range e.diagnostics {
 		if i > 0 {
-			b.WriteString("\n\n")
+			b.WriteByte('\n')
 		}
-
 		line, column := e.file.LineColumn(d.Position.Offset)
-
-		fmt.Fprintf(&b, "%s:%d:%d: %s: %s\n", e.file.Name(), line, column, d.Kind, d.Message)
-
 		src := e.file.Line(line)
-		b.Write(src)
-		b.WriteByte('\n')
+
+		_, _ = fmt.Fprintf(&b, "%s: %s\n", d.Kind, d.Message)
+		_, _ = fmt.Fprintf(&b, " --> %s:%d:%d\n", e.file.Name(), line, column)
+
+		_, _ = fmt.Fprintf(&b, "%*s |\n", gutter, "")
+		_, _ = fmt.Fprintf(&b, "%*d | %s\n", gutter, line, src)
+		_, _ = fmt.Fprintf(&b, "%*s | ", gutter, "")
 
 		prefix := src[:column-1]
 		for _, ch := range prefix {
@@ -99,10 +112,18 @@ func (e *Engine) Error() string {
 			}
 		}
 
-		b.WriteByte('^')
-		for i := uint32(1); i < d.Length; i++ {
-			b.WriteByte('~')
+		if d.Length == 0 {
+			b.WriteByte('^')
+		} else {
+			b.WriteByte('^')
+			for i := uint32(1); i < d.Length; i++ {
+				b.WriteByte('~')
+			}
 		}
+
+		b.WriteByte(' ')
+		b.WriteString(d.Message)
+		b.WriteByte('\n')
 	}
 
 	return b.String()
