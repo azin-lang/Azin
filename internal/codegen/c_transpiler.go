@@ -18,7 +18,8 @@ func New() *Transpiler {
 	return &Transpiler{}
 }
 
-func handleImports(program *ast.Program) string {
+// handleImports handles the import statements in the AST and writes the corresponding C include statements to the buffer.
+func (t *Transpiler) handleImports(program *ast.Program) string {
 	hasImports := false
 	for _, stmt := range program.Statements {
 		if imp, ok := stmt.(*ast.ImportCStmt); ok {
@@ -34,27 +35,15 @@ func handleImports(program *ast.Program) string {
 	if hasImports {
 		t.newline()
 	}
+
+	return t.buf.String()
 }
 
 // Transpile takes an AST and transpiles it to C code.
 func (t *Transpiler) Transpile(program *ast.Program) string {
 	t.buf.Reset()
 
-	hasImports := false
-	for _, stmt := range program.Statements {
-		if imp, ok := stmt.(*ast.ImportCStmt); ok {
-			header := imp.Path.Value
-			if filepath.Ext(header) == "" {
-				header += ".h"
-			}
-			t.write("#include <" + header + ">\n")
-			hasImports = true
-		}
-	}
-
-	if hasImports {
-		t.newline()
-	}
+	t.handleImports(program)
 
 	for _, stmt := range program.Statements {
 		if s, ok := stmt.(*ast.StructStmt); ok {
