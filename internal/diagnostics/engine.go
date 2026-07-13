@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/azin-lang/Azin/internal/source"
 	"github.com/azin-lang/Azin/internal/token"
@@ -11,6 +12,7 @@ import (
 
 // Engine collects diagnostics for a source file.
 type Engine struct {
+	mu          sync.RWMutex
 	file        *source.File
 	diagnostics []Diagnostic
 	hasErrors   bool
@@ -25,15 +27,14 @@ func New(file *source.File) *Engine {
 
 // Report adds a diagnostic to the engine.
 func (e *Engine) Report(kind DiagnosticKind, pos token.Position, length uint32, format string, args ...any) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if kind == Error {
 		e.hasErrors = true
 	}
-
 	e.diagnostics = append(e.diagnostics, Diagnostic{
-		Kind:     kind,
-		Message:  fmt.Sprintf(format, args...),
-		Position: pos,
-		Length:   length,
+		Kind: kind, Message: fmt.Sprintf(format, args...), Position: pos, Length: length,
 	})
 }
 
@@ -54,11 +55,18 @@ func (e *Engine) ReportNote(pos token.Position, length uint32, format string, ar
 
 // Diagnostics returns all recorded diagnostics.
 func (e *Engine) Diagnostics() []Diagnostic {
-	return e.diagnostics
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	res := make([]Diagnostic, len(e.diagnostics))
+	copy(res, e.diagnostics)
+	return res
 }
 
 // HasErrors reports whether any errors have been recorded.
 func (e *Engine) HasErrors() bool {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	return e.hasErrors
 }
 
@@ -72,12 +80,14 @@ func (e *Engine) Err() error {
 
 // Formats all diagnostics into a readable string.
 func (e *Engine) Error() string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
 	if len(e.diagnostics) == 0 {
 		return ""
 	}
 
 	var b strings.Builder
-
 	maxLine := 1
 
 	for _, d := range e.diagnostics {
@@ -93,6 +103,7 @@ func (e *Engine) Error() string {
 		if i > 0 {
 			b.WriteByte('\n')
 		}
+
 		line, column := e.file.LineColumn(d.Position.Offset)
 		src := e.file.Line(line)
 
@@ -102,7 +113,15 @@ func (e *Engine) Error() string {
 		_, _ = fmt.Fprintf(&b, "%*d | %s\n", gutter, line, src)
 		_, _ = fmt.Fprintf(&b, "%*s | ", gutter, "")
 
-		prefix := src[:column-1]
+		colIdx := int(column) - 1
+		if colIdx < 0 {
+			colIdx = 0
+		}
+		if colIdx > len(src) {
+			colIdx = len(src)
+		}
+
+		prefix := src[:colIdx]
 		for _, ch := range prefix {
 			if ch == '\t' {
 				b.WriteByte('\t')
@@ -111,17 +130,14 @@ func (e *Engine) Error() string {
 			}
 		}
 
-		if d.Length == 0 {
-			b.WriteByte('^')
-		} else {
-			b.WriteByte('^')
+		b.WriteByte('^')
+
+		if d.Length > 0 {
 			for i := uint32(1); i < d.Length; i++ {
 				b.WriteByte('~')
 			}
 		}
 
-		b.WriteByte(' ')
-		b.WriteString(d.Message)
 		b.WriteByte('\n')
 	}
 
