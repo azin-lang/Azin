@@ -2,14 +2,16 @@ package semantic
 
 import "github.com/azin-lang/Azin/internal/ast"
 
+// SymbolKind represents the kind of a symbol (variable, function, struct).
 type SymbolKind uint8
 
 const (
-	SymbolVariable SymbolKind = iota
-	SymbolFunction
-	SymbolStruct
+	SymbolVariable SymbolKind = iota // SymbolVariable represents a variable symbol.
+	SymbolFunction                   // SymbolFunction represents a function symbol.
+	SymbolStruct                     // SymbolStruct represents a struct symbol.
 )
 
+// Symbol represents a symbol in the semantic analysis phase.
 type Symbol struct {
 	Name    string
 	Type    *ast.Identifier
