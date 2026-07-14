@@ -33,6 +33,7 @@ const (
 	KwStruct  // kw_struct
 	KwIs      // kw_is
 	KwImportC // kw_import
+	KwLoop    // kw_loop
 
 	Plus           // plus
 	Minus          // minus
@@ -103,6 +104,10 @@ func (k Kind) DisplayName() string {
 		return "'char'"
 	case KwInt:
 		return "'int'"
+	case KwBool:
+		return "'bool'"
+	case KwNull:
+		return "'null'"
 	case KwUnit:
 		return "'unit'"
 	case KwString:
