@@ -1,0 +1,1 @@
+go run .\modules\compiler\cmd\azc -version

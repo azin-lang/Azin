@@ -212,8 +212,10 @@ $RECYCLE.BIN/
 
 azin_old/
 /build/
-
+/docs/
 *.sum
-!go.sum
+!compiler/go.sum
 CONVERSATION.md
 test.txt
+
+
