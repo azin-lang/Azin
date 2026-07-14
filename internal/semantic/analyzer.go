@@ -1,9 +1,10 @@
 package semantic
 
 import (
+	"fmt"
+
 	"github.com/azin-lang/Azin/internal/ast"
 	"github.com/azin-lang/Azin/internal/diagnostics"
-	"github.com/azin-lang/Azin/internal/token"
 )
 
 /*
@@ -25,8 +26,13 @@ func New(diag *diagnostics.Engine) *Analyzer {
 	}
 }
 
-func (a *Analyzer) errorf(format string, args ...any) {
-	a.diag.ReportError(token.Position{}, 0, format, args...)
+func (a *Analyzer) errorf(node ast.Node, format string, args ...any) {
+	a.diag.ReportError(
+		node.Pos(),
+		uint32(len(node.TokenLiteral())),
+		format,
+		args...,
+	)
 }
 
 // Analyze performs semantic analysis on the given AST program.
@@ -69,7 +75,7 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 		}
 	}
 
-	return nil
+	return a.diag.Err()
 }
 
 func (a *Analyzer) lookupStruct(name string) *ast.StructStmt {
@@ -135,6 +141,7 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 
 		if expected != nil && actual != nil && expected.Value != actual.Value {
 			a.errorf(
+				n.Value,
 				"return type mismatch: expected %s, got %s",
 				expected.Value,
 				actual.Value,
@@ -149,6 +156,7 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 
 			if got != nil && got.Value != n.Type.Value {
 				a.errorf(
+					n.Value,
 					"cannot initialize variable '%s' of type '%s' with value of type '%s'",
 					n.Name.Value,
 					n.Type.Value,
@@ -181,6 +189,15 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 
 		a.popScope()
 
+	case *ast.LoopStmt:
+		a.pushScope()
+
+		for _, stmt := range n.Body {
+			a.visitStatement(stmt)
+		}
+
+		a.popScope()
+
 	case *ast.AssignmentStmt:
 		switch left := n.Left.(type) {
 
@@ -191,21 +208,34 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		case *ast.Identifier:
 			sym := a.lookup(left.Value)
 			if sym == nil {
-				a.errorf("unknown variable: %s", left.Value)
+				a.errorf(n.Value, "unknown variable: %s", left.Value)
 			}
 
 			if sym.Kind != SymbolVariable {
-				a.errorf("%s is not a variable", left.Value)
+				a.errorf(n.Value, "%s is not a variable", left.Value)
 			}
 
 			if !sym.Mutable {
-				a.errorf("cannot assign to immutable variable '%s'", left.Value)
+				a.errorf(n.Value, "cannot assign to immutable variable '%s'", left.Value)
 			}
 
 			got := a.inferExprType(n.Value)
 
+			fmt.Printf(
+				"assign: lhs=%q rhs=%q (%T)\n",
+				sym.Type.Value,
+				func() string {
+					if got == nil {
+						return "<nil>"
+					}
+					return got.Value
+				}(),
+				n.Value,
+			)
+
 			if got != nil && sym.Type != nil && got.Value != sym.Type.Value {
 				a.errorf(
+					n.Value,
 					"cannot assign %s to variable '%s' of type %s",
 					got.Value,
 					left.Value,
@@ -216,28 +246,28 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		case *ast.MemberExpr:
 			objectType := a.inferExprType(left.Object)
 			if objectType == nil {
-				a.errorf("cannot determine type of member access")
+				a.errorf(n.Value, "cannot determine type of member access")
 			}
 
 			strct := a.lookupStruct(objectType.Value)
 			if strct == nil {
-				a.errorf("'%s' is not a struct", objectType.Value)
+				a.errorf(n.Value, "'%s' is not a struct", objectType.Value)
 			}
 
 			field := a.lookupField(strct, left.Property.Value)
 			if field == nil {
-				a.errorf("struct '%s' has no field '%s'", strct.Name.Value, left.Property.Value)
+				a.errorf(n.Value, "struct '%s' has no field '%s'", strct.Name.Value, left.Property.Value)
 			}
 
 			if !field.Mutable {
-				a.errorf("cannot assign to immutable field '%s'", field.Name.Value)
+				a.errorf(n.Value, "cannot assign to immutable field '%s'", field.Name.Value)
 			}
 
 			got := a.inferExprType(n.Value)
 
 			if got != nil && got.Value != field.Type.Value {
 				a.errorf(
-					"cannot assign %s to field '%s' of type %s",
+					n.Value, "cannot assign %s to field '%s' of type %s",
 					got.Value,
 					field.Name.Value,
 					field.Type.Value,
@@ -245,7 +275,7 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			}
 
 		default:
-			a.errorf("left side of assignment is not assignable")
+			a.errorf(n.Value, "left side of assignment is not assignable")
 		}
 	}
 }
@@ -332,6 +362,11 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 	case *ast.StringLiteral:
 		return &ast.Identifier{Value: "string"}
 
+	case *ast.BooleanLiteral:
+		return &ast.Identifier{
+			Value: "bool",
+		}
+
 	case *ast.Identifier:
 		if sym := a.lookup(n.Value); sym != nil {
 			return sym.Type
@@ -345,7 +380,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 
 		sym := a.lookup(id.Value)
 		if sym == nil || sym.Kind != SymbolFunction {
-			a.errorf("unknown function: %s", id.Value)
+			a.errorf(n.Callee, "unknown function: %s", id.Value)
 			return nil
 		}
 
@@ -358,7 +393,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 		}
 
 		if len(n.Args) != len(sym.Function.Params) {
-			a.errorf("wrong number of arguments to %s", id.Value)
+			a.errorf(n.Callee, "wrong number of arguments to %s", id.Value)
 			return nil
 		}
 
@@ -372,6 +407,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 
 			if got.Value != want.Value {
 				a.errorf(
+					arg,
 					"argument %d of %s: expected %s, got %s",
 					i+1,
 					id.Value,
@@ -405,7 +441,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 
 		strct := a.lookupStruct(objectType.Value)
 		if strct == nil {
-			a.errorf("'%s' is not a struct", objectType.Value)
+			a.errorf(n.Object, "'%s' is not a struct", objectType.Value)
 		}
 
 		for _, field := range strct.Fields {
@@ -414,7 +450,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 			}
 		}
 
-		a.errorf("struct '%s' has no field '%s'", strct.Name.Value, n.Property.Value)
+		a.errorf(n.Property, "struct '%s' has no field '%s'", strct.Name.Value, n.Property.Value)
 		return nil
 	}
 
