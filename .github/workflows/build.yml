@@ -45,17 +45,17 @@ jobs:
               run: go vet ./...
 
             - name: Run tests
-              run: go test ./...
+              run: go test -count=1 -short ./tests/...
 
             - name: Build
               run: go build -o azc ./cmd/azc
 
-            - name: Verify version (Unix)
+            - name: Full test suite with coverage (Unix)
               if: runner.os != 'Windows'
               run: |
                 bash ./scripts/test/test.sh
 
-            - name: Verify version (Windows)
+            - name: Full test suite with coverage (Windows)
               if: runner.os == 'Windows'
               shell: pwsh
               run: |
