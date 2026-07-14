@@ -1,41 +1,55 @@
 package ast
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/fatih/color"
 )
 
-// PrintJSON serializes the AST node to JSON and prints it to standard output.
-func PrintJSON(node Node) error {
-	data, err := json.MarshalIndent(node, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal AST: %w", err)
+var (
+	cNode    = color.New(color.FgHiBlue, color.Bold).SprintFunc()
+	cField   = color.New(color.FgYellow).SprintFunc()
+	cValue   = color.New(color.FgHiGreen).SprintFunc()
+	cLiteral = color.New(color.FgHiCyan).SprintFunc()
+	cLabel   = color.New(color.FgWhite).SprintFunc()
+	cBranch  = color.New(color.FgHiBlack).SprintFunc()
+)
+
+func PrintTree(node Node) {
+	//newNormalPrinter(os.Stdout, true).Print(node)
+}
+
+func PrintDebugTree(node Node) {
+	newDebugPrinter(os.Stdout, true).Print(node)
+}
+
+func ExportTree(node Node, path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
 	}
 
-	fmt.Println(string(data))
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	//newNormalPrinter(f, false).Print(node)
 	return nil
 }
 
-// ExportJSON serializes the AST node to JSON and writes it to the specified destination path.
-// The destPath should include the desired file name (e.g., "out/ast.json").
-func ExportJSON(node Node, destPath string) error {
-	data, err := json.MarshalIndent(node, "", "  ")
+func ExportDebugTree(node Node, path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+
+	f, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("failed to marshal AST: %w", err)
+		return err
 	}
+	defer f.Close()
 
-	// Ensure the parent directories exist based on the provided file path
-	dir := filepath.Dir(destPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("failed to create directory %s: %w", dir, err)
-	}
-
-	// Write the file
-	if err := os.WriteFile(destPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write AST file: %w", err)
-	}
-
+	newDebugPrinter(f, false).Print(node)
 	return nil
 }

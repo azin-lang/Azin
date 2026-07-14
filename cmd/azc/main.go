@@ -74,12 +74,11 @@ func main() {
 	program, parseErr := parser.Parse(string(file.Slice(0, file.Len())), tokens, diag)
 
 	if *printAST {
-		if err := ast.PrintJSON(program); err != nil {
-			fatal(err)
-		}
-
-		if parseErr != nil {
-			fatal(parseErr)
+		// TODO: hook this up to *output and use the Export*Tree family of funcs
+		if *debug {
+			ast.PrintDebugTree(program)
+		} else {
+			ast.PrintTree(program)
 		}
 		return
 	}
