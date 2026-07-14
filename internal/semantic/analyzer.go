@@ -239,14 +239,17 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			sym := a.lookup(left.Value)
 			if sym == nil {
 				a.errorf(n.Value, "unknown variable: %s", left.Value)
+				return
 			}
 
 			if sym.Kind != SymbolVariable {
 				a.errorf(n.Value, "%s is not a variable", left.Value)
+				return
 			}
 
 			if !sym.Mutable {
 				a.errorf(n.Value, "cannot assign to immutable variable '%s'", left.Value)
+				return
 			}
 
 			got := a.inferExprType(n.Value)
@@ -265,16 +268,19 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			objectType := a.inferExprType(left.Object)
 			if objectType == nil {
 				a.errorf(n.Value, "cannot determine type of member access")
+				return
 			}
 
 			strct := a.lookupStruct(objectType.Value)
 			if strct == nil {
 				a.errorf(n.Value, "'%s' is not a struct", objectType.Value)
+				return
 			}
 
 			field := a.lookupField(strct, left.Property.Value)
 			if field == nil {
 				a.errorf(n.Value, "struct '%s' has no field '%s'", strct.Name.Value, left.Property.Value)
+				return
 			}
 
 			if !field.Mutable {

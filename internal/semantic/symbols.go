@@ -37,5 +37,19 @@ func (a *Analyzer) lookup(name string) *Symbol {
 }
 
 func (a *Analyzer) declare(sym *Symbol) {
+	if existing := a.currentScope().Symbols[sym.Name]; existing != nil {
+		a.errorfSym(sym, "redeclaration of '%s'", sym.Name)
+		return
+	}
 	a.currentScope().Symbols[sym.Name] = sym
+}
+
+func (a *Analyzer) errorfSym(sym *Symbol, format string, args ...any) {
+	if sym.Function != nil {
+		a.errorf(sym.Function, format, args...)
+	} else if sym.Struct != nil {
+		a.errorf(sym.Struct, format, args...)
+	} else if sym.Enum != nil {
+		a.errorf(sym.Enum, format, args...)
+	}
 }
