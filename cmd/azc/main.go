@@ -15,7 +15,7 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
-const Version = "0.2.3-dev"
+const Version = "0.2.0"
 
 var (
 	debug           = flag.Bool("debug", false, "Enable debug output")
