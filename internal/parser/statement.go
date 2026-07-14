@@ -197,7 +197,7 @@ func (p *Parser) parseEnum() ast.Stmt {
 	tok := p.advance()
 	name := p.parseIdentifier()
 	if name == nil {
-		return badStmt(tok) 
+		return badStmt(tok)
 	}
 	p.expect(token.KwIs, "after enum name")
 
