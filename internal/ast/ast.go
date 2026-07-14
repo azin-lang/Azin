@@ -124,19 +124,6 @@ func (s *StructStmt) Label() string {
 	return "struct " + s.Name.Value
 }
 
-type EnumStmt struct {
-	Token    token.Token // enum
-	Name     *Identifier
-	Variants []*Identifier
-}
-
-func (*EnumStmt) stmtNode()              {}
-func (e *EnumStmt) TokenLiteral() string { return e.Token.Kind.String() }
-func (e *EnumStmt) Pos() token.Position  { return e.Token.Position }
-func (e *EnumStmt) Label() string {
-	return "enum " + e.Name.Value
-}
-
 type FuncStmt struct {
 	Token      token.Token // fn
 	Name       *Identifier

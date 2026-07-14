@@ -21,32 +21,10 @@ func (t *Transpiler) compileStruct(s *ast.StructStmt) {
 	t.newline()
 }
 
-func (t *Transpiler) compileEnum(e *ast.EnumStmt) {
-	t.enums[e.Name.Value] = true
-
-	t.write("typedef enum {\n")
-	t.pushIndent()
-
-	for i, variant := range e.Variants {
-		t.writeIndent()
-		t.printf("%s_%s", e.Name.Value, variant.Value)
-		if i < len(e.Variants)-1 {
-			t.write(",")
-		}
-		t.newline()
-	}
-
-	t.popIndent()
-	t.printf("} %s;\n", e.Name.Value)
-}
-
 func (t *Transpiler) compileStatement(stmt ast.Stmt) {
 	switch n := stmt.(type) {
 
 	case *ast.StructStmt:
-		// already emitted
-
-	case *ast.EnumStmt:
 		// already emitted
 
 	case *ast.ImportCStmt:
@@ -177,11 +155,6 @@ func (t *Transpiler) compileExpression(expr ast.Expr) {
 		t.printf("%q", n.Value)
 
 	case *ast.MemberExpr:
-		if id, ok := n.Object.(*ast.Identifier); ok && t.enums[id.Value] {
-			t.printf("%s_%s", id.Value, n.Property.Value)
-			return
-		}
-
 		t.compileExpression(n.Object)
 		t.write(".")
 		t.write(n.Property.Value)

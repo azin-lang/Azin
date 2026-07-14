@@ -95,8 +95,6 @@ func (p *Parser) parseStatement() ast.Stmt {
 		stmt = p.parseVar()
 	case p.check(token.KwStruct):
 		stmt = p.parseStruct()
-	case p.check(token.KwEnum):
-		stmt = p.parseEnum()
 	case p.check(token.KwFn):
 		stmt = p.parseFunc()
 	case p.check(token.KwReturn):
@@ -190,41 +188,6 @@ func (p *Parser) parseStruct() ast.Stmt {
 		Token:  tok,
 		Name:   name,
 		Fields: fields,
-	}
-}
-
-func (p *Parser) parseEnum() ast.Stmt {
-	tok := p.advance()
-	name := p.parseIdentifier()
-	if name == nil {
-		return badStmt(tok)
-	}
-	p.expect(token.KwIs, "after enum name")
-
-	var variants []*ast.Identifier
-	for !p.isAtEnd() {
-		p.skipNewlines()
-		if p.check(token.KwEnd) {
-			break
-		}
-
-		variant := p.parseIdentifier()
-		if variant != nil {
-			variants = append(variants, variant)
-		} else {
-			// if variant parsing failed, sync to try parsing the next variant
-			p.synchronize()
-		}
-
-		p.consumeStatementEnd()
-	}
-
-	p.expect(token.KwEnd, "to close enum")
-
-	return &ast.EnumStmt{
-		Token:    tok,
-		Name:     name,
-		Variants: variants,
 	}
 }
 

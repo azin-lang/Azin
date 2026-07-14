@@ -11,14 +11,11 @@ import (
 type Transpiler struct {
 	buf    bytes.Buffer
 	indent int
-	enums  map[string]bool
 }
 
 // New create a new Transpiler.
 func New() *Transpiler {
-	return &Transpiler{
-		enums: map[string]bool{},
-	}
+	return &Transpiler{}
 }
 
 // handleImports handles the import statements in the AST and writes the corresponding C include statements to the buffer.
@@ -48,11 +45,7 @@ func (t *Transpiler) Transpile(program *ast.Program) string {
 	t.handleImports(program)
 
 	for _, stmt := range program.Statements {
-		switch s := stmt.(type) {
-		case *ast.EnumStmt:
-			t.compileEnum(s)
-			t.newline()
-		case *ast.StructStmt:
+		if s, ok := stmt.(*ast.StructStmt); ok {
 			t.compileStruct(s)
 			t.newline()
 		}
@@ -60,7 +53,7 @@ func (t *Transpiler) Transpile(program *ast.Program) string {
 
 	for _, stmt := range program.Statements {
 		switch stmt.(type) {
-		case *ast.ImportCStmt, *ast.StructStmt, *ast.EnumStmt:
+		case *ast.ImportCStmt, *ast.StructStmt:
 			continue
 		default:
 			t.compileStatement(stmt)
