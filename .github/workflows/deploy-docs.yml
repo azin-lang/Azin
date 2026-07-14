@@ -69,5 +69,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: internals-docs
+          projectName: internal-docs
           directory: build/docs/html
