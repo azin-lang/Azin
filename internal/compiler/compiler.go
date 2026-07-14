@@ -32,12 +32,27 @@ func runCompilerCommand(name string, args []string, label, output string) error 
 	return nil
 }
 
-func runMSVC(cl, sourcePath, exeName string) error {
+func msvcOptimization(opt string) string {
+	switch opt {
+	case "1", "s", "z":
+		return "/O1"
+	case "2":
+		return "/O2"
+	case "3":
+		return "/Ox"
+	default:
+		return "/Od"
+	}
+}
+
+func runMSVC(cl, sourcePath, exeName string, opts Options) error {
+	opt := msvcOptimization(opts.Optimization)
+
 	return runCompilerCommand(
 		cl,
 		[]string{
 			"/nologo",
-			"/O2",
+			opt,
 			"/Fe:" + exeName,
 			sourcePath,
 		},
@@ -46,12 +61,12 @@ func runMSVC(cl, sourcePath, exeName string) error {
 	)
 }
 
-func runClang(clang, sourcePath, exeName string) error {
+func runClang(clang, sourcePath, exeName string, opts Options) error {
 	return runCompilerCommand(
 		clang,
 		[]string{
 			"-std=c23",
-			"-O2",
+			"-O" + opts.Optimization,
 			sourcePath,
 			"-o",
 			exeName,
@@ -61,12 +76,12 @@ func runClang(clang, sourcePath, exeName string) error {
 	)
 }
 
-func runGCC(gcc, sourcePath, exeName string) error {
+func runGCC(gcc, sourcePath, exeName string, opts Options) error {
 	return runCompilerCommand(
 		gcc,
 		[]string{
 			"-std=c23",
-			"-O2",
+			"-O" + opts.Optimization,
 			sourcePath,
 			"-o",
 			exeName,
@@ -78,7 +93,7 @@ func runGCC(gcc, sourcePath, exeName string) error {
 
 type compiler struct {
 	name string
-	run  func(string, string, string) error
+	run  func(string, string, string, Options) error
 }
 
 func runCompiler(sourcePath, exeName string, opts Options) error {
@@ -131,7 +146,7 @@ func writeCOutput(code, output string) error {
 }
 
 // Compile compiles the given source file to a C executable.
-func Compile(file *source.File, outputPath string, emitC bool) error {
+func Compile(file *source.File, outputPath string, opts Options) error {
 	program, err := parseSource(file)
 	if err != nil {
 		return err
@@ -146,7 +161,7 @@ func Compile(file *source.File, outputPath string, emitC bool) error {
 
 	cCode := transpileToC(program)
 
-	if emitC {
+	if opts.EmitC {
 		return writeCOutput(cCode, outputPath)
 	}
 
@@ -163,7 +178,7 @@ func Compile(file *source.File, outputPath string, emitC bool) error {
 		}
 	}(tmpPath)
 
-	return runCompiler(tmpPath, exeName)
+	return runCompiler(tmpPath, exeName, opts)
 }
 
 func parseSource(file *source.File) (*ast.Program, error) {
