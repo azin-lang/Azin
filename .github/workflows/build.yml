@@ -40,6 +40,15 @@ jobs:
               if: runner.os != 'Windows'
               run: |
                 test -z "$(gofmt -l .)"
+                
+            - name: Debug env
+              run: |
+                pwd
+                ls -la
+                go version
+                cat go.mod
+                grep "github.com/fatih/color" go.sum || true
+                go env GOMOD
 
             - name: Run go vet
               run: go vet ./...
