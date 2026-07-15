@@ -4,11 +4,11 @@ about: Suggest a new feature
 labels: enhancement
 ---
 
-**What do you want?**
+## What do you want?
 
-**Why is it useful?**
+## Why is it useful?
 
-**Example usage**
-```
+## Example usage
+```az
 // how it would look in azin
 ```

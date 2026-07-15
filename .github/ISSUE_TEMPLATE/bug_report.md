@@ -4,15 +4,15 @@ about: Report a bug
 labels: bug
 ---
 
-**Describe the bug**
+## Describe the bug
 
-**To reproduce**
-```
+## To reproduce
+```az
 // code that triggers the bug
 ```
 
-**Expected behavior**
+## Expected behavior
 
-**Actual behavior**
+## Actual behavior
 
-**Version**
+## Version
