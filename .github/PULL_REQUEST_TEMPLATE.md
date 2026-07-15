@@ -1,10 +1,10 @@
 ## What does this PR do?
 
 ## Related issue
-Closes #
+Closes #issue
 
 ## Checklist
-- [ ] branched of `dev`
+- [ ] Branched off `dev`
 - [ ] `go test ./...` passes
 - [ ] `go vet ./...` passes
-- [ ] code is formatted with `go fmt ./...`
+- [ ] Code is formatted with `go fmt ./...`
