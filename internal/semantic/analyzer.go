@@ -63,16 +63,16 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 	}
 
 	// Infer function return types before semantic analysis.
-	for _, stmt := range program.Statements {
-		if fn, ok := stmt.(*ast.FuncStmt); ok {
-			a.inferFunctionReturnType(fn)
-
-			sym := a.lookup(fn.Name.Value)
-			if sym != nil {
-				sym.Type = fn.ReturnType
-			}
-		}
-	}
+	//for _, stmt := range program.Statements {
+	//	if fn, ok := stmt.(*ast.FuncStmt); ok {
+	//		a.inferFunctionReturnType(fn)
+	//
+	//		sym := a.lookup(fn.Name.Value)
+	//		if sym != nil {
+	//			sym.Type = fn.ReturnType
+	//		}
+	//	}
+	//}
 
 	for _, stmt := range program.Statements {
 		a.visitStatement(stmt)
@@ -126,6 +126,14 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 
 		for _, stmt := range n.Body {
 			a.visitStatement(stmt)
+		}
+
+		if n.ReturnType == nil {
+			a.inferFunctionReturnType(n)
+
+			if sym := a.lookup(n.Name.Value); sym != nil {
+				sym.Type = n.ReturnType
+			}
 		}
 
 		// TODO(0.3.0): This only checks whether a return statement exists.
