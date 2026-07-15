@@ -1,0 +1,6 @@
+go 1.26.5
+
+uses (
+    ./modules/compiler
+    ./modules/lsp
+)
