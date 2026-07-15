@@ -3,6 +3,7 @@ package semantic
 import (
 	"github.com/azin-lang/Azin/internal/ast"
 	"github.com/azin-lang/Azin/internal/diagnostics"
+	"github.com/azin-lang/Azin/internal/token"
 )
 
 /*
@@ -68,18 +69,20 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 		}
 	}
 
-	// Analyze every statement.
-	for _, stmt := range program.Statements {
-		a.visitStatement(stmt)
-	}
-
+	// Infer function return types before semantic analysis.
 	for _, stmt := range program.Statements {
 		if fn, ok := stmt.(*ast.FuncStmt); ok {
 			a.inferFunctionReturnType(fn)
 
 			sym := a.lookup(fn.Name.Value)
-			sym.Type = fn.ReturnType
+			if sym != nil {
+				sym.Type = fn.ReturnType
+			}
 		}
+	}
+
+	for _, stmt := range program.Statements {
+		a.visitStatement(stmt)
 	}
 
 	return a.diag.Err()
@@ -144,6 +147,30 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			a.visitStatement(stmt)
 		}
 
+		// TODO(0.3.0): This only checks whether a return statement exists.
+		// It does not verify that all execution paths return a value.
+		// It also cannot detect inconsistent return types across different
+		// control-flow paths
+		if n.ReturnType != nil && n.ReturnType.Value != "unit" {
+			hasReturn := false
+
+			for _, stmt := range n.Body {
+				if a.findReturnType(stmt) != nil {
+					hasReturn = true
+					break
+				}
+			}
+
+			if !hasReturn {
+				a.errorf(
+					n.Name,
+					"function '%s' must return %s",
+					n.Name.Value,
+					n.ReturnType.Value,
+				)
+			}
+		}
+
 		a.popScope()
 
 	case *ast.ReturnStmt:
@@ -196,6 +223,12 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		})
 
 	case *ast.IfStmt:
+
+		cond := a.inferExprType(n.Condition)
+		if cond != nil && cond.Value != "bool" {
+			a.errorf(n.Condition, "if condition must be bool, got %s", cond.Value)
+		}
+
 		a.pushScope()
 
 		for _, stmt := range n.Then {
@@ -285,6 +318,7 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 
 			if !field.Mutable {
 				a.errorf(n.Value, "cannot assign to immutable field '%s'", field.Name.Value)
+				return
 			}
 
 			got := a.inferExprType(n.Value)
@@ -323,6 +357,13 @@ func (a *Analyzer) findReturnType(stmt ast.Stmt) *ast.Identifier {
 		}
 
 		for _, s := range n.Else {
+			if t := a.findReturnType(s); t != nil {
+				return t
+			}
+		}
+
+	case *ast.LoopStmt:
+		for _, s := range n.Body {
 			if t := a.findReturnType(s); t != nil {
 				return t
 			}
@@ -396,6 +437,9 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 			return sym.Type
 		}
 
+		a.errorf(n, "unknown identifier: %s", n.Value)
+		return nil
+
 	case *ast.CallExpr:
 		id, ok := n.Callee.(*ast.Identifier)
 		if !ok {
@@ -403,13 +447,15 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 		}
 
 		sym := a.lookup(id.Value)
-		if sym == nil || sym.Kind != SymbolFunction {
-			// IMPORTANT: Commented out because Azin has no way to know if the function is from C.
-			// And we are definitely not parsing C
-			// a.errorf(n.Callee, "unknown function: %s", id.Value)
+		if sym == nil {
+			// Could be an external C function
 			return nil
 		}
 
+		if sym.Kind != SymbolFunction {
+			a.errorf(n.Callee, "'%s' is not callable", id.Value)
+			return nil
+		}
 		if sym.Inferring {
 			return nil
 		}
@@ -453,11 +499,42 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 			return nil
 		}
 
-		if left.Value == "float" || right.Value == "float" {
-			return &ast.Identifier{Value: "float"}
+		switch n.Operator.Kind {
+		case token.Plus, token.Minus, token.Star, token.Slash:
+			if (left.Value != "int" && left.Value != "float") ||
+				(right.Value != "int" && right.Value != "float") {
+				a.errorf(
+					n,
+					"operator '%s' requires numeric operands",
+					n.TokenLiteral(),
+				)
+				return nil
+			}
+
+			if left.Value == "float" || right.Value == "float" {
+				return &ast.Identifier{Value: "float"}
+			}
+
+			return &ast.Identifier{Value: "int"}
+
+		case token.EqualEqual, token.BangEqual,
+			token.Less, token.LessEqual,
+			token.Greater, token.GreaterEqual:
+
+			if left.Value != right.Value {
+				a.errorf(
+					n,
+					"cannot compare %s with %s",
+					left.Value,
+					right.Value,
+				)
+				return nil
+			}
+
+			return &ast.Identifier{Value: "bool"}
 		}
 
-		return left
+		return nil
 
 	case *ast.MemberExpr:
 		// the object is a type name used as a namespace, so it must be resolved before type inference
@@ -482,6 +559,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 		strct := a.lookupStruct(objectType.Value)
 		if strct == nil {
 			a.errorf(n.Object, "'%s' is not a struct", objectType.Value)
+			return nil
 		}
 
 		for _, field := range strct.Fields {
