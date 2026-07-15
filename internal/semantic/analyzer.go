@@ -62,11 +62,7 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 		}
 	}
 
-	// Analyze every statement.
-	for _, stmt := range program.Statements {
-		a.visitStatement(stmt)
-	}
-
+	// Infer function return types before semantic analysis.
 	for _, stmt := range program.Statements {
 		if fn, ok := stmt.(*ast.FuncStmt); ok {
 			a.inferFunctionReturnType(fn)
@@ -76,6 +72,10 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 				sym.Type = fn.ReturnType
 			}
 		}
+	}
+
+	for _, stmt := range program.Statements {
+		a.visitStatement(stmt)
 	}
 
 	return a.diag.Err()
