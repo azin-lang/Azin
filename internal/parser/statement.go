@@ -107,6 +107,15 @@ func (p *Parser) parseStatement() ast.Stmt {
 		stmt = p.parseLoop()
 	case p.check(token.KwStop):
 		stmt = p.parseStop()
+	case p.check(token.KwEnd):
+		p.reportError(p.peek(), "unexpected 'end'")
+		p.advance()
+		stmt = badStmt(p.previous())
+
+	case p.check(token.KwElse):
+		p.reportError(p.peek(), "unexpected 'else'")
+		p.advance()
+		stmt = badStmt(p.previous())
 	default:
 		stmt = p.parseExpressionOrAssignment()
 	}
@@ -194,9 +203,18 @@ func (p *Parser) parseStruct() ast.Stmt {
 func (p *Parser) parseType() *ast.Identifier {
 	if isBuiltinType(p.peek().Kind) {
 		tok := p.advance()
-		return &ast.Identifier{Token: tok, Value: p.lexeme(tok)}
+		return &ast.Identifier{
+			Token: tok,
+			Value: p.lexeme(tok),
+		}
 	}
-	return p.parseIdentifier()
+
+	if p.check(token.Identifier) {
+		return p.parseIdentifier()
+	}
+
+	p.reportError(p.peek(), "expected type")
+	return nil
 }
 
 func (p *Parser) parseFunc() ast.Stmt {
@@ -276,10 +294,8 @@ func (p *Parser) parseIf() ast.Stmt {
 
 func (p *Parser) parseExpression(precedence int) ast.Expr {
 	left := p.parsePrefix()
-	if left == nil {
-		errTok := p.peek()
-		p.reportError(errTok, "expected expression")
-		return badExpr(errTok)
+	if isBadExpr(left) {
+		return left
 	}
 
 	for !p.isAtEnd() {
@@ -318,8 +334,13 @@ func (p *Parser) parsePrefix() ast.Expr {
 		return p.parseStringLiteral()
 	case p.check(token.CharacterLiteral):
 		return p.parseCharacterLiteral()
+	case p.match(token.LeftParen):
+		expr := p.parseExpression(PrecLowest)
+		p.expect(token.RightParen, "to close expression")
+		return expr
 	default:
-		return nil
+		p.reportError(p.peek(), "unexpected %s", p.peek().Kind.DisplayName())
+		return badExpr(p.peek())
 	}
 }
 

@@ -68,6 +68,9 @@ func (p *Parser) synchronize() {
 func (p *Parser) lexeme(tok token.Token) string {
 	start := int(tok.Position.Offset)
 	end := start + int(tok.Length)
+	if start < 0 {
+		panic("negative token offset") // shouldn't reach here (but it can)
+	}
 	if end > len(p.source) {
 		end = len(p.source)
 	}
