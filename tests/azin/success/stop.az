@@ -1,0 +1,13 @@
+fn main: int do
+    var mut i: int = 0
+
+    loop
+        i = i + 1
+
+        if i == 10 then
+            stop
+        end
+    end
+
+    return 0
+end

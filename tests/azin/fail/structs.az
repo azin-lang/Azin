@@ -1,0 +1,9 @@
+// error expected:
+// expected identifier , found 'fn'
+
+struct Point is
+    x: int
+    y: int
+
+fn main: int do
+end

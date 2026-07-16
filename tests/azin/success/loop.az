@@ -1,0 +1,7 @@
+fn main: int do
+    loop
+        stop
+    end
+
+    return 0
+end

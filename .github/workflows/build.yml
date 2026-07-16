@@ -53,19 +53,39 @@ jobs:
             - name: Run go vet
               run: go vet ./...
 
-            - name: Run tests
-              run: go test -count=1 -short ./tests/...
-
-            - name: Build
+            - name: Build (Unix)
+              if: runner.os != 'Windows'
               run: go build -o azc ./cmd/azc
+
+            - name: Build (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: go build -o azc.exe ./cmd/azc
+#
+#            - name: List workspace (Windows)
+#              if: runner.os == 'Windows'
+#              shell: pwsh
+#              run: |
+#                Get-ChildItem ${{ github.workspace }}
+#                Get-ChildItem ${{ github.workspace }} -Recurse | Where-Object { $_.Name -like "azc*" }
+#
+#            - name: Check build output
+#              if: runner.os == 'Windows'
+#              shell: pwsh
+#              run: |
+#                Test-Path azc.exe
+#                Test-Path azc
+#                Get-Location
 
             - name: Full test suite with coverage (Unix)
               if: runner.os != 'Windows'
+              env:
+                AZC: ${{ github.workspace }}/azc
               run: go test -count=1 -cover ./tests/...
 
             - name: Full test suite with coverage (Windows)
               if: runner.os == 'Windows'
               shell: pwsh
+              env:
+                AZC: ${{ github.workspace }}/azc.exe
               run: go test -count=1 -cover ./tests/...
-
-

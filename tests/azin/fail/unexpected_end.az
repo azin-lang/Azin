@@ -1,0 +1,7 @@
+// error expected:
+// unexpected 'end'
+
+fn main: int do
+    return 0
+end
+end

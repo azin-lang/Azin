@@ -161,11 +161,13 @@ func skipFalseOrEmpty(v reflect.Value) bool {
 
 	case reflect.Bool:
 		return !v.Bool()
+
+	case reflect.String:
+		return v.Len() == 0
 	}
 
 	return false
 }
-
 func isInlineField(name string) bool {
 	switch name {
 	case
