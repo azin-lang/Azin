@@ -12,8 +12,8 @@ import (
 	"github.com/azin-lang/Azin/internal/codegen"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
-	"github.com/azin-lang/Azin/internal/parser"
 	"github.com/azin-lang/Azin/internal/optimizer"
+	"github.com/azin-lang/Azin/internal/parser"
 	"github.com/azin-lang/Azin/internal/semantic"
 	"github.com/azin-lang/Azin/internal/source"
 )
