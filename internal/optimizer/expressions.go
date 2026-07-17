@@ -5,17 +5,28 @@ import (
 )
 
 func optimizeExpr(expr ast.Expr) ast.Expr {
+	for {
+		next := optimizeExprOnce(expr)
+		if exprEqual(expr, next) {
+			return next
+		}
+		expr = next
+	}
+}
+
+func optimizeExprOnce(expr ast.Expr) ast.Expr {
 	switch n := expr.(type) {
+
 	case *ast.BinaryExpr:
 		n.Left = optimizeExpr(n.Left)
 		n.Right = optimizeExpr(n.Right)
 
-		if expr := simplifyBinary(n); expr != nil {
-			return expr
-		}
-
 		if folded := foldBinaryExpr(n.Left, n.Operator, n.Right); folded != nil {
 			return folded
+		}
+
+		if simplified := simplifyBinary(n); simplified != nil {
+			return simplified
 		}
 
 	case *ast.MemberExpr:
@@ -31,6 +42,6 @@ func optimizeExpr(expr ast.Expr) ast.Expr {
 
 func optimizeExprs(exprs []ast.Expr) {
 	for i := range exprs {
-		exprs[i] = optimizeExpr(exprs[i])
+		exprs[i] = optimizeExprOnce(exprs[i])
 	}
 }
