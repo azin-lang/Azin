@@ -51,24 +51,14 @@ func exprEqual(left, right ast.Expr) bool {
 
 	case *ast.CallExpr:
 		r, ok := right.(*ast.CallExpr)
-		if !ok {
+		if !ok || !exprEqual(l.Callee, r.Callee) || len(l.Args) != len(r.Args) {
 			return false
 		}
-
-		if !exprEqual(l.Callee, r.Callee) {
-			return false
-		}
-
-		if len(l.Args) != len(r.Args) {
-			return false
-		}
-
 		for i := range l.Args {
 			if !exprEqual(l.Args[i], r.Args[i]) {
 				return false
 			}
 		}
-
 		return true
 
 	default:
@@ -111,5 +101,19 @@ func isConstant(expr ast.Expr) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// isPure returns true if evaluating the expression has no side effects.
+func isPure(expr ast.Expr) bool {
+	switch n := expr.(type) {
+	case *ast.IntegerLiteral, *ast.FloatLiteral, *ast.BooleanLiteral, *ast.CharacterLiteral, *ast.Identifier:
+		return true
+	case *ast.MemberExpr:
+		return isPure(n.Object)
+	case *ast.BinaryExpr:
+		return isPure(n.Left) && isPure(n.Right)
+	default:
+		return false // CallExpr, assignments, etc. are assumed impure
 	}
 }

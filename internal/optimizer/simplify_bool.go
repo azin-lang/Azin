@@ -9,60 +9,61 @@ func simplifyBoolean(n *ast.BinaryExpr) ast.Expr {
 	switch n.Operator.Kind {
 
 	case token.LogicalAnd:
-		// true && x -> x
+		// true && x == x
 		if isTrue(n.Left) {
 			return n.Right
 		}
 
-		// x && true -> x
+		// x && true == x
 		if isTrue(n.Right) {
 			return n.Left
 		}
 
-		// false && x -> false
+		// false && foo() safely short-circuits to false
 		if isFalse(n.Left) {
 			return n.Left
 		}
 
-		// x && false -> false
-		if isFalse(n.Right) {
+		// foo() && false is only false if foo() is pure
+		if isFalse(n.Right) && isPure(n.Left) {
 			return n.Right
 		}
 
-		// x && x -> x
-		if exprEqual(n.Left, n.Right) {
+		// x && x == x
+		if isPure(n.Left) && exprEqual(n.Left, n.Right) {
 			return n.Left
 		}
 
 	case token.LogicalOr:
-		// false || x -> x
+		// false || x == x
 		if isFalse(n.Left) {
 			return n.Right
 		}
 
-		// x || false -> x
+		// x || false == x
 		if isFalse(n.Right) {
 			return n.Left
 		}
 
-		// true || x -> true
+		// true || foo() safely short-circuits to true
 		if isTrue(n.Left) {
 			return n.Left
 		}
 
-		// x || true -> true
-		if isTrue(n.Right) {
+		// foo() || true is only true if foo() is pure
+		if isTrue(n.Right) && isPure(n.Left) {
 			return n.Right
 		}
 
-		// x || x -> x
-		if exprEqual(n.Left, n.Right) {
+		// x || x == x
+		if isPure(n.Left) && exprEqual(n.Left, n.Right) {
 			return n.Left
 		}
 
 	case token.EqualEqual:
-		// x == x
-		if exprEqual(n.Left, n.Right) {
+		// x == x is true
+		// TODO: handle NaN, since the identity for that
+		if isPure(n.Left) && exprEqual(n.Left, n.Right) {
 			return boolLit(true)
 		}
 
