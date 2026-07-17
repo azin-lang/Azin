@@ -117,3 +117,13 @@ func isTerminal(stmt ast.Stmt) bool {
 	}
 	return false
 }
+
+// blockIsTerminal checks if a slice of statements is guaranteed to halt.
+// Because optimizeStatements strips dead code, a terminal statement
+// will always be exactly at the last index.
+func blockIsTerminal(stmts []ast.Stmt) bool {
+	if len(stmts) == 0 {
+		return false
+	}
+	return isTerminal(stmts[len(stmts)-1])
+}
