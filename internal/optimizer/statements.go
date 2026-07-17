@@ -22,7 +22,10 @@ func optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 		return optimizeIf(n)
 
 	case *ast.LoopStmt:
-		optimizeLoop(n)
+		return optimizeLoop(n)
+
+	case *ast.ExpressionStmt:
+		return optimizeExpressionStmt(n)
 
 	case *ast.FuncStmt:
 		optimizeFunction(n)
@@ -36,15 +39,16 @@ func optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 	case *ast.AssignmentStmt:
 		optimizeAssignment(n)
 
-	case *ast.ExpressionStmt:
-		optimizeExpressionStmt(n)
 	}
 
 	return []ast.Stmt{stmt}
 }
 
-func optimizeLoop(n *ast.LoopStmt) {
+func optimizeLoop(n *ast.LoopStmt) []ast.Stmt {
 	n.Body = optimizeStatements(n.Body)
+
+	// TODO: revisit this when we add conditions to loops, so we can discard or simplify loops such as while(false)
+	return []ast.Stmt{n}
 }
 
 func optimizeFunction(n *ast.FuncStmt) {
@@ -68,8 +72,16 @@ func optimizeAssignment(n *ast.AssignmentStmt) {
 	n.Value = optimizeExpr(n.Value)
 }
 
-func optimizeExpressionStmt(n *ast.ExpressionStmt) {
+func optimizeExpressionStmt(n *ast.ExpressionStmt) []ast.Stmt {
 	if n.Expression != nil {
 		n.Expression = optimizeExpr(n.Expression)
+
+		// If the statement has no side effects, the statement is useless.
+		// e.g. "5 + 5;" or "x;".
+		if isPure(n.Expression) {
+			return []ast.Stmt{}
+		}
 	}
+
+	return []ast.Stmt{n}
 }
