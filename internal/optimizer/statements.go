@@ -28,8 +28,7 @@ func optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
 			optStmt := optStmts[j]
 			out = append(out, optStmt)
 
-			switch optStmt.(type) {
-			case *ast.ReturnStmt, *ast.StopStmt:
+			if isTerminal(optStmt) {
 				// Terminal statement reached; abandon dead code
 				return out
 			}
@@ -108,4 +107,13 @@ func optimizeExpressionStmt(n *ast.ExpressionStmt) []ast.Stmt {
 	}
 
 	return []ast.Stmt{n}
+}
+
+// isTerminal checks if a single statement halts execution flow.
+func isTerminal(stmt ast.Stmt) bool {
+	switch stmt.(type) {
+	case *ast.ReturnStmt, *ast.StopStmt:
+		return true
+	}
+	return false
 }
