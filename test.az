@@ -1,3 +1,4 @@
+test
 importc "stdio.h"
 importc "stdlib.h"
 importc "math.h"
