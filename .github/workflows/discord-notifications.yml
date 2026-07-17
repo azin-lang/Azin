@@ -15,6 +15,8 @@ jobs:
   notify:
     name: Send Webhook
     runs-on: ubuntu-latest
+    # If PR is from a fork, secrets may be unavailable => skip safely
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - name: Send Discord Embed Message
         env:
@@ -29,6 +31,13 @@ jobs:
           REPO: ${{ github.repository }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
+          if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+            echo "DISCORD_WEBHOOK_URL is empty (secrets unavailable). Skipping."
+            exit 0
+          fi
+
+          DISCORD_WEBHOOK_URL="$(printf '%s' "$DISCORD_WEBHOOK_URL" | tr -d '\r\n' | xargs)"
+
           payload=$(jq -n \
             --arg action "$PR_ACTION" \
             --arg number "$PR_NUMBER" \
