@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime" 
+	"runtime"
 	"strings"
 
 	"github.com/azin-lang/Azin/internal/ast"
