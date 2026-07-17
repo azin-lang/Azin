@@ -78,6 +78,19 @@ func simplifyBoolean(n *ast.BinaryExpr) ast.Expr {
 		if isTrue(n.Left) {
 			return n.Right
 		}
+
+	case token.Less, token.Greater:
+		// x < x == false, x > x == false
+		if leftPure && exprEqual(n.Left, n.Right) {
+			return boolLit(false)
+		}
+
+	case token.LessEqual, token.GreaterEqual:
+		// x <= x == true, x >= x == true
+		// TODO: NaN breaks this, so make sure type isn't float before this
+		if leftPure && exprEqual(n.Left, n.Right) {
+			return boolLit(true)
+		}
 	}
 
 	return nil
