@@ -3,22 +3,34 @@ package optimizer
 import "github.com/azin-lang/Azin/internal/ast"
 
 func optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
-	out := make([]ast.Stmt, 0, len(stmts))
+	if len(stmts) == 0 {
+		return stmts
+	}
 
-	for _, stmt := range stmts {
+	var out []ast.Stmt // Delay allocation until required
+
+	for i := range stmts {
+		stmt := stmts[i]
 		if stmt == nil {
 			continue
 		}
 
-		optimizedStmts := optimizeStatement(stmt)
+		optStmts := optimizeStatement(stmt)
+		if len(optStmts) == 0 {
+			continue
+		}
 
-		for _, optStmt := range optimizedStmts {
+		if out == nil {
+			out = make([]ast.Stmt, 0, len(stmts))
+		}
+
+		for j := range optStmts {
+			optStmt := optStmts[j]
 			out = append(out, optStmt)
 
 			switch optStmt.(type) {
 			case *ast.ReturnStmt, *ast.StopStmt:
-				// We hit a terminal statement!
-				// Return immediately, abandoning any remaining statements in the block.
+				// Terminal statement reached; abandon dead code
 				return out
 			}
 		}
