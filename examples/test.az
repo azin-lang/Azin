@@ -9,7 +9,7 @@ end
 
 fn distance(a: Point, b: Point): int do
     return abs(a.x - b.x) + abs(a.y - b.y);
-end
+end s
 
 fn main: int do
     printf("hello world\n");
