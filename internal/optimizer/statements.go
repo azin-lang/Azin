@@ -96,14 +96,15 @@ func optimizeAssignment(n *ast.AssignmentStmt) {
 }
 
 func optimizeExpressionStmt(n *ast.ExpressionStmt) []ast.Stmt {
-	if n.Expression != nil {
-		n.Expression = optimizeExpr(n.Expression)
+	if n.Expression == nil {
+		return nil
+	}
 
-		// If the statement has no side effects, the statement is useless.
-		// e.g. "5 + 5;" or "x;".
-		if isPure(n.Expression) {
-			return []ast.Stmt{}
-		}
+	n.Expression = optimizeExpr(n.Expression)
+
+	// Eliminate pure statements that execute with no side effects
+	if isPure(n.Expression) {
+		return nil
 	}
 
 	return []ast.Stmt{n}
