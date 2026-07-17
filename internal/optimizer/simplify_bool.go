@@ -6,6 +6,8 @@ import (
 )
 
 func simplifyBoolean(n *ast.BinaryExpr) ast.Expr {
+	leftPure := isPure(n.Left)
+
 	switch n.Operator.Kind {
 
 	case token.LogicalAnd:
@@ -25,12 +27,12 @@ func simplifyBoolean(n *ast.BinaryExpr) ast.Expr {
 		}
 
 		// foo() && false is only false if foo() is pure
-		if isFalse(n.Right) && isPure(n.Left) {
+		if isFalse(n.Right) && leftPure {
 			return n.Right
 		}
 
 		// x && x == x
-		if isPure(n.Left) && exprEqual(n.Left, n.Right) {
+		if leftPure && exprEqual(n.Left, n.Right) {
 			return n.Left
 		}
 
@@ -51,19 +53,19 @@ func simplifyBoolean(n *ast.BinaryExpr) ast.Expr {
 		}
 
 		// foo() || true is only true if foo() is pure
-		if isTrue(n.Right) && isPure(n.Left) {
+		if isTrue(n.Right) && leftPure {
 			return n.Right
 		}
 
 		// x || x == x
-		if isPure(n.Left) && exprEqual(n.Left, n.Right) {
+		if leftPure && exprEqual(n.Left, n.Right) {
 			return n.Left
 		}
 
 	case token.EqualEqual:
 		// x == x is true
 		// TODO: handle NaN, since the identity for that
-		if isPure(n.Left) && exprEqual(n.Left, n.Right) {
+		if leftPure && exprEqual(n.Left, n.Right) {
 			return boolLit(true)
 		}
 
