@@ -15,6 +15,15 @@ func isFalse(expr ast.Expr) bool {
 // TODO: move this out of optimizer and implement an `Equal(Expr) bool` inside the Expr interface
 
 func exprEqual(left, right ast.Expr) bool {
+	// Fast path: identical pointers
+	if left == right {
+		return true
+	}
+
+	if left == nil || right == nil {
+		return false
+	}
+
 	switch l := left.(type) {
 	case *ast.IntegerLiteral:
 		r, ok := right.(*ast.IntegerLiteral)
@@ -38,23 +47,19 @@ func exprEqual(left, right ast.Expr) bool {
 
 	case *ast.MemberExpr:
 		r, ok := right.(*ast.MemberExpr)
-		return ok &&
-			exprEqual(l.Object, r.Object) &&
-			exprEqual(l.Property, r.Property)
+		return ok && exprEqual(l.Object, r.Object) && exprEqual(l.Property, r.Property)
 
 	case *ast.BinaryExpr:
 		r, ok := right.(*ast.BinaryExpr)
-		return ok &&
-			l.Operator.Kind == r.Operator.Kind &&
-			exprEqual(l.Left, r.Left) &&
-			exprEqual(l.Right, r.Right)
+		return ok && l.Operator.Kind == r.Operator.Kind &&
+			exprEqual(l.Left, r.Left) && exprEqual(l.Right, r.Right)
 
 	case *ast.CallExpr:
 		r, ok := right.(*ast.CallExpr)
-		if !ok || !exprEqual(l.Callee, r.Callee) || len(l.Args) != len(r.Args) {
+		if !ok || len(l.Args) != len(r.Args) || !exprEqual(l.Callee, r.Callee) {
 			return false
 		}
-		for i := range l.Args {
+		for i := 0; i < len(l.Args); i++ {
 			if !exprEqual(l.Args[i], r.Args[i]) {
 				return false
 			}
@@ -65,7 +70,6 @@ func exprEqual(left, right ast.Expr) bool {
 		return false
 	}
 }
-
 func isZero(expr ast.Expr) bool {
 	switch n := expr.(type) {
 	case *ast.IntegerLiteral:
@@ -74,9 +78,8 @@ func isZero(expr ast.Expr) bool {
 		return n.Value == 0
 	case *ast.CharacterLiteral:
 		return n.Value == 0
-	default:
-		return false
 	}
+	return false
 }
 
 func isOne(expr ast.Expr) bool {
@@ -87,21 +90,16 @@ func isOne(expr ast.Expr) bool {
 		return n.Value == 1
 	case *ast.CharacterLiteral:
 		return n.Value == 1
-	default:
-		return false
 	}
+	return false
 }
 
 func isConstant(expr ast.Expr) bool {
 	switch expr.(type) {
-	case *ast.IntegerLiteral,
-		*ast.FloatLiteral,
-		*ast.BooleanLiteral,
-		*ast.CharacterLiteral:
+	case *ast.IntegerLiteral, *ast.FloatLiteral, *ast.BooleanLiteral, *ast.CharacterLiteral:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // isPure returns true if evaluating the expression has no side effects.
@@ -114,6 +112,6 @@ func isPure(expr ast.Expr) bool {
 	case *ast.BinaryExpr:
 		return isPure(n.Left) && isPure(n.Right)
 	default:
-		return false // CallExpr, assignments, etc. are assumed impure
+		return false
 	}
 }
