@@ -4,13 +4,18 @@ import (
 	"github.com/azin-lang/Azin/internal/ast"
 )
 
-func simplifyBinary(n *ast.BinaryExpr) ast.Expr {
-	if expr := simplifyBoolean(n); expr != nil {
-		return expr
-	}
+type binaryRule func(*ast.BinaryExpr) ast.Expr
 
-	if expr := simplifyArithmetic(n); expr != nil {
-		return expr
+var binaryRules = []binaryRule{
+	simplifyArithmetic,
+	simplifyBoolean,
+}
+
+func simplifyBinary(n *ast.BinaryExpr) ast.Expr {
+	for _, rule := range binaryRules {
+		if expr := rule(n); expr != nil {
+			return expr
+		}
 	}
 
 	return nil
