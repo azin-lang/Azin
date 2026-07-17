@@ -14,5 +14,10 @@ func optimizeIf(n *ast.IfStmt) []ast.Stmt {
 		return n.Else
 	}
 
+	// If both branches are empty, and condition has no side effects, delete it
+	if len(n.Then) == 0 && len(n.Else) == 0 && isPure(n.Condition) {
+		return []ast.Stmt{}
+	}
+
 	return []ast.Stmt{n}
 }
