@@ -10,17 +10,17 @@ func foldBinaryExpr(left ast.Expr, op token.Token, right ast.Expr) ast.Expr {
 	case *ast.IntegerLiteral:
 		switch r := right.(type) {
 		case *ast.IntegerLiteral:
-			return foldIntegerInteger(l, op, r)
+			return foldInteger(l, op, r)
 
 		case *ast.FloatLiteral:
-			return foldFloatFloat(
+			return foldFloat(
 				floatLit(float64(l.Value)),
 				op,
 				r,
 			)
 
 		case *ast.CharacterLiteral:
-			return foldIntegerInteger(
+			return foldInteger(
 				l,
 				op,
 				intLit(int64(r.Value)),
@@ -30,32 +30,32 @@ func foldBinaryExpr(left ast.Expr, op token.Token, right ast.Expr) ast.Expr {
 	case *ast.FloatLiteral:
 		switch r := right.(type) {
 		case *ast.IntegerLiteral:
-			return foldFloatFloat(
+			return foldFloat(
 				l,
 				op,
 				floatLit(float64(r.Value)),
 			)
 
 		case *ast.FloatLiteral:
-			return foldFloatFloat(l, op, r)
+			return foldFloat(l, op, r)
 		}
 
 	case *ast.BooleanLiteral:
 		if r, ok := right.(*ast.BooleanLiteral); ok {
-			return foldBooleanBoolean(l, op, r)
+			return foldBoolean(l, op, r)
 		}
 
 	case *ast.CharacterLiteral:
 		switch r := right.(type) {
 		case *ast.CharacterLiteral:
-			return foldIntegerInteger(
+			return foldInteger(
 				charAsInt(l),
 				op,
 				charAsInt(r),
 			)
 
 		case *ast.IntegerLiteral:
-			return foldIntegerInteger(
+			return foldInteger(
 				charAsInt(l),
 				op,
 				r,

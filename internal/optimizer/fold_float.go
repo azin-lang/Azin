@@ -5,7 +5,7 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
-func foldFloatFloat(left *ast.FloatLiteral, op token.Token, right *ast.FloatLiteral) ast.Expr {
+func foldFloat(left *ast.FloatLiteral, op token.Token, right *ast.FloatLiteral) ast.Expr {
 	switch op.Kind {
 	case token.Plus:
 		return floatLit(left.Value + right.Value)

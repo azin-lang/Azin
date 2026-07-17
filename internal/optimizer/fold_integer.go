@@ -5,7 +5,7 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
-func foldIntegerInteger(left *ast.IntegerLiteral, op token.Token, right *ast.IntegerLiteral) ast.Expr {
+func foldInteger(left *ast.IntegerLiteral, op token.Token, right *ast.IntegerLiteral) ast.Expr {
 	switch op.Kind {
 	case token.Plus:
 		return intLit(left.Value + right.Value)

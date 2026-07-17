@@ -5,7 +5,7 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
-func foldBooleanBoolean(left *ast.BooleanLiteral, op token.Token, right *ast.BooleanLiteral) ast.Expr {
+func foldBoolean(left *ast.BooleanLiteral, op token.Token, right *ast.BooleanLiteral) ast.Expr {
 	switch op.Kind {
 	case token.LogicalAnd:
 		return boolLit(left.Value && right.Value)
