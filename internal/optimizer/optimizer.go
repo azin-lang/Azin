@@ -1,4 +1,4 @@
-// package optimizer provides basic optimitzations before transpiling to C
+// Package optimizer provides basic optimizations before transpiling to C.
 package optimizer
 
 import (
