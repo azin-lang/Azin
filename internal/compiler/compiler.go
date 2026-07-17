@@ -13,6 +13,7 @@ import (
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/parser"
+	"github.com/azin-lang/Azin/internal/optimizer"
 	"github.com/azin-lang/Azin/internal/semantic"
 	"github.com/azin-lang/Azin/internal/source"
 )
@@ -159,6 +160,7 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 		return err
 	}
 
+	optimizer.Optimize(program)
 	cCode := transpileToC(program)
 
 	if opts.EmitC {
