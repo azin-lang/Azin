@@ -45,5 +45,29 @@ func optimizeIf(n *ast.IfStmt) []ast.Stmt {
 		return unnested
 	}
 
+	return tryTailMerge(n)
+}
+
+func tryTailMerge(n *ast.IfStmt) []ast.Stmt {
+	if len(n.Then) == 0 || len(n.Else) == 0 {
+		return []ast.Stmt{n}
+	}
+
+	lastThen := n.Then[len(n.Then)-1]
+	lastElse := n.Else[len(n.Else)-1]
+
+	// If both end in the same return value
+	if t, okT := lastThen.(*ast.ReturnStmt); okT {
+		if e, okE := lastElse.(*ast.ReturnStmt); okE {
+			if exprEqual(t.Value, e.Value) {
+				// Drop the returns from the branches
+				n.Then = n.Then[:len(n.Then)-1]
+				n.Else = n.Else[:len(n.Else)-1]
+
+				// Return the if statement followed by the shared return
+				return []ast.Stmt{n, t}
+			}
+		}
+	}
 	return []ast.Stmt{n}
 }
