@@ -101,3 +101,15 @@ func isOne(expr ast.Expr) bool {
 		return false
 	}
 }
+
+func isConstant(expr ast.Expr) bool {
+	switch expr.(type) {
+	case *ast.IntegerLiteral,
+		*ast.FloatLiteral,
+		*ast.BooleanLiteral,
+		*ast.CharacterLiteral:
+		return true
+	default:
+		return false
+	}
+}

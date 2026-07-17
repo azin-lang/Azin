@@ -9,6 +9,7 @@ type binaryRule func(*ast.BinaryExpr) ast.Expr
 var binaryRules = []binaryRule{
 	simplifyArithmetic,
 	simplifyBoolean,
+	canonicalizeBinary,
 }
 
 func simplifyBinary(n *ast.BinaryExpr) ast.Expr {
