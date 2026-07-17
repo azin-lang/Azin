@@ -75,3 +75,29 @@ func exprEqual(left, right ast.Expr) bool {
 		return false
 	}
 }
+
+func isZero(expr ast.Expr) bool {
+	switch n := expr.(type) {
+	case *ast.IntegerLiteral:
+		return n.Value == 0
+	case *ast.FloatLiteral:
+		return n.Value == 0
+	case *ast.CharacterLiteral:
+		return n.Value == 0
+	default:
+		return false
+	}
+}
+
+func isOne(expr ast.Expr) bool {
+	switch n := expr.(type) {
+	case *ast.IntegerLiteral:
+		return n.Value == 1
+	case *ast.FloatLiteral:
+		return n.Value == 1
+	case *ast.CharacterLiteral:
+		return n.Value == 1
+	default:
+		return false
+	}
+}
