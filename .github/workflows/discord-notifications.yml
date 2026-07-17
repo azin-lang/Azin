@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: tsickert/discord-webhook@v7
+      - uses: tsickert/discord-webhook@v7.0.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           embed-title: "Pull Request ${{ github.event.action }}: #${{ github.event.pull_request.number }}"
