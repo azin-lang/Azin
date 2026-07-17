@@ -7,10 +7,10 @@ import (
 type binaryRule func(*ast.BinaryExpr) ast.Expr
 
 var binaryRules = []binaryRule{
-	simplifyArithmetic,
-	simplifyBoolean,
 	canonicalizeBinary,
 	reassociateBinary,
+	simplifyArithmetic,
+	simplifyBoolean,
 }
 
 func simplifyBinary(n *ast.BinaryExpr) ast.Expr {
