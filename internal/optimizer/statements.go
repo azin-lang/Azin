@@ -10,7 +10,18 @@ func optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
 			continue
 		}
 
-		out = append(out, optimizeStatement(stmt)...)
+		optimizedStmts := optimizeStatement(stmt)
+
+		for _, optStmt := range optimizedStmts {
+			out = append(out, optStmt)
+
+			switch optStmt.(type) {
+			case *ast.ReturnStmt, *ast.StopStmt:
+				// We hit a terminal statement!
+				// Return immediately, abandoning any remaining statements in the block.
+				return out
+			}
+		}
 	}
 
 	return out
