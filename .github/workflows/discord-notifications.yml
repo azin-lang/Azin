@@ -1,7 +1,7 @@
 name: Pull Request Discord Notification
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 concurrency:
@@ -15,51 +15,18 @@ jobs:
   notify:
     name: Send Webhook
     runs-on: ubuntu-latest
-    # If PR is from a fork, secrets may be unavailable => skip safely
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
-      - name: Send Discord Embed Message
-        env:
-          PR_ACTION: ${{ github.event.action }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_USER_LOGIN: ${{ github.event.pull_request.user.login }}
-          PR_USER_AVATAR: ${{ github.event.pull_request.user.avatar_url }}
-          REPO: ${{ github.repository }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
-            echo "DISCORD_WEBHOOK_URL is empty (secrets unavailable). Skipping."
-            exit 0
-          fi
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v7.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "Pull Request ${{ github.event.action }}: #${{ github.event.pull_request.number }}"
+          embed-description: |
+            **${{ github.event.pull_request.title }}**
 
-          DISCORD_WEBHOOK_URL="$(printf '%s' "$DISCORD_WEBHOOK_URL" | tr -d '\r\n' | xargs)"
-
-          payload=$(jq -n \
-            --arg action "$PR_ACTION" \
-            --arg number "$PR_NUMBER" \
-            --arg title "$PR_TITLE" \
-            --arg head "$PR_HEAD_REF" \
-            --arg base "$PR_BASE_REF" \
-            --arg url "$PR_URL" \
-            --arg user "$PR_USER_LOGIN" \
-            --arg avatar "$PR_USER_AVATAR" \
-            --arg repo "$REPO" \
-            '{
-              embeds: [{
-                title: ("Pull Request " + $action + ": #" + $number),
-                description: ("**" + $title + "**\n\nBranch: `" + $head + "` into `" + $base + "`"),
-                url: $url,
-                color: 5814783,
-                author: { name: $user, icon_url: $avatar },
-                footer: { text: $repo }
-              }]
-            }')
-
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "$payload" \
-               "$DISCORD_WEBHOOK_URL"
+            Branch: `${{ github.event.pull_request.head.ref }}` into `${{ github.event.pull_request.base.ref }}`
+          embed-url: ${{ github.event.pull_request.html_url }}
+          embed-color: 5814783
+          embed-author-name: ${{ github.event.pull_request.user.login }}
+          embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
+          embed-footer-text: ${{ github.repository }}
