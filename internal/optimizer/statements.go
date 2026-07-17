@@ -69,7 +69,41 @@ func optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 func optimizeLoop(n *ast.LoopStmt) []ast.Stmt {
 	n.Body = optimizeStatements(n.Body)
 
-	// TODO: revisit this when we add conditions to loops, so we can discard or simplify loops such as while(false)
+	if len(n.Body) == 0 {
+		return []ast.Stmt{n}
+	}
+
+	if !canUnwrapLoop(n.Body) {
+		return []ast.Stmt{n}
+	}
+
+	last := n.Body[len(n.Body)-1]
+
+	switch last.(type) {
+	case *ast.ReturnStmt:
+		// loop
+		//   ...
+		//   return
+		// end
+		//
+		// =>
+		//
+		// ...
+		// return
+		return n.Body
+
+	case *ast.StopStmt:
+		// loop
+		//   ...
+		//   stop
+		// end
+		//
+		// =>
+		//
+		// ...
+		return n.Body[:len(n.Body)-1]
+	}
+
 	return []ast.Stmt{n}
 }
 
@@ -126,4 +160,29 @@ func blockIsTerminal(stmts []ast.Stmt) bool {
 		return false
 	}
 	return isTerminal(stmts[len(stmts)-1])
+}
+
+func canUnwrapLoop(body []ast.Stmt) bool {
+	if len(body) == 0 {
+		return false
+	}
+
+	for i := 0; i < len(body)-1; i++ {
+		if !isSimpleStmt(body[i]) {
+			return false
+		}
+	}
+
+	return isTerminal(body[len(body)-1])
+}
+
+func isSimpleStmt(stmt ast.Stmt) bool {
+	switch stmt.(type) {
+	case *ast.ExpressionStmt,
+		*ast.VarStmt,
+		*ast.AssignmentStmt:
+		return true
+	default:
+		return false
+	}
 }
