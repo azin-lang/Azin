@@ -27,11 +27,75 @@ func TestAzinPrograms(t *testing.T) {
 		t.Fatal("AZC environment variable is not set")
 	}
 
-	runDir(t, "success", false)
-	runDir(t, "fail", true)
+	runSuccessTests(t)
+	runFailureTests(t)
 }
 
-func runDir(t *testing.T, dir string, shouldFail bool) {
+func runSuccessTests(t *testing.T) {
+	t.Helper()
+
+	for _, file := range testFiles(t, "success") {
+		file := file
+
+		t.Run(filepath.Base(file), func(t *testing.T) {
+			output, err := compile(file)
+
+			if err != nil {
+				t.Fatalf(
+					"compiler failed\n\nerror: %v\n\noutput:\n%s",
+					err,
+					output,
+				)
+			}
+		})
+	}
+}
+
+func runFailureTests(t *testing.T) {
+	t.Helper()
+
+	for _, file := range testFiles(t, "fail") {
+		file := file
+
+		t.Run(filepath.Base(file), func(t *testing.T) {
+			output, err := compile(file)
+
+			if err == nil {
+				t.Fatal("expected compilation to fail")
+			}
+
+			expected := expectedError(t, file)
+
+			if expected == "" {
+				t.Fatal("missing '// error expected:' block")
+			}
+
+			if !strings.Contains(output, expected) {
+				t.Fatalf(
+					"unexpected compiler output\n\nexpected:\n%s\n\ngot:\n%s",
+					expected,
+					output,
+				)
+			}
+		})
+	}
+}
+
+func compile(file string) (string, error) {
+	defer os.Remove("output.exe")
+
+	cmd := exec.Command(compiler, file)
+
+	var output bytes.Buffer
+	cmd.Stdout = &output
+	cmd.Stderr = &output
+
+	err := cmd.Run()
+
+	return strings.TrimSpace(output.String()), err
+}
+
+func testFiles(t *testing.T, dir string) []string {
 	t.Helper()
 
 	files, err := filepath.Glob(filepath.Join(dir, "*.az"))
@@ -43,50 +107,7 @@ func runDir(t *testing.T, dir string, shouldFail bool) {
 		t.Fatalf("no test files found in %q", dir)
 	}
 
-	for _, file := range files {
-
-		t.Run(filepath.Base(file), func(t *testing.T) {
-			defer os.Remove("output.exe")
-
-			cmd := exec.Command(compiler, file)
-
-			var output bytes.Buffer
-			cmd.Stdout = &output
-			cmd.Stderr = &output
-
-			err := cmd.Run()
-
-			got := strings.TrimSpace(output.String())
-
-			if shouldFail {
-				if err == nil {
-					t.Fatal("expected compilation to fail")
-				}
-
-				expected := expectedError(t, file)
-				if expected == "" {
-					t.Fatal("missing '// error expected:' block")
-				}
-
-				if !strings.Contains(got, expected) {
-					t.Fatalf(
-						"unexpected compiler output\n\nexpected to contain:\n%s\n\ngot:\n%s",
-						expected,
-						got,
-					)
-				}
-
-				return
-			}
-
-			if err != nil {
-				t.Fatalf(
-					"compilation failed:\n\n%s",
-					got,
-				)
-			}
-		})
-	}
+	return files
 }
 
 func expectedError(t *testing.T, file string) string {
