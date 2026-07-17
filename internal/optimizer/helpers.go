@@ -39,8 +39,8 @@ func exprEqual(left, right ast.Expr) bool {
 	case *ast.MemberExpr:
 		r, ok := right.(*ast.MemberExpr)
 		return ok &&
-			l.Object.TokenLiteral() == r.Object.TokenLiteral() &&
-			exprEqual(l.Object, r.Object)
+			exprEqual(l.Object, r.Object) &&
+			exprEqual(l.Property, r.Property)
 
 	case *ast.BinaryExpr:
 		r, ok := right.(*ast.BinaryExpr)
