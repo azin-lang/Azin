@@ -35,3 +35,20 @@ func reassociateBinary(n *ast.BinaryExpr) ast.Expr {
 	}
 	return nil
 }
+
+func canonicalizeBinary(n *ast.BinaryExpr) ast.Expr {
+	switch n.Operator.Kind {
+
+	case token.Plus,
+		token.Star,
+		token.EqualEqual,
+		token.BangEqual:
+
+		if isConstant(n.Left) && !isConstant(n.Right) {
+			n.Left, n.Right = n.Right, n.Left
+			return n
+		}
+	}
+
+	return nil
+}
