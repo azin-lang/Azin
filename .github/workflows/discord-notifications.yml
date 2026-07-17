@@ -1,30 +1,22 @@
 name: Pull Request Discord Notification
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   notify:
-    name: Send Webhook
     runs-on: ubuntu-latest
+
     steps:
-      - name: Discord Webhook Action
-        uses: tsickert/discord-webhook@v7.0.0
+      - uses: tsickert/discord-webhook@v7
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          embed-title: "Pull request ${{ github.event.action }}: #${{ github.event.pull_request.number }}"
+          embed-title: "Pull Request ${{ github.event.action }}: #${{ github.event.pull_request.number }}"
           embed-description: |
             **${{ github.event.pull_request.title }}**
 
-            Branch: `${{ github.event.pull_request.head.ref }}` into `${{ github.event.pull_request.base.ref }}`
+            Branch: `${{ github.head_ref }}` into `${{ github.base_ref }}`
           embed-url: ${{ github.event.pull_request.html_url }}
           embed-color: 5814783
           embed-author-name: ${{ github.event.pull_request.user.login }}
