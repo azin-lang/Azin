@@ -1,15 +1,24 @@
 #define AzAppVersion "0.2.1"
 
 [Setup]
+AppId={{CA1B358E-4F89-412E-B278-72C2F9B983BD}
 AppName=Azin
 AppVersion={#AzAppVersion}
-AppPublisher=Azin maintainers
+AppPublisher=Azin Project
 AppPublisherURL=https://github.com/azin-lang/Azin
 AppSupportURL=https://github.com/azin-lang/Azin/issues
+AppUpdatesURL=https://github.com/azin-lang/Azin/releases
 
-DefaultDirName={autopf}\Azin
+DefaultDirName={localappdata}\Programs\Azin
 DefaultGroupName=Azin
 DisableProgramGroupPage=yes
+
+LicenseFile=..\..\LICENSE
+
+VersionInfoVersion={#AzAppVersion}
+VersionInfoCompany=Azin Project
+VersionInfoDescription=Azin compiler installer
+VersionInfoCopyright=Azin Project
 
 OutputDir=..\installer
 OutputBaseFilename=Azin-setup-{#AzAppVersion}
@@ -23,8 +32,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 
 ChangesEnvironment=yes
 
-SetupIconFile=azin.ico
-UninstallDisplayIcon={app}\azin.ico
+WizardStyle=modern
 
 
 [Languages]
@@ -33,11 +41,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "..\..\build\azc.exe"; DestDir: "{app}"; DestName: "azc.exe"; Flags: ignoreversion
-Source: "azin.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 
 [Icons]
-Name: "{group}\Azin"; Filename: "{app}\azc.exe"; IconFilename: "{app}\azin.ico"
+Name: "{group}\Azin"; Filename: "{app}\azc.exe"
 Name: "{group}\Uninstall Azin"; Filename: "{uninstallexe}"
 
 
@@ -99,27 +106,41 @@ begin
   end;
 end;
 
-procedure RemoveFromPath(Dir: string);
+procedure RemoveFromPath(const Dir: string);
 var
-  Path: string;
+  Path, NewPath, Entry: string;
+  PosSep: Integer;
 begin
   if not RegQueryStringValue(HKCU, EnvironmentKey, 'Path', Path) then
     Exit;
 
-  StringChangeEx(Path, ';' + Dir, '', True);
-  StringChangeEx(Path, Dir + ';', '', True);
-  StringChangeEx(Path, Dir, '', True);
+  NewPath := '';
 
-  while Pos(';;', Path) > 0 do
-    StringChangeEx(Path, ';;', ';', True);
+  while Path <> '' do
+  begin
+    PosSep := Pos(';', Path);
 
-  if (Length(Path) > 0) and (Path[1] = ';') then
-    Delete(Path, 1, 1);
+    if PosSep = 0 then
+    begin
+      Entry := Path;
+      Path := '';
+    end
+    else
+    begin
+      Entry := Copy(Path, 1, PosSep - 1);
+      Delete(Path, 1, PosSep);
+    end;
 
-  if (Length(Path) > 0) and (Path[Length(Path)] = ';') then
-    Delete(Path, Length(Path), 1);
+    if CompareText(Entry, Dir) <> 0 then
+    begin
+      if NewPath <> '' then
+        NewPath := NewPath + ';';
 
-  RegWriteExpandStringValue(HKCU, EnvironmentKey, 'Path', Path);
+      NewPath := NewPath + Entry;
+    end;
+  end;
+
+  RegWriteExpandStringValue(HKCU, EnvironmentKey, 'Path', NewPath);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
