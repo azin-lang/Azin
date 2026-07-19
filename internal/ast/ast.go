@@ -18,6 +18,7 @@ type Node interface {
 type Expr interface {
 	Node
 	exprNode()
+	Equals(other Expr) bool
 }
 
 // Stmt represents a statement node.
@@ -59,6 +60,7 @@ func (*BadExpr) exprNode()              {}
 func (b *BadExpr) TokenLiteral() string { return b.Token.Kind.String() }
 func (b *BadExpr) Pos() token.Position  { return b.Token.Position }
 func (*BadExpr) Label() string          { return "BadExpr" }
+func (*BadExpr) Equals(other Expr) bool { return false }
 
 type BadStmt struct {
 	Token token.Token
@@ -294,6 +296,10 @@ func (i *Identifier) Pos() token.Position  { return i.Token.Position }
 func (i *Identifier) Label() string {
 	return i.Value
 }
+func (i *Identifier) Equals(other Expr) bool {
+	o, ok := other.(*Identifier)
+	return ok && i.Value == o.Value
+}
 
 type IntegerLiteral struct {
 	Token token.Token
@@ -305,6 +311,10 @@ func (i *IntegerLiteral) TokenLiteral() string { return fmt.Sprintf("%d", i.Valu
 func (i *IntegerLiteral) Pos() token.Position  { return i.Token.Position }
 func (i *IntegerLiteral) Label() string {
 	return strconv.FormatInt(i.Value, 10)
+}
+func (i *IntegerLiteral) Equals(other Expr) bool {
+	o, ok := other.(*IntegerLiteral)
+	return ok && i.Value == o.Value
 }
 
 type FloatLiteral struct {
@@ -318,6 +328,10 @@ func (f *FloatLiteral) Pos() token.Position  { return f.Token.Position }
 func (f *FloatLiteral) Label() string {
 	return strconv.FormatFloat(f.Value, 'g', -1, 64)
 }
+func (f *FloatLiteral) Equals(other Expr) bool {
+	o, ok := other.(*FloatLiteral)
+	return ok && f.Value == o.Value
+}
 
 type StringLiteral struct {
 	Token token.Token
@@ -330,6 +344,10 @@ func (s *StringLiteral) Pos() token.Position  { return s.Token.Position }
 func (s *StringLiteral) Label() string {
 	return strconv.Quote(s.Value)
 }
+func (s *StringLiteral) Equals(other Expr) bool {
+	o, ok := other.(*StringLiteral)
+	return ok && s.Value == o.Value
+}
 
 type CharacterLiteral struct {
 	Token token.Token
@@ -341,6 +359,10 @@ func (c *CharacterLiteral) TokenLiteral() string { return string(c.Value) }
 func (c *CharacterLiteral) Pos() token.Position  { return c.Token.Position }
 func (c *CharacterLiteral) Label() string {
 	return strconv.QuoteRune(c.Value)
+}
+func (c *CharacterLiteral) Equals(other Expr) bool {
+	o, ok := other.(*CharacterLiteral)
+	return ok && c.Value == o.Value
 }
 
 type BooleanLiteral struct {
@@ -355,6 +377,10 @@ func (b *BooleanLiteral) TokenLiteral() string {
 func (b *BooleanLiteral) Pos() token.Position { return b.Token.Position }
 func (b *BooleanLiteral) Label() string {
 	return strconv.FormatBool(b.Value)
+}
+func (b *BooleanLiteral) Equals(other Expr) bool {
+	o, ok := other.(*BooleanLiteral)
+	return ok && b.Value == o.Value
 }
 
 type CallExpr struct {
@@ -378,6 +404,18 @@ func (c *CallExpr) Label() string {
 		return "call"
 	}
 }
+func (c *CallExpr) Equals(other Expr) bool {
+	o, ok := other.(*CallExpr)
+	if !ok || len(c.Args) != len(o.Args) || !c.Callee.Equals(o.Callee) {
+		return false
+	}
+	for i := range c.Args {
+		if !c.Args[i].Equals(o.Args[i]) {
+			return false
+		}
+	}
+	return true
+}
 
 type BinaryExpr struct {
 	Left     Expr
@@ -390,6 +428,12 @@ func (b *BinaryExpr) TokenLiteral() string { return b.Operator.Kind.String() }
 func (b *BinaryExpr) Pos() token.Position  { return b.Left.Pos() }
 func (b *BinaryExpr) Label() string {
 	return b.Operator.Kind.String()
+}
+func (b *BinaryExpr) Equals(other Expr) bool {
+	o, ok := other.(*BinaryExpr)
+	return ok && b.Operator.Kind == o.Operator.Kind &&
+		b.Left.Equals(o.Left) &&
+		b.Right.Equals(o.Right)
 }
 
 type MemberExpr struct {
@@ -406,4 +450,8 @@ func (m *MemberExpr) Label() string {
 	}
 
 	return "." + m.Property.Value
+}
+func (m *MemberExpr) Equals(other Expr) bool {
+	o, ok := other.(*MemberExpr)
+	return ok && m.Object.Equals(o.Object) && m.Property.Equals(o.Property)
 }
