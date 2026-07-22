@@ -14,7 +14,7 @@ import (
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/optimizer"
 	"github.com/azin-lang/Azin/internal/parser"
-	"github.com/azin-lang/Azin/internal/semantic"
+	"github.com/azin-lang/Azin/internal/sema"
 	"github.com/azin-lang/Azin/internal/source"
 )
 
@@ -154,7 +154,7 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 	}
 
 	diag := diagnostics.New(file)
-	analyzer := semantic.New(diag)
+	analyzer := sema.New(diag)
 
 	if err := analyzer.Analyze(program); err != nil {
 		return err

@@ -13,7 +13,7 @@ import (
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/parser"
-	"github.com/azin-lang/Azin/internal/semantic"
+	"github.com/azin-lang/Azin/internal/sema"
 	"github.com/azin-lang/Azin/internal/source"
 )
 
@@ -29,9 +29,9 @@ func transpile(t *testing.T, input string) string {
 		t.Fatalf("parse error: %v", err)
 	}
 
-	analyzer := semantic.New(diag)
+	analyzer := sema.New(diag)
 	if err := analyzer.Analyze(program); err != nil {
-		t.Fatalf("semantic error: %v", err)
+		t.Fatalf("sema error: %v", err)
 	}
 
 	tx := codegen.New()
