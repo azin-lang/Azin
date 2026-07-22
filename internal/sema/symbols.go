@@ -1,4 +1,4 @@
-package semantic
+package sema
 
 import "github.com/azin-lang/Azin/internal/ast"
 
@@ -12,7 +12,7 @@ const (
 	SymbolEnum                       // SymbolEnum represents an enum symbol.
 )
 
-// Symbol represents a symbol in the semantic analysis phase.
+// Symbol represents a symbol in the sema analysis phase.
 type Symbol struct {
 	Name    string
 	Type    *ast.Identifier

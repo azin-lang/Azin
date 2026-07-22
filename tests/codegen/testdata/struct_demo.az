@@ -1,14 +1,20 @@
 importc "stdio.h"
 
 struct Point is
-    x: int;
-    y: int;
+    mut x: int
+    mut y: int
 end
 
 fn distance(a: Point, b: Point): int do
-    return a.x + b.y;
+    return a.x + b.y
 end
 
 fn main: int do
-    return 0;
+    var mut a: Point
+    a.x = 3; a.y = 4
+
+    var mut b: Point
+    b.x = 4; b.y = 3
+
+    return distance(a, b);
 end

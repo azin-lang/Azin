@@ -3,5 +3,6 @@ fn main: int do
     var name: string = "azin";
     var flag: bool = true;
     x = 99;
+    printf("%s %d %d\n", name, x, flag);
     return x;
 end

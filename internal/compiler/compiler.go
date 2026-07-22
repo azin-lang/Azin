@@ -9,12 +9,12 @@ import (
 	"strings"
 
 	"github.com/azin-lang/Azin/internal/ast"
-	"github.com/azin-lang/Azin/internal/codegen"
+	"github.com/azin-lang/Azin/internal/codegen/c"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/optimizer"
 	"github.com/azin-lang/Azin/internal/parser"
-	"github.com/azin-lang/Azin/internal/semantic"
+	"github.com/azin-lang/Azin/internal/sema"
 	"github.com/azin-lang/Azin/internal/source"
 )
 
@@ -154,7 +154,7 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 	}
 
 	diag := diagnostics.New(file)
-	analyzer := semantic.New(diag)
+	analyzer := sema.New(diag)
 
 	if err := analyzer.Analyze(program); err != nil {
 		return err
@@ -203,7 +203,7 @@ func parseSource(file *source.File) (*ast.Program, error) {
 }
 
 func transpileToC(program *ast.Program) string {
-	tx := codegen.New()
+	tx := c.New()
 	return tx.Transpile(program)
 }
 

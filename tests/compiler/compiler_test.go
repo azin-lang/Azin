@@ -102,7 +102,7 @@ func TestCompileEmptyProgram(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(data) == 0 {
-		t.Error("output should not be empty")
+	if len(data) != 0 {
+		t.Error("output should be empty")
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/parser"
-	"github.com/azin-lang/Azin/internal/semantic"
+	"github.com/azin-lang/Azin/internal/sema"
 	"github.com/azin-lang/Azin/internal/source"
 )
 
@@ -21,7 +21,7 @@ func analyzeProgram(t *testing.T, input string) (*ast.Program, *diagnostics.Engi
 		t.Fatalf("parse error: %v", err)
 	}
 
-	analyzer := semantic.New(diag)
+	analyzer := sema.New(diag)
 	if err := analyzer.Analyze(program); err != nil {
 		return program, diag
 	}
@@ -40,7 +40,7 @@ func mustHaveError(t *testing.T, input string) *diagnostics.Engine {
 	t.Helper()
 	_, diag := analyzeProgram(t, input)
 	if !diag.HasErrors() {
-		t.Error("expected semantic error, got none")
+		t.Error("expected sema error, got none")
 	}
 	return diag
 }

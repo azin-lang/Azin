@@ -1,4 +1,4 @@
-package semantic
+package sema
 
 import (
 	"github.com/azin-lang/Azin/internal/ast"
@@ -7,7 +7,7 @@ import (
 )
 
 /*
-- The Analyzer struct is responsible for performing semantic analysis on the AST of a program.
+- The Analyzer struct is responsible for performing sema analysis on the AST of a program.
 - It maintains a stack of scopes, keeps track of the current function being analyzed,
 - and uses a diagnostics engine to report errors and warnings.
 */
@@ -232,7 +232,7 @@ func (a *Analyzer) errorf(node ast.Node, format string, args ...any) {
 	)
 }
 
-// Analyze performs semantic analysis on the given AST program.
+// Analyze performs sema analysis on the given AST program.
 func (a *Analyzer) Analyze(program *ast.Program) error {
 	a.pushScope()
 	defer a.popScope()
@@ -267,7 +267,7 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 
 	a.assignFunctionCNames()
 
-	// Infer function return types before semantic analysis.
+	// Infer function return types before sema analysis.
 	//for _, stmt := range program.Statements {
 	//	if fn, ok := stmt.(*ast.FuncStmt); ok {
 	//		a.inferFunctionReturnType(fn)
