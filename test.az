@@ -1,17 +1,53 @@
-importc "stdio.h"
-importc "stdlib.h"
-importc "math.h"
+enum Color is
+    Red
+    Green
+    Blue
+end
+
+enum UnusedEnum is
+    A
+    B
+end
+
 
 struct Point is
-    x: int;
-    y: int;
+    mut x: int
+    mut y: int
 end
 
-fn distance(a: Point, b: Point): int do
-    return abs(a.x - b.x) + abs(a.y - b.y);
+struct UnusedStruct is
+    mut value: int
 end
 
-fn main: int do
-    printf("hello world\n");
-    return 0;
+struct Wrapper is
+    mut point: Point
+    mut enabled: bool
+end
+
+
+fn main do
+    var color: Color = Color.Red
+
+    if color == Color.Blue then
+        return 1
+
+        printf("dead code\n")
+    else
+        helper("hello\n")
+        return 2
+    end
+end
+
+
+fn helper(message: string) do
+    var unused: int = 123
+
+    printf(message)
+
+    return 0
+end
+
+
+fn neverCalled do
+    printf("should disappear\n")
 end
