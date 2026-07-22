@@ -1,32 +1,51 @@
 package c
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
-func (t *Transpiler) write(s string) {
-	t.buf.WriteString(s)
+type writer struct {
+	buf    bytes.Buffer
+	indent int
 }
 
-func (t *Transpiler) printf(format string, args ...any) {
-	_, err := fmt.Fprintf(&t.buf, format, args...)
-	if err != nil {
-		return
+func (w *writer) reset() {
+	w.buf.Reset()
+	w.indent = 0
+}
+
+func (w *writer) String() string {
+	return w.buf.String()
+}
+
+func (w *writer) write(s string) {
+	_, _ = w.buf.WriteString(s)
+}
+
+func (w *writer) printf(
+	format string,
+	args ...any,
+) {
+	_, _ = fmt.Fprintf(&w.buf, format, args...)
+}
+
+func (w *writer) newline() {
+	_ = w.buf.WriteByte('\n')
+}
+
+func (w *writer) indentLine() {
+	for i := 0; i < w.indent; i++ {
+		w.write("\t")
 	}
 }
 
-func (t *Transpiler) newline() {
-	t.buf.WriteByte('\n')
+func (w *writer) pushIndent() {
+	w.indent++
 }
 
-func (t *Transpiler) writeIndent() {
-	for i := 0; i < t.indent; i++ {
-		t.write("    ")
+func (w *writer) popIndent() {
+	if w.indent > 0 {
+		w.indent--
 	}
-}
-
-func (t *Transpiler) pushIndent() {
-	t.indent++
-}
-
-func (t *Transpiler) popIndent() {
-	t.indent--
 }
