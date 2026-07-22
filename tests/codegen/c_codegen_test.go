@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/azin-lang/Azin/internal/codegen"
+	"github.com/azin-lang/Azin/internal/codegen/c"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/parser"
@@ -34,7 +34,7 @@ func transpile(t *testing.T, input string) string {
 		t.Fatalf("sema error: %v", err)
 	}
 
-	tx := codegen.New()
+	tx := c.New()
 	return tx.Transpile(program)
 }
 

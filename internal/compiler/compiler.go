@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/azin-lang/Azin/internal/ast"
-	"github.com/azin-lang/Azin/internal/codegen"
+	"github.com/azin-lang/Azin/internal/codegen/c"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/lexer"
 	"github.com/azin-lang/Azin/internal/optimizer"
@@ -203,7 +203,7 @@ func parseSource(file *source.File) (*ast.Program, error) {
 }
 
 func transpileToC(program *ast.Program) string {
-	tx := codegen.New()
+	tx := c.New()
 	return tx.Transpile(program)
 }
 

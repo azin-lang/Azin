@@ -1,4 +1,4 @@
-package codegen
+package c
 
 func (t *Transpiler) writeIndent() {
 	for i := 0; i < t.indent; i++ {
