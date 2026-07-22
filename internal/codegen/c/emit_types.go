@@ -11,12 +11,16 @@ func (t *Transpiler) emitTypes(
 		switch n := stmt.(type) {
 
 		case *ast.StructStmt:
-			t.emitStruct(n)
-			t.newline()
+			if _, ok := t.reachableTypes[n.Name.Value]; ok {
+				t.emitStruct(n)
+				t.newline()
+			}
 
 		case *ast.EnumStmt:
-			t.emitEnum(n)
-			t.newline()
+			if _, ok := t.reachableTypes[n.Name.Value]; ok {
+				t.emitEnum(n)
+				t.newline()
+			}
 		}
 	}
 }
@@ -24,8 +28,9 @@ func (t *Transpiler) emitTypes(
 func (t *Transpiler) emitStruct(
 	s *ast.StructStmt,
 ) {
+	// We already typedef'd this in emitStructDeclarations, so just define it
 	t.printf(
-		"typedef struct %s {\n",
+		"struct %s {\n",
 		s.Name.Value,
 	)
 
@@ -34,9 +39,16 @@ func (t *Transpiler) emitStruct(
 	for _, field := range s.Fields {
 		t.indentLine()
 
+		typ := emitType(field.Type.Value)
+
+		// Convert to a pointer if it creates a cycle
+		if t.isCyclicField(s.Name.Value, field.Type.Value) {
+			typ += "*"
+		}
+
 		t.printf(
 			"%s %s;\n",
-			emitType(field.Type.Value),
+			typ,
 			field.Name.Value,
 		)
 	}
@@ -44,8 +56,7 @@ func (t *Transpiler) emitStruct(
 	t.popIndent()
 
 	t.printf(
-		"} %s;\n",
-		s.Name.Value,
+		"};\n",
 	)
 }
 

@@ -10,6 +10,7 @@ func (t *Transpiler) emit(
 	program *ast.Program,
 ) {
 	t.emitImports()
+	t.emitStructDeclarations(program)
 	t.emitTypes(program)
 	t.emitForwardDeclarations()
 	t.emitFunctions(program)
@@ -36,6 +37,22 @@ func (t *Transpiler) emitImports() {
 	}
 
 	t.newline()
+}
+
+func (t *Transpiler) emitStructDeclarations(program *ast.Program) {
+	hasStructs := false
+	for _, stmt := range program.Statements {
+		if s, ok := stmt.(*ast.StructStmt); ok {
+			name := s.Name.Value
+			if _, ok := t.reachableTypes[name]; ok {
+				t.printf("typedef struct %s %s;\n", name, name)
+				hasStructs = true
+			}
+		}
+	}
+	if hasStructs {
+		t.newline()
+	}
 }
 
 func (t *Transpiler) emitForwardDeclarations() {
