@@ -2,58 +2,76 @@ package analysis
 
 import (
 	"path/filepath"
+
+	"github.com/azin-lang/Azin/internal/ast"
 )
 
-func (a *Analyzer) registerVariable(
-	function string,
-	name string,
-) {
-	if function == "" {
+// registerVariable adds a local variable to the scope tracker initialized with zero usages.
+func (a *Analyzer) registerVariable(function, name string) {
+	if function == "" || name == "" {
 		return
 	}
-
-	vars, ok := a.Variables[function]
-
-	if !ok {
-		vars = make(map[string]int)
-		a.Variables[function] = vars
+	if a.Variables[function] == nil {
+		a.Variables[function] = make(map[string]int)
 	}
-
-	vars[name] = 0
+	a.Variables[function][name] = 0
 }
 
-func (a *Analyzer) useVariable(
-	function string,
-	name string,
-) {
-	vars := a.Variables[function]
-
-	if vars == nil {
-		return
-	}
-
-	if _, ok := vars[name]; ok {
-		vars[name]++
+// useVariable safely increments the read count of a scoped variable.
+func (a *Analyzer) useVariable(function, name string) {
+	if vars := a.Variables[function]; vars != nil {
+		if _, exists := vars[name]; exists {
+			vars[name]++
+		}
 	}
 }
 
-func (a *Analyzer) markType(name string) {
+// MarkTypeUsed resolves a struct or enum type and recursively marks all of its dependent types as used.
+func (a *Analyzer) MarkTypeUsed(name string) {
 	if name == "" {
 		return
 	}
+	if _, ok := a.ReachableTypes[name]; ok {
+		return // Break cyclic dependencies
+	}
 
-	a.Types[name] = struct{}{}
+	a.ReachableTypes[name] = struct{}{}
 
-	switch name {
-	case "bool":
+	if name == "bool" {
 		a.Transpiler.RequireInclude("stdbool.h")
+	}
+
+	for dep := range a.TypeDependencies[name] {
+		a.MarkTypeUsed(dep)
 	}
 }
 
 func (a *Analyzer) requireImport(path string) {
+	if path == "" {
+		return
+	}
 	if filepath.Ext(path) == "" {
 		path += ".h"
 	}
-
 	a.Transpiler.RequireInclude(path)
+}
+
+// walkExpr performs a depth-first search on expressions.
+// The visitor function should return true to continue descending, or false to halt the current branch.
+func walkExpr(expr ast.Expr, visit func(ast.Expr) bool) {
+	if expr == nil || !visit(expr) {
+		return
+	}
+	switch e := expr.(type) {
+	case *ast.BinaryExpr:
+		walkExpr(e.Left, visit)
+		walkExpr(e.Right, visit)
+	case *ast.CallExpr:
+		walkExpr(e.Callee, visit)
+		for _, arg := range e.Args {
+			walkExpr(arg, visit)
+		}
+	case *ast.MemberExpr:
+		walkExpr(e.Object, visit)
+	}
 }

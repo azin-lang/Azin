@@ -2,31 +2,18 @@ package analysis
 
 import "github.com/azin-lang/Azin/internal/ast"
 
-func (a *Analyzer) RemoveUnusedFunctions(
-	program *ast.Program,
-) {
+func (a *Analyzer) RemoveUnusedFunctions(program *ast.Program) {
 	out := program.Statements[:0]
-
 	for _, stmt := range program.Statements {
-
-		fn, ok := stmt.(*ast.FuncStmt)
-
-		if !ok {
-			out = append(out, stmt)
-			continue
-		}
-
-		name := FunctionName(fn)
-
-		if name != "main" {
-
-			if _, ok := a.Reachable[name]; !ok {
-				continue
+		if fn, ok := stmt.(*ast.FuncStmt); ok {
+			name := FunctionName(fn)
+			if name != "main" {
+				if _, ok := a.ReachableFunctions[name]; !ok {
+					continue // Prune dead function
+				}
 			}
 		}
-
 		out = append(out, stmt)
 	}
-
 	program.Statements = out
 }
