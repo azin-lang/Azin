@@ -16,3 +16,17 @@ func (t *Transpiler) printf(format string, args ...any) {
 func (t *Transpiler) newline() {
 	t.buf.WriteByte('\n')
 }
+
+func (t *Transpiler) writeIndent() {
+	for i := 0; i < t.indent; i++ {
+		t.write("    ")
+	}
+}
+
+func (t *Transpiler) pushIndent() {
+	t.indent++
+}
+
+func (t *Transpiler) popIndent() {
+	t.indent--
+}
