@@ -1,7 +1,6 @@
 package analysis
 
 import (
-	"fmt"
 
 	"github.com/azin-lang/Azin/internal/ast"
 )
@@ -22,7 +21,7 @@ func (a *Analyzer) visitExpr(fn string, expr ast.Expr) {
 	case *ast.MemberExpr:
 		a.visitMember(fn, n)
 	default:
-		panic(fmt.Sprintf("unsupported expression %T", expr))
+		a.ReportError("unsupported expression %T", expr)
 	}
 }
 

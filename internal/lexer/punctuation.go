@@ -27,5 +27,6 @@ func (l *Lexer) lexPunctuation(ch rune, start token.Position) token.Token {
 	}
 
 	// Should be unreachable as long as isPunctuation guards this method.
-	panic("unreachable: lexPunctuation called with non-punctuation rune")
+	l.diag.ReportError(start, 1, "internal error: unexpected character '%c'", ch)
+	return l.emit(token.Error, start)
 }
