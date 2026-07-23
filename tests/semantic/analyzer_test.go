@@ -232,6 +232,14 @@ end`
 	validProgram(t, input)
 }
 
+func TestSemanticDefer(t *testing.T) {
+	input := `fn main: int do
+    defer printf("cleanup");
+    return 0;
+end`
+	validProgram(t, input)
+}
+
 func mustHaveWarning(t *testing.T, input string, msg string) {
 	t.Helper()
 	_, diag := analyzeProgram(t, input)
