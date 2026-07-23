@@ -94,11 +94,18 @@ func (s *Scope) MarkRead(name string) {
 
 func (s *Scope) GetValue(name string) (ast.Expr, bool) {
 	if val, ok := s.values[name]; ok {
+		if id, ok := val.(*ast.Identifier); ok && id.Value != name {
+			if resolved, ok := s.GetValue(id.Value); ok {
+				return resolved, true
+			}
+		}
 		return val, true
 	}
+
 	if s.parent != nil {
 		return s.parent.GetValue(name)
 	}
+
 	return nil, false
 }
 
