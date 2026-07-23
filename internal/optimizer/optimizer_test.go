@@ -137,10 +137,10 @@ func TestFoldFloatDivByZero(t *testing.T) {
 
 func TestFoldBoolean(t *testing.T) {
 	tests := []struct {
-		name   string
-		op     token.Kind
-		a, b   bool
-		want   bool
+		name string
+		op   token.Kind
+		a, b bool
+		want bool
 	}{
 		{"and_true", token.LogicalAnd, true, true, true},
 		{"and_false", token.LogicalAnd, true, false, false},
