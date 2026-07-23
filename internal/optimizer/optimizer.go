@@ -35,6 +35,18 @@ func Optimize(program *ast.Program) {
 		return
 	}
 	opt := NewOptimizer()
+
+	// Pre-scan statements to register enum constants into the global scope
+	for _, stmt := range program.Statements {
+		if enumStmt, ok := stmt.(*ast.EnumStmt); ok {
+			for i, field := range enumStmt.Variants {
+				// Register e.g., "Color.Red" = 0, "Color.Green" = 1, etc.
+				key := enumStmt.Name.Value + "." + field.Value
+				opt.currentScope.SetValue(key, intLit(int64(i)))
+			}
+		}
+	}
+
 	program.Statements = opt.optimizeStatements(program.Statements)
 }
 

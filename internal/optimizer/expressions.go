@@ -33,6 +33,16 @@ func (o *Optimizer) optimizeExpr(expr ast.Expr) ast.Expr {
 	case *ast.MemberExpr:
 		n.Object = o.optimizeExpr(n.Object)
 
+		// Evaluate constants in assignments/comparisons (e.g., Color.Blue)
+		if objId, ok := n.Object.(*ast.Identifier); ok {
+			if n.Property != nil {
+				key := objId.Value + "." + n.Property.Value
+				if val, ok := o.currentScope.GetValue(key); ok {
+					return cloneValue(val)
+				}
+			}
+		}
+
 	case *ast.CallExpr:
 		n.Callee = o.optimizeExpr(n.Callee)
 		o.optimizeExprs(n.Args)
