@@ -133,9 +133,12 @@ func (o *Optimizer) optimizeExpressionStmt(n *ast.ExpressionStmt) []ast.Stmt {
 
 // isTerminal checks if a single statement halts execution flow.
 func isTerminal(stmt ast.Stmt) bool {
-	switch stmt.(type) {
+	switch s := stmt.(type) {
 	case *ast.ReturnStmt, *ast.StopStmt:
 		return true
+	case *ast.IfStmt:
+		// If both branches halt, the if statement itself guarantees a halt.
+		return blockIsTerminal(s.Then) && blockIsTerminal(s.Else)
 	}
 	return false
 }
