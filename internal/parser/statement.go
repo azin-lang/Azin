@@ -109,6 +109,8 @@ func (p *Parser) parseStatement() ast.Stmt {
 		stmt = p.parseLoop()
 	case p.check(token.KwStop):
 		stmt = p.parseStop()
+	case p.check(token.KwDefer):
+		stmt = p.parseDefer()
 	case p.check(token.KwEnd):
 		p.reportError(p.peek(), "unexpected 'end'")
 		p.advance()
@@ -468,5 +470,16 @@ func (p *Parser) parseLoop() ast.Stmt {
 	return &ast.LoopStmt{
 		Token: tok,
 		Body:  body,
+	}
+}
+
+func (p *Parser) parseDefer() ast.Stmt {
+	tok := p.advance()
+	call := p.parseExpression(PrecLowest)
+	p.consumeStatementEnd()
+
+	return &ast.DeferStmt{
+		Token: tok,
+		Call:  call,
 	}
 }

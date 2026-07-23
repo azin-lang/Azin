@@ -20,6 +20,8 @@ type Transpiler struct {
 
 	lateFuncs []*ast.FuncStmt
 	lateSet   map[string]struct{}
+
+	defers []ast.Expr
 }
 
 func New() *Transpiler {
@@ -36,14 +38,14 @@ func New() *Transpiler {
 
 func (t *Transpiler) Transpile(
 	program *ast.Program,
-) string {
+) (string, error) {
 	t.reset()
 
 	t.analyze(program)
 
 	t.emit(program)
 
-	return t.String()
+	return t.String(), t.err
 }
 
 func (t *Transpiler) analyze(program *ast.Program) {

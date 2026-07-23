@@ -52,7 +52,7 @@ func transpile(t *testing.T, input string) string {
 
 	tx := c.New()
 
-	out := tx.Transpile(parseProgram(t, input))
+	out, _ := tx.Transpile(parseProgram(t, input))
 	return normalize(out)
 }
 
@@ -283,6 +283,108 @@ end
 
 		t.Run(tt.name, func(t *testing.T) {
 			requireContains(t, transpile(t, tt.input), tt.contains...)
+		})
+	}
+}
+
+func TestDefer(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		contains []string
+		absent   []string
+	}{
+		{
+			name: "defer before return",
+			input: `
+fn side_effect do end
+
+fn foo: int do
+	defer side_effect()
+	return 42
+end
+
+fn main: int do
+	return foo()
+end
+`,
+			contains: []string{
+				"side_effect()",
+				"return 42",
+			},
+			absent: []string{
+				"/* defer */",
+			},
+		},
+		{
+			name: "multiple defers reverse order",
+			input: `
+fn cleanup do end
+fn save do end
+
+fn foo: int do
+	defer cleanup()
+	defer save()
+	return 0
+end
+
+fn main: int do
+	return foo()
+end
+`,
+			contains: []string{
+				"save()",
+				"cleanup()",
+				"return 0",
+			},
+		},
+		{
+			name: "defer at function end",
+			input: `
+fn done do end
+
+fn foo do
+	defer done()
+end
+
+fn main: int do
+	foo()
+	return 0
+end
+`,
+			contains: []string{
+				"done()",
+			},
+			absent: []string{
+				"/* defer */",
+			},
+		},
+		{
+			name: "defer with importc builtin",
+			input: `
+fn main: int do
+	var mut p: int
+	defer free(p)
+	return 0
+end
+`,
+			contains: []string{
+				"free(p)",
+			},
+			absent: []string{
+				"/* defer */",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			out := transpile(t, tt.input)
+
+			requireContains(t, out, tt.contains...)
+			requireNotContains(t, out, tt.absent...)
 		})
 	}
 }
@@ -656,6 +758,6 @@ end
 	b.ResetTimer()
 
 	for b.Loop() {
-		_ = tx.Transpile(program)
+		_, _ = tx.Transpile(program)
 	}
 }

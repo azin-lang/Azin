@@ -228,6 +228,18 @@ func (*StopStmt) Label() string {
 	return "stop"
 }
 
+type DeferStmt struct {
+	Token token.Token // defer
+	Call  Expr
+}
+
+func (*DeferStmt) stmtNode()              {}
+func (d *DeferStmt) TokenLiteral() string { return d.Token.Kind.String() }
+func (d *DeferStmt) Pos() token.Position  { return d.Token.Position }
+func (*DeferStmt) Label() string {
+	return "defer"
+}
+
 type ImportCStmt struct {
 	Token token.Token
 	Path  *StringLiteral

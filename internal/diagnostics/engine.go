@@ -10,19 +10,33 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
+const defaultErrorLimit = 50
+
 // Engine collects diagnostics for a source file.
 type Engine struct {
 	mu          sync.RWMutex
 	file        *source.File
 	diagnostics []Diagnostic
 	hasErrors   bool
+	errorCount  int
+	errorLimit  int
+	limitNote   bool
 }
 
 // New returns a new Engine for the given file.
 func New(file *source.File) *Engine {
 	return &Engine{
-		file: file,
+		file:       file,
+		errorLimit: defaultErrorLimit,
 	}
+}
+
+// SetErrorLimit sets the maximum number of errors before reporting stops.
+// A value of 0 means unlimited.
+func (e *Engine) SetErrorLimit(n int) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.errorLimit = n
 }
 
 // Report adds a diagnostic to the engine.
@@ -32,7 +46,19 @@ func (e *Engine) Report(kind DiagnosticKind, pos token.Position, length uint32, 
 
 	if kind == Error {
 		e.hasErrors = true
+		e.errorCount++
+
+		if e.errorLimit > 0 && e.errorCount > e.errorLimit {
+			if !e.limitNote {
+				e.limitNote = true
+				e.diagnostics = append(e.diagnostics, Diagnostic{
+					Kind: Note, Message: fmt.Sprintf("too many errors (limit %d)", e.errorLimit),
+				})
+			}
+			return
+		}
 	}
+
 	e.diagnostics = append(e.diagnostics, Diagnostic{
 		Kind: kind, Message: fmt.Sprintf(format, args...), Position: pos, Length: length,
 	})

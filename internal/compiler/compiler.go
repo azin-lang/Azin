@@ -148,12 +148,13 @@ func writeCOutput(code, output string) error {
 
 // Compile compiles the given source file to a C executable.
 func Compile(file *source.File, outputPath string, opts Options) error {
-	program, err := parseSource(file)
+	diag := diagnostics.New(file)
+
+	program, err := parseSource(file, diag)
 	if err != nil {
 		return err
 	}
 
-	diag := diagnostics.New(file)
 	analyzer := sema.New(diag)
 
 	if err := analyzer.Analyze(program); err != nil {
@@ -161,7 +162,10 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 	}
 
 	optimizer.Optimize(program)
-	cCode := transpileToC(program)
+	cCode, err := transpileToC(program)
+	if err != nil {
+		return err
+	}
 
 	if opts.EmitC {
 		return writeCOutput(cCode, outputPath)
@@ -182,9 +186,7 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 	return runCompiler(tmpPath, exeName, opts)
 }
 
-func parseSource(file *source.File) (*ast.Program, error) {
-	diag := diagnostics.New(file)
-
+func parseSource(file *source.File, diag *diagnostics.Engine) (*ast.Program, error) {
 	tokens := lexer.New(file, diag).Tokenize()
 	if err := diag.Err(); err != nil {
 		return nil, err
@@ -201,7 +203,7 @@ func parseSource(file *source.File) (*ast.Program, error) {
 	return program, diag.Err()
 }
 
-func transpileToC(program *ast.Program) string {
+func transpileToC(program *ast.Program) (string, error) {
 	tx := c.New()
 	return tx.Transpile(program)
 }

@@ -153,3 +153,80 @@ func TestWarningWithoutError(t *testing.T) {
 		t.Error("Err() should be nil with only warnings")
 	}
 }
+
+func TestErrorLimitSuppressesExcess(t *testing.T) {
+	diag, _ := newTestEngine("hello world")
+	diag.SetErrorLimit(3)
+
+	for i := 0; i < 10; i++ {
+		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
+	}
+
+	all := diag.Diagnostics()
+	if len(all) > 4 {
+		t.Errorf("expected at most 4 diagnostics (3 errors + 1 limit note), got %d", len(all))
+	}
+
+	limitNote := false
+	for _, d := range all {
+		if d.Kind == diagnostics.Note && strings.Contains(d.Message, "too many errors") {
+			limitNote = true
+			break
+		}
+	}
+	if !limitNote {
+		t.Error("expected 'too many errors' limit note")
+	}
+}
+
+func TestErrorLimitUnlimited(t *testing.T) {
+	diag, _ := newTestEngine("hello world")
+	diag.SetErrorLimit(0)
+
+	for i := 0; i < 100; i++ {
+		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
+	}
+
+	all := diag.Diagnostics()
+	if len(all) != 100 {
+		t.Errorf("expected 100 diagnostics, got %d", len(all))
+	}
+}
+
+func TestErrorLimitWarningsNotAffected(t *testing.T) {
+	diag, _ := newTestEngine("hello world")
+	diag.SetErrorLimit(2)
+
+	for i := 0; i < 5; i++ {
+		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
+	}
+	for i := 0; i < 5; i++ {
+		diag.ReportWarning(token.Position{Offset: 0}, 5, "warning %d", i)
+	}
+
+	all := diag.Diagnostics()
+	warnings := 0
+	for _, d := range all {
+		if d.Kind == diagnostics.Warning {
+			warnings++
+		}
+	}
+	if warnings != 5 {
+		t.Errorf("expected 5 warnings, got %d", warnings)
+	}
+}
+
+func TestErrorLimitDefault(t *testing.T) {
+	diag, _ := newTestEngine("hello world")
+
+	// Default limit is 50, so 60 errors should trigger the limit
+	for i := 0; i < 60; i++ {
+		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
+	}
+
+	all := diag.Diagnostics()
+	// 50 errors + 1 limit note = 51 max
+	if len(all) > 51 {
+		t.Errorf("expected at most 51 diagnostics, got %d", len(all))
+	}
+}

@@ -20,6 +20,8 @@ func (t *Transpiler) emitStatement(
 		t.emitFunction(n)
 
 	case *ast.ReturnStmt:
+		t.flushDefers()
+
 		t.indentLine()
 
 		t.write("return")
@@ -63,6 +65,9 @@ func (t *Transpiler) emitStatement(
 	case *ast.StopStmt:
 		t.indentLine()
 		t.write("break;\n")
+
+	case *ast.DeferStmt:
+		t.defers = append(t.defers, n.Call)
 
 	default:
 		t.write(fmt.Sprintf(
@@ -120,6 +125,15 @@ func (t *Transpiler) emitBlock(
 	}
 
 	t.popIndent()
+}
+
+func (t *Transpiler) flushDefers() {
+	for i := len(t.defers) - 1; i >= 0; i-- {
+		t.indentLine()
+		t.emitExpression(t.defers[i])
+		t.write(";\n")
+	}
+	t.defers = nil
 }
 
 func (t *Transpiler) emitIf(

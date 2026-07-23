@@ -8,11 +8,13 @@ import (
 type writer struct {
 	buf    bytes.Buffer
 	indent int
+	err    error
 }
 
 func (w *writer) reset() {
 	w.buf.Reset()
 	w.indent = 0
+	w.err = nil
 }
 
 func (w *writer) String() string {
@@ -20,18 +22,27 @@ func (w *writer) String() string {
 }
 
 func (w *writer) write(s string) {
-	_, _ = w.buf.WriteString(s)
+	if w.err != nil {
+		return
+	}
+	_, w.err = w.buf.WriteString(s)
 }
 
 func (w *writer) printf(
 	format string,
 	args ...any,
 ) {
-	_, _ = fmt.Fprintf(&w.buf, format, args...)
+	if w.err != nil {
+		return
+	}
+	_, w.err = fmt.Fprintf(&w.buf, format, args...)
 }
 
 func (w *writer) newline() {
-	_ = w.buf.WriteByte('\n')
+	if w.err != nil {
+		return
+	}
+	w.err = w.buf.WriteByte('\n')
 }
 
 func (w *writer) indentLine() {

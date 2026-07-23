@@ -30,6 +30,7 @@ func TestKeywordsContainAllRegistered(t *testing.T) {
 		"stop":    token.KwStop,
 		"null":    token.KwNull,
 		"enum":    token.KwEnum,
+		"defer":   token.KwDefer,
 	}
 
 	for word, kind := range expected {
@@ -51,7 +52,7 @@ func TestKeywordsNoExtraEntries(t *testing.T) {
 		"bool": true, "unit": true, "string": true, "float": true,
 		"if": true, "then": true, "else": true, "struct": true,
 		"is": true, "importc": true, "loop": true, "stop": true,
-		"null": true, "enum": true,
+		"null": true, "enum": true, "defer": true,
 	}
 
 	for word := range token.Keywords {
