@@ -81,11 +81,11 @@ jobs:
               if: runner.os != 'Windows'
               env:
                 AZC: ${{ github.workspace }}/azc
-              run: go test -count=1 -cover ./tests/...
+              run: go test -count=1 -cover ./...
 
             - name: Full test suite with coverage (Windows)
               if: runner.os == 'Windows'
               shell: pwsh
               env:
                 AZC: ${{ github.workspace }}/azc.exe
-              run: go test -count=1 -cover ./tests/...
+              run: go test -count=1 -cover ./...
