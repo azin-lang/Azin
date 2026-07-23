@@ -103,6 +103,9 @@ func (a *Analyzer) analyzeExpr(expr ast.Expr) {
 	case nil, *ast.BadExpr:
 		return
 
+	case *ast.Identifier:
+		a.lookup(n.Value)
+
 	case *ast.CallExpr:
 		a.analyzeExpr(n.Callee)
 		for _, arg := range n.Args {
@@ -235,6 +238,15 @@ func (a *Analyzer) errorf(node ast.Node, format string, args ...any) {
 	)
 }
 
+func (a *Analyzer) warningf(node ast.Node, format string, args ...any) {
+	a.diag.ReportWarning(
+		node.Pos(),
+		uint32(len(node.TokenLiteral())),
+		format,
+		args...,
+	)
+}
+
 // Analyze performs sema analysis on the given AST program.
 func (a *Analyzer) Analyze(program *ast.Program) error {
 	a.pushScope()
@@ -341,9 +353,10 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			}
 
 			a.declare(&Symbol{
-				Name: param.Name.Value,
-				Type: param.Type,
-				Kind: SymbolVariable,
+				Name:     param.Name.Value,
+				Type:     param.Type,
+				Kind:     SymbolVariable,
+				DeclNode: param.Name,
 			})
 		}
 
@@ -421,10 +434,11 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		}
 
 		a.declare(&Symbol{
-			Name:    n.Name.Value,
-			Type:    n.Type,
-			Kind:    SymbolVariable,
-			Mutable: n.Mutable,
+			Name:     n.Name.Value,
+			Type:     n.Type,
+			Kind:     SymbolVariable,
+			Mutable:  n.Mutable,
+			DeclNode: n.Name,
 		})
 
 	case *ast.IfStmt:

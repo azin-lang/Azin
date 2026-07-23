@@ -14,10 +14,12 @@ const (
 
 // Symbol represents a symbol in the sema analysis phase.
 type Symbol struct {
-	Name    string
-	Type    *ast.Identifier
-	Kind    SymbolKind
-	Mutable bool
+	Name     string
+	Type     *ast.Identifier
+	Kind     SymbolKind
+	Mutable  bool
+	Used     bool
+	DeclNode ast.Node
 
 	Function *ast.FuncStmt
 	Struct   *ast.StructStmt
@@ -29,6 +31,9 @@ type Symbol struct {
 func (a *Analyzer) lookup(name string) *Symbol {
 	for scope := a.currentScope(); scope != nil; scope = scope.Parent {
 		if sym, ok := scope.Symbols[name]; ok {
+			if sym.Kind == SymbolVariable {
+				sym.Used = true
+			}
 			return sym
 		}
 	}
