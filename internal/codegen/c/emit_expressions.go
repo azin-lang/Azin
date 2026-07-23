@@ -160,6 +160,15 @@ func emitOperator(
 	case token.GreaterEqual:
 		return ">="
 
+	case token.LessLess:
+		return "<<"
+
+	case token.GreaterGreater:
+		return ">>"
+
+	case token.Ampersand:
+		return "&"
+
 	default:
 		return "/* unsupported operator */"
 	}
