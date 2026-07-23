@@ -654,7 +654,8 @@ func TestOptimizeIfConstantTrue(t *testing.T) {
 		Then:      []ast.Stmt{&ast.ReturnStmt{Value: intLit(1)}},
 		Else:      []ast.Stmt{&ast.ReturnStmt{Value: intLit(2)}},
 	}
-	result := optimizeIf(ifStmt)
+	o := NewOptimizer()
+	result := o.optimizeIf(ifStmt)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 stmt, got %d", len(result))
 	}
@@ -670,7 +671,8 @@ func TestOptimizeIfConstantFalse(t *testing.T) {
 		Then:      []ast.Stmt{&ast.ReturnStmt{Value: intLit(1)}},
 		Else:      []ast.Stmt{&ast.ReturnStmt{Value: intLit(2)}},
 	}
-	result := optimizeIf(ifStmt)
+	o := NewOptimizer()
+	result := o.optimizeIf(ifStmt)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 stmt, got %d", len(result))
 	}
@@ -691,7 +693,8 @@ func TestOptimizeIfBothBranchesEmpty(t *testing.T) {
 		Then:      nil,
 		Else:      nil,
 	}
-	result := optimizeIf(ifStmt)
+	o := NewOptimizer()
+	result := o.optimizeIf(ifStmt)
 	if len(result) != 0 {
 		t.Fatalf("expected 0 stmts (pure condition eliminated), got %d", len(result))
 	}
@@ -702,7 +705,8 @@ func TestOptimizeIfBothBranchesEmpty(t *testing.T) {
 		Then:      nil,
 		Else:      nil,
 	}
-	result2 := optimizeIf(ifStmt2)
+	o2 := NewOptimizer()
+	result2 := o2.optimizeIf(ifStmt2)
 	if len(result2) != 1 {
 		t.Fatalf("expected 1 stmt (expression retained), got %d", len(result2))
 	}
@@ -724,7 +728,8 @@ func TestOptimizeIfTailMerge(t *testing.T) {
 			&ast.ReturnStmt{Value: intLit(42)},
 		},
 	}
-	result := optimizeIf(ifStmt)
+	o := NewOptimizer()
+	result := o.optimizeIf(ifStmt)
 	// Should have if + tail return
 	foundReturn := false
 	for _, s := range result {
@@ -743,7 +748,8 @@ func TestOptimizeIfUnnestElse(t *testing.T) {
 		Then:      []ast.Stmt{&ast.ReturnStmt{Value: intLit(1)}},
 		Else:      []ast.Stmt{&ast.ReturnStmt{Value: intLit(2)}},
 	}
-	result := optimizeIf(ifStmt)
+	o := NewOptimizer()
+	result := o.optimizeIf(ifStmt)
 	// Terminal then → else unnested after if
 	if len(result) != 2 {
 		t.Fatalf("expected 2 stmts (if + else), got %d", len(result))
@@ -766,7 +772,8 @@ func TestOptimizeStatementsDeadCode(t *testing.T) {
 		&ast.ReturnStmt{Value: intLit(2)}, // dead code
 		&ast.ReturnStmt{Value: intLit(3)}, // dead code
 	}
-	result := optimizeStatements(stmts)
+	o := NewOptimizer()
+	result := o.optimizeStatements(stmts)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 stmt, got %d", len(result))
 	}
@@ -777,7 +784,8 @@ func TestOptimizeStatementsExpressionElimination(t *testing.T) {
 		&ast.ExpressionStmt{Expression: intLit(42)}, // pure, should be eliminated
 		&ast.ReturnStmt{Value: intLit(0)},
 	}
-	result := optimizeStatements(stmts)
+	o := NewOptimizer()
+	result := o.optimizeStatements(stmts)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 stmt (only return), got %d", len(result))
 	}
@@ -791,7 +799,8 @@ func TestOptimizeLoopUnwrapReturn(t *testing.T) {
 			&ast.ReturnStmt{Value: intLit(0)},
 		},
 	}
-	result := optimizeStatement(loop)
+	o := NewOptimizer()
+	result := o.optimizeStatement(loop)
 	if len(result) != 2 {
 		t.Fatalf("expected 2 stmts (unwrapped), got %d", len(result))
 	}
@@ -809,7 +818,8 @@ func TestOptimizeLoopUnwrapStop(t *testing.T) {
 			&ast.StopStmt{},
 		},
 	}
-	result := optimizeStatement(loop)
+	o := NewOptimizer()
+	result := o.optimizeStatement(loop)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 stmt (stop removed), got %d", len(result))
 	}
@@ -826,7 +836,8 @@ func TestOptimizeLoopNotUnwrapped(t *testing.T) {
 			&ast.ExpressionStmt{Expression: id("x")},
 		},
 	}
-	result := optimizeStatement(loop)
+	o := NewOptimizer()
+	result := o.optimizeStatement(loop)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 stmt (loop kept), got %d", len(result))
 	}

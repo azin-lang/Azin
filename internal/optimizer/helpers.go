@@ -115,3 +115,19 @@ func isPure(expr ast.Expr) bool {
 		return false
 	}
 }
+
+func cloneConstant(expr ast.Expr) ast.Expr {
+	switch n := expr.(type) {
+	case *ast.IntegerLiteral:
+		return &ast.IntegerLiteral{Token: n.Token, Value: n.Value}
+	case *ast.FloatLiteral:
+		return &ast.FloatLiteral{Token: n.Token, Value: n.Value}
+	case *ast.BooleanLiteral:
+		return &ast.BooleanLiteral{Token: n.Token, Value: n.Value}
+	case *ast.CharacterLiteral:
+		return &ast.CharacterLiteral{Token: n.Token, Value: n.Value}
+	case *ast.StringLiteral:
+		return &ast.StringLiteral{Token: n.Token, Value: n.Value}
+	}
+	return expr
+}

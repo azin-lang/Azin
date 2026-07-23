@@ -2,21 +2,31 @@ package optimizer
 
 import "github.com/azin-lang/Azin/internal/ast"
 
-func optimizeIf(n *ast.IfStmt) []ast.Stmt {
+func (o *Optimizer) optimizeIf(n *ast.IfStmt) []ast.Stmt {
 	if n.Condition != nil {
-		n.Condition = optimizeExpr(n.Condition)
+		n.Condition = o.optimizeExpr(n.Condition)
 	}
 
-	// Constant folding: if condition is a literal, return the appropriate branch
 	if b, ok := n.Condition.(*ast.BooleanLiteral); ok {
 		if b.Value {
-			return optimizeStatements(n.Then)
+			o.Enter()
+			res := o.optimizeStatements(n.Then)
+			o.Leave()
+			return res
 		}
-		return optimizeStatements(n.Else)
+		o.Enter()
+		res := o.optimizeStatements(n.Else)
+		o.Leave()
+		return res
 	}
 
-	n.Then = optimizeStatements(n.Then)
-	n.Else = optimizeStatements(n.Else)
+	o.Enter()
+	n.Then = o.optimizeStatements(n.Then)
+	o.Leave()
+
+	o.Enter()
+	n.Else = o.optimizeStatements(n.Else)
+	o.Leave()
 
 	// Try to pull common returns out of the branches.
 	var tailReturn *ast.ReturnStmt

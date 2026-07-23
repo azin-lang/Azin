@@ -2,12 +2,12 @@ package optimizer
 
 import "github.com/azin-lang/Azin/internal/ast"
 
-func optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
+func (o *Optimizer) optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
 	if len(stmts) == 0 {
 		return stmts
 	}
 
-	var out []ast.Stmt // Delay allocation until required
+	var out []ast.Stmt
 
 	for i := range stmts {
 		stmt := stmts[i]
@@ -15,7 +15,7 @@ func optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
 			continue
 		}
 
-		optStmts := optimizeStatement(stmt)
+		optStmts := o.optimizeStatement(stmt)
 		if len(optStmts) == 0 {
 			continue
 		}
@@ -29,117 +29,104 @@ func optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
 			out = append(out, optStmt)
 
 			if isTerminal(optStmt) {
-				// Terminal statement reached; abandon dead code
 				return out
 			}
 		}
 	}
-
 	return out
 }
 
-func optimizeStatement(stmt ast.Stmt) []ast.Stmt {
+func (o *Optimizer) optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 	switch n := stmt.(type) {
 	case *ast.IfStmt:
-		return optimizeIf(n)
-
+		return o.optimizeIf(n)
 	case *ast.LoopStmt:
-		return optimizeLoop(n)
-
+		return o.optimizeLoop(n)
 	case *ast.ExpressionStmt:
-		return optimizeExpressionStmt(n)
-
+		return o.optimizeExpressionStmt(n)
 	case *ast.FuncStmt:
-		optimizeFunction(n)
-
+		o.optimizeFunction(n)
 	case *ast.ReturnStmt:
-		optimizeReturn(n)
-
+		o.optimizeReturn(n)
 	case *ast.VarStmt:
-		optimizeVariable(n)
-
+		o.optimizeVariable(n)
 	case *ast.AssignmentStmt:
-		optimizeAssignment(n)
-
+		o.optimizeAssignment(n)
 	}
-
 	return []ast.Stmt{stmt}
 }
 
-func optimizeLoop(n *ast.LoopStmt) []ast.Stmt {
-	n.Body = optimizeStatements(n.Body)
+func (o *Optimizer) optimizeLoop(n *ast.LoopStmt) []ast.Stmt {
+	o.currentScope.ClearAll()
 
-	if len(n.Body) == 0 {
-		return []ast.Stmt{n}
-	}
+	o.Enter()
+	n.Body = o.optimizeStatements(n.Body)
+	o.Leave()
 
-	if !canUnwrapLoop(n.Body) {
+	if len(n.Body) == 0 || !canUnwrapLoop(n.Body) {
 		return []ast.Stmt{n}
 	}
 
 	last := n.Body[len(n.Body)-1]
-
 	switch last.(type) {
 	case *ast.ReturnStmt:
-		// loop
-		//   ...
-		//   return
-		// end
-		//
-		// =>
-		//
-		// ...
-		// return
 		return n.Body
-
 	case *ast.StopStmt:
-		// loop
-		//   ...
-		//   stop
-		// end
-		//
-		// =>
-		//
-		// ...
 		return n.Body[:len(n.Body)-1]
 	}
-
 	return []ast.Stmt{n}
 }
 
-func optimizeFunction(n *ast.FuncStmt) {
-	n.Body = optimizeStatements(n.Body)
+func (o *Optimizer) optimizeFunction(n *ast.FuncStmt) {
+	o.Enter()
+	n.Body = o.optimizeStatements(n.Body)
+	o.Leave()
 }
 
-func optimizeReturn(n *ast.ReturnStmt) {
+func (o *Optimizer) optimizeReturn(n *ast.ReturnStmt) {
 	if n.Value != nil {
-		n.Value = optimizeExpr(n.Value)
+		n.Value = o.optimizeExpr(n.Value)
 	}
 }
 
-func optimizeVariable(n *ast.VarStmt) {
+func (o *Optimizer) optimizeVariable(n *ast.VarStmt) {
 	if n.Value != nil {
-		n.Value = optimizeExpr(n.Value)
+		n.Value = o.optimizeExpr(n.Value)
+
+		// Track state for constant propagation
+		if isConstant(n.Value) {
+			o.currentScope.SetConstant(n.Name.Value, n.Value)
+		} else {
+			// If they are shadowing a parent variable with a non-constant
+			o.currentScope.Invalidate(n.Name.Value)
+		}
 	}
 }
 
-func optimizeAssignment(n *ast.AssignmentStmt) {
-	n.Left = optimizeExpr(n.Left)
-	n.Value = optimizeExpr(n.Value)
+func (o *Optimizer) optimizeAssignment(n *ast.AssignmentStmt) {
+	if _, isId := n.Left.(*ast.Identifier); !isId {
+		n.Left = o.optimizeExpr(n.Left)
+	}
+
+	n.Value = o.optimizeExpr(n.Value)
+
+	if id, ok := n.Left.(*ast.Identifier); ok {
+		if isConstant(n.Value) {
+			o.currentScope.SetConstant(id.Value, n.Value)
+		} else {
+			o.currentScope.Invalidate(id.Value)
+		}
+	}
 }
 
-func optimizeExpressionStmt(n *ast.ExpressionStmt) []ast.Stmt {
+func (o *Optimizer) optimizeExpressionStmt(n *ast.ExpressionStmt) []ast.Stmt {
 	if n.Expression == nil {
 		return nil
 	}
-
-	n.Expression = optimizeExpr(n.Expression)
-
-	// Eliminate pure statements that execute with no side effects
+	n.Expression = o.optimizeExpr(n.Expression)
 	if isPure(n.Expression) {
 		return nil
 	}
-
 	return []ast.Stmt{n}
 }
 
