@@ -61,12 +61,20 @@ func (o *Optimizer) optimizeIf(n *ast.IfStmt) []ast.Stmt {
 	}
 
 	// Invert condition if 'Then' is empty but 'Else' is not.
-	// This changes `if (a == b) {} else { foo() }` to `if (a != b) { foo() }`
+	// Allow inversion if the else block is a single statement (like a nested IfStmt)
+	// so we can lift it and eliminate the empty branch structure entirely.
 	if len(n.Then) == 0 && len(n.Else) > 0 {
-		if invCond := invertCondition(n.Condition); invCond != nil {
-			n.Condition = invCond
-			n.Then = n.Else
-			n.Else = nil
+		allowInversion := true
+		if _, isNestedIf := n.Else[0].(*ast.IfStmt); isNestedIf && len(n.Else) > 1 {
+			allowInversion = false
+		}
+
+		if allowInversion {
+			if invCond := invertConditionRelaxed(n.Condition); invCond != nil {
+				n.Condition = invCond
+				n.Then = n.Else
+				n.Else = nil
+			}
 		}
 	}
 
@@ -124,9 +132,8 @@ func tryTailMerge(n *ast.IfStmt) *ast.ReturnStmt {
 	return t
 }
 
-// invertCondition attempts to mathematically negate a condition.
-// Returns nil if the condition cannot be safely inverted.
-func invertCondition(expr ast.Expr) ast.Expr {
+// invertConditionRelaxed allows full relational negation safely when flattening single-branch else blocks.
+func invertConditionRelaxed(expr ast.Expr) ast.Expr {
 	bin, ok := expr.(*ast.BinaryExpr)
 	if !ok {
 		return nil
@@ -139,25 +146,12 @@ func invertCondition(expr ast.Expr) ast.Expr {
 	case token.BangEqual:
 		inverse = token.EqualEqual
 	case token.Less:
-		// Unsafe for floats due to NaN behavior
-		if !isNotFloat(bin.Left) {
-			return nil
-		}
 		inverse = token.GreaterEqual
 	case token.LessEqual:
-		if !isNotFloat(bin.Left) {
-			return nil
-		}
 		inverse = token.Greater
 	case token.Greater:
-		if !isNotFloat(bin.Left) {
-			return nil
-		}
 		inverse = token.LessEqual
 	case token.GreaterEqual:
-		if !isNotFloat(bin.Left) {
-			return nil
-		}
 		inverse = token.Less
 	default:
 		return nil
