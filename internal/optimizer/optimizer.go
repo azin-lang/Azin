@@ -8,24 +8,28 @@ import (
 // Optimizer holds the global state for the optimization pass.
 type Optimizer struct {
 	currentScope *Scope
+	deadStores   map[ast.Stmt]bool
 }
 
 // Scope tracks variables for a specific block (e.g., global, function, if-body).
 type Scope struct {
-	parent *Scope
-	values map[string]ast.Expr
-
-	// modified tracks variables reassigned in this specific scope.
-	// This is crucial for invalidating parent values after branching.
+	parent   *Scope
+	values   map[string]ast.Expr
 	modified map[string]bool
+
+	lastStore map[string]ast.Stmt
+	read      map[string]bool
 }
 
 func NewOptimizer() *Optimizer {
 	return &Optimizer{
 		currentScope: &Scope{
-			values:   make(map[string]ast.Expr),
-			modified: make(map[string]bool),
+			values:    make(map[string]ast.Expr),
+			modified:  make(map[string]bool),
+			lastStore: make(map[string]ast.Stmt),
+			read:      make(map[string]bool),
 		},
+		deadStores: make(map[ast.Stmt]bool),
 	}
 }
 
@@ -52,9 +56,11 @@ func Optimize(program *ast.Program) {
 
 func (o *Optimizer) Enter() {
 	o.currentScope = &Scope{
-		parent:   o.currentScope,
-		values:   make(map[string]ast.Expr),
-		modified: make(map[string]bool),
+		parent:    o.currentScope,
+		values:    make(map[string]ast.Expr),
+		modified:  make(map[string]bool),
+		lastStore: make(map[string]ast.Stmt),
+		read:      make(map[string]bool),
 	}
 }
 
@@ -63,9 +69,26 @@ func (o *Optimizer) Leave() {
 	o.currentScope = child.parent
 
 	if o.currentScope != nil {
+		// Propagate reads to parent: if a branch read a variable,
+		// the parent's prior store cannot be killed.
+		for name := range child.read {
+			o.currentScope.MarkRead(name)
+		}
+
 		for name := range child.modified {
 			o.currentScope.Invalidate(name)
+			// A branch modified it, we can no longer safely guarantee killing
+			// a store before the branch (since the branch may not execute).
+			delete(o.currentScope.lastStore, name)
 		}
+	}
+}
+
+func (s *Scope) MarkRead(name string) {
+	delete(s.lastStore, name)
+	s.read[name] = true
+	if s.parent != nil {
+		s.parent.MarkRead(name)
 	}
 }
 
@@ -107,8 +130,9 @@ func (s *Scope) Invalidate(name string) {
 }
 
 func (s *Scope) ClearAll() {
-	// Wipe this scope's known values
+	// Wipe this scope's known values and stores (e.g. for Loops)
 	s.values = make(map[string]ast.Expr)
+	s.lastStore = make(map[string]ast.Stmt)
 
 	// Recursively wipe parent scopes
 	if s.parent != nil {

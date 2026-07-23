@@ -29,11 +29,11 @@ func (o *Optimizer) optimizeStatements(stmts []ast.Stmt) []ast.Stmt {
 			out = append(out, optStmt)
 
 			if isTerminal(optStmt) {
-				return out
+				return o.filterDead(out)
 			}
 		}
 	}
-	return out
+	return o.filterDead(out)
 }
 
 func (o *Optimizer) optimizeStatement(stmt ast.Stmt) []ast.Stmt {
@@ -93,13 +93,14 @@ func (o *Optimizer) optimizeVariable(n *ast.VarStmt) {
 	if n.Value != nil {
 		n.Value = o.optimizeExpr(n.Value)
 
-		// Always invalidate to break previous copies pointing to this shadowed name
 		o.currentScope.Invalidate(n.Name.Value)
-
-		// Track state for constant and copy propagation
 		if isCopyable(n.Value) {
 			o.currentScope.SetValue(n.Name.Value, n.Value)
 		}
+
+		// DSE: Record this declaration as the most recent store
+		o.currentScope.lastStore[n.Name.Value] = n
+		o.currentScope.modified[n.Name.Value] = true
 	}
 }
 
@@ -107,16 +108,27 @@ func (o *Optimizer) optimizeAssignment(n *ast.AssignmentStmt) {
 	if _, isId := n.Left.(*ast.Identifier); !isId {
 		n.Left = o.optimizeExpr(n.Left)
 	}
-
 	n.Value = o.optimizeExpr(n.Value)
 
 	if id, ok := n.Left.(*ast.Identifier); ok {
+		// DSE: If there's an active, unused store to this exact variable in this scope, kill it!
+		if prev, exists := o.currentScope.lastStore[id.Value]; exists {
+			// Do not kill VarStmt. Removing a variable declaration causes
+			// the C compiler to fail with an "undeclared variable" error.
+			if _, isVarDecl := prev.(*ast.VarStmt); !isVarDecl {
+				o.deadStores[prev] = true
+			}
+		}
+
 		// Break any existing aliases to this variable before re-assigning
 		o.currentScope.Invalidate(id.Value)
-
 		if isCopyable(n.Value) {
 			o.currentScope.SetValue(id.Value, n.Value)
 		}
+
+		// DSE: Record this assignment as the most recent store
+		o.currentScope.lastStore[id.Value] = n
+		o.currentScope.modified[id.Value] = true
 	}
 }
 
@@ -176,4 +188,34 @@ func isSimpleStmt(stmt ast.Stmt) bool {
 	default:
 		return false
 	}
+}
+
+func (o *Optimizer) filterDead(stmts []ast.Stmt) []ast.Stmt {
+	if len(o.deadStores) == 0 {
+		return stmts
+	}
+
+	var filtered []ast.Stmt
+	for _, s := range stmts {
+		if !o.deadStores[s] {
+			filtered = append(filtered, s)
+			continue
+		}
+
+		// The store is dead, but we must preserve side effects (like function calls).
+		var rhs ast.Expr
+		switch n := s.(type) {
+		case *ast.VarStmt:
+			rhs = n.Value
+		case *ast.AssignmentStmt:
+			rhs = n.Value
+		}
+
+		if rhs != nil && !isPure(rhs) {
+			filtered = append(filtered, &ast.ExpressionStmt{
+				Expression: rhs,
+			})
+		}
+	}
+	return filtered
 }

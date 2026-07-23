@@ -15,6 +15,9 @@ func (o *Optimizer) optimizeExpr(expr ast.Expr) ast.Expr {
 			return cloneValue(val)
 		}
 
+		// If it remains an identifier in the AST, it has officially been read.
+		o.currentScope.MarkRead(n.Value)
+
 	case *ast.BinaryExpr:
 		// Bottom-up: optimize children first
 		n.Left = o.optimizeExpr(n.Left)
