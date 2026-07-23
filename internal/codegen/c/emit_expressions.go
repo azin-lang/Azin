@@ -115,7 +115,7 @@ func emitType(
 		return "char"
 
 	case "string":
-		return "const char*"
+		return "char*"
 
 	case "bool":
 		return "bool"
