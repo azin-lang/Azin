@@ -12,19 +12,19 @@ type Optimizer struct {
 
 // Scope tracks variables for a specific block (e.g., global, function, if-body).
 type Scope struct {
-	parent    *Scope
-	constants map[string]ast.Expr
+	parent *Scope
+	values map[string]ast.Expr
 
 	// modified tracks variables reassigned in this specific scope.
-	// This is crucial for invalidating parent constants after branching.
+	// This is crucial for invalidating parent values after branching.
 	modified map[string]bool
 }
 
 func NewOptimizer() *Optimizer {
 	return &Optimizer{
 		currentScope: &Scope{
-			constants: make(map[string]ast.Expr),
-			modified:  make(map[string]bool),
+			values:   make(map[string]ast.Expr),
+			modified: make(map[string]bool),
 		},
 	}
 }
@@ -40,9 +40,9 @@ func Optimize(program *ast.Program) {
 
 func (o *Optimizer) Enter() {
 	o.currentScope = &Scope{
-		parent:    o.currentScope,
-		constants: make(map[string]ast.Expr),
-		modified:  make(map[string]bool),
+		parent:   o.currentScope,
+		values:   make(map[string]ast.Expr),
+		modified: make(map[string]bool),
 	}
 }
 
@@ -57,32 +57,46 @@ func (o *Optimizer) Leave() {
 	}
 }
 
-func (s *Scope) GetConstant(name string) (ast.Expr, bool) {
-	if val, ok := s.constants[name]; ok {
+func (s *Scope) GetValue(name string) (ast.Expr, bool) {
+	if val, ok := s.values[name]; ok {
 		return val, true
 	}
 	if s.parent != nil {
-		return s.parent.GetConstant(name)
+		return s.parent.GetValue(name)
 	}
 	return nil, false
 }
 
-func (s *Scope) SetConstant(name string, val ast.Expr) {
-	s.constants[name] = val
+func (s *Scope) SetValue(name string, val ast.Expr) {
+	s.values[name] = val
 	s.modified[name] = true
 }
 
 func (s *Scope) Invalidate(name string) {
-	delete(s.constants, name)
+	delete(s.values, name)
 	s.modified[name] = true
+
+	// Invalidate any variable holding a propagated copy of this variable
+	// We extract keys to safely modify the map during iteration
+	var aliases []string
+	for k, v := range s.values {
+		if id, ok := v.(*ast.Identifier); ok && id.Value == name {
+			aliases = append(aliases, k)
+		}
+	}
+
+	for _, alias := range aliases {
+		s.Invalidate(alias)
+	}
+
 	if s.parent != nil {
 		s.parent.Invalidate(name)
 	}
 }
 
 func (s *Scope) ClearAll() {
-	// Wipe this scope's constants
-	s.constants = make(map[string]ast.Expr)
+	// Wipe this scope's known values
+	s.values = make(map[string]ast.Expr)
 
 	// Recursively wipe parent scopes
 	if s.parent != nil {

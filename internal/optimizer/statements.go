@@ -93,12 +93,12 @@ func (o *Optimizer) optimizeVariable(n *ast.VarStmt) {
 	if n.Value != nil {
 		n.Value = o.optimizeExpr(n.Value)
 
-		// Track state for constant propagation
-		if isConstant(n.Value) {
-			o.currentScope.SetConstant(n.Name.Value, n.Value)
-		} else {
-			// If they are shadowing a parent variable with a non-constant
-			o.currentScope.Invalidate(n.Name.Value)
+		// Always invalidate to break previous copies pointing to this shadowed name
+		o.currentScope.Invalidate(n.Name.Value)
+
+		// Track state for constant and copy propagation
+		if isCopyable(n.Value) {
+			o.currentScope.SetValue(n.Name.Value, n.Value)
 		}
 	}
 }
@@ -111,10 +111,11 @@ func (o *Optimizer) optimizeAssignment(n *ast.AssignmentStmt) {
 	n.Value = o.optimizeExpr(n.Value)
 
 	if id, ok := n.Left.(*ast.Identifier); ok {
-		if isConstant(n.Value) {
-			o.currentScope.SetConstant(id.Value, n.Value)
-		} else {
-			o.currentScope.Invalidate(id.Value)
+		// Break any existing aliases to this variable before re-assigning
+		o.currentScope.Invalidate(id.Value)
+
+		if isCopyable(n.Value) {
+			o.currentScope.SetValue(id.Value, n.Value)
 		}
 	}
 }

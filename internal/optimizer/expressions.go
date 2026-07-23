@@ -11,8 +11,8 @@ func (o *Optimizer) optimizeExpr(expr ast.Expr) ast.Expr {
 
 	switch n := expr.(type) {
 	case *ast.Identifier:
-		if val, ok := o.currentScope.GetConstant(n.Value); ok {
-			return cloneConstant(val)
+		if val, ok := o.currentScope.GetValue(n.Value); ok {
+			return cloneValue(val)
 		}
 
 	case *ast.BinaryExpr:
