@@ -56,6 +56,20 @@ func isConstant(expr ast.Expr) bool {
 	return false
 }
 
+// isNotFloat returns true if the expression is definitely not a float type.
+// The optimizer has no type information, so we can only determine this for literals.
+func isNotFloat(expr ast.Expr) bool {
+	switch expr.(type) {
+	case *ast.IntegerLiteral, *ast.BooleanLiteral, *ast.CharacterLiteral, *ast.StringLiteral:
+		return true
+	case *ast.FloatLiteral:
+		return false
+	default:
+		// Identifiers, binary expressions, call expressions, etc. could be float.
+		return false
+	}
+}
+
 // isPure returns true if evaluating the expression has no side effects.
 func isPure(expr ast.Expr) bool {
 	switch n := expr.(type) {
