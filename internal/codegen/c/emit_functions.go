@@ -7,6 +7,8 @@ import (
 func (t *Transpiler) emitFunction(
 	fn *ast.FuncStmt,
 ) {
+	t.defers = nil
+
 	t.emitFunctionSignature(fn)
 
 	t.write(" {\n")
@@ -16,6 +18,8 @@ func (t *Transpiler) emitFunction(
 	for _, stmt := range fn.Body {
 		t.emitStatement(stmt)
 	}
+
+	t.flushDefers()
 
 	if t.functionName(fn) == "main" &&
 		fn.ReturnType != nil &&
