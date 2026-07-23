@@ -65,8 +65,8 @@ func (t *Transpiler) emitStatement(
 		t.write("break;\n")
 
 	default:
-		panic(fmt.Sprintf(
-			"unsupported statement %T",
+		t.write(fmt.Sprintf(
+			"/* unsupported statement %T */",
 			stmt,
 		))
 	}
@@ -78,20 +78,29 @@ func (t *Transpiler) emitVariable(
 	t.indentLine()
 
 	if stmt.Type == nil {
-		panic(
-			"variable missing type",
+		t.write("/* variable missing type */")
+		t.write(";\n")
+		return
+	}
+
+	if stmt.Type.Value == "string" {
+		if !stmt.Mutable {
+			t.write("const char* const ")
+		} else {
+			t.write("char* ")
+		}
+		t.write(stmt.Name.Value)
+	} else {
+		if !stmt.Mutable {
+			t.write("const ")
+		}
+
+		t.printf(
+			"%s %s",
+			emitType(stmt.Type.Value),
+			stmt.Name.Value,
 		)
 	}
-
-	if !stmt.Mutable {
-		t.write("const ")
-	}
-
-	t.printf(
-		"%s %s",
-		emitType(stmt.Type.Value),
-		stmt.Name.Value,
-	)
 
 	if stmt.Value != nil {
 		t.write(" = ")

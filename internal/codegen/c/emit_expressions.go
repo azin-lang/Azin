@@ -90,8 +90,8 @@ func (t *Transpiler) emitExpression(
 		t.write(")")
 
 	default:
-		panic(fmt.Sprintf(
-			"unsupported expression %T",
+		t.write(fmt.Sprintf(
+			"/* unsupported expression %T */",
 			expr,
 		))
 	}
@@ -115,7 +115,7 @@ func emitType(
 		return "char"
 
 	case "string":
-		return "const char*"
+		return "char*"
 
 	case "bool":
 		return "bool"
@@ -161,11 +161,6 @@ func emitOperator(
 		return ">="
 
 	default:
-		panic(
-			fmt.Sprintf(
-				"unsupported operator %v",
-				kind,
-			),
-		)
+		return "/* unsupported operator */"
 	}
 }

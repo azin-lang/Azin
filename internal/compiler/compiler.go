@@ -174,9 +174,8 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 		return err
 	}
 	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			panic(err)
+		if err := os.Remove(name); err != nil {
+			fmt.Printf("warning: failed to remove temp file %s: %v\n", name, err)
 		}
 	}(tmpPath)
 

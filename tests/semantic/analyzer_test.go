@@ -1,6 +1,7 @@
 package semantic_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/azin-lang/Azin/internal/ast"
@@ -229,4 +230,119 @@ fn main: int do
     return double(21);
 end`
 	validProgram(t, input)
+}
+
+func mustHaveWarning(t *testing.T, input string, msg string) {
+	t.Helper()
+	_, diag := analyzeProgram(t, input)
+	for _, d := range diag.Diagnostics() {
+		if d.Kind == diagnostics.Warning && strings.Contains(d.Message, msg) {
+			return
+		}
+	}
+	t.Errorf("expected warning containing %q, got diagnostics: %v", msg, diag.Diagnostics())
+}
+
+func mustNotHaveWarning(t *testing.T, input string) {
+	t.Helper()
+	_, diag := analyzeProgram(t, input)
+	for _, d := range diag.Diagnostics() {
+		if d.Kind == diagnostics.Warning {
+			t.Errorf("unexpected warning: %s", d.Message)
+		}
+	}
+}
+
+func TestSemanticUnusedLocalVar(t *testing.T) {
+	input := `fn main: int do
+    var x: int = 42;
+    return 0;
+end`
+	mustHaveWarning(t, input, "unused variable: x")
+}
+
+func TestSemanticUsedLocalVar(t *testing.T) {
+	input := `fn main: int do
+    var x: int = 42;
+    return x;
+end`
+	mustNotHaveWarning(t, input)
+}
+
+func TestSemanticUnusedParameter(t *testing.T) {
+	input := `fn foo(x: int): int do
+    return 0;
+end`
+	mustHaveWarning(t, input, "unused variable: x")
+}
+
+func TestSemanticUsedParameter(t *testing.T) {
+	input := `fn foo(x: int): int do
+    return x;
+end`
+	mustNotHaveWarning(t, input)
+}
+
+func TestSemanticUnusedVarInBlock(t *testing.T) {
+	input := `fn main: int do
+    if true then
+        var x: int = 42;
+    end
+    return 0;
+end`
+	mustHaveWarning(t, input, "unused variable: x")
+}
+
+func TestSemanticUsedVarInBlock(t *testing.T) {
+	input := `fn main: int do
+    if true then
+        var x: int = 42;
+        return x;
+    end
+    return 0;
+end`
+	mustNotHaveWarning(t, input)
+}
+
+func TestSemanticUnusedGlobalVar(t *testing.T) {
+	input := `var x: int = 42;
+fn main: int do
+    return 0;
+end`
+	mustHaveWarning(t, input, "unused variable: x")
+}
+
+func TestSemanticUsedGlobalVar(t *testing.T) {
+	input := `var x: int = 42;
+fn main: int do
+    return x;
+end`
+	mustNotHaveWarning(t, input)
+}
+
+func TestSemanticUnusedBlankIdentifier(t *testing.T) {
+	input := `fn main: int do
+    var _: int = 42;
+    return 0;
+end`
+	mustNotHaveWarning(t, input)
+}
+
+func TestSemanticUnusedVarInLoop(t *testing.T) {
+	input := `fn main: int do
+    loop
+        var x: int = 42;
+    end
+end`
+	mustHaveWarning(t, input, "unused variable: x")
+}
+
+func TestSemanticUsedVarInLoop(t *testing.T) {
+	input := `fn main: int do
+    loop
+        var x: int = 42;
+        return x;
+    end
+end`
+	mustNotHaveWarning(t, input)
 }

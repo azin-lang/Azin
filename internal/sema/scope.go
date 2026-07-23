@@ -21,6 +21,12 @@ func (a *Analyzer) pushScope() {
 }
 
 func (a *Analyzer) popScope() {
+	scope := a.scopes[len(a.scopes)-1]
+	for _, sym := range scope.Symbols {
+		if sym.Kind == SymbolVariable && !sym.Used && sym.Name != "_" && sym.DeclNode != nil {
+			a.warningf(sym.DeclNode, "unused variable: %s", sym.Name)
+		}
+	}
 	a.scopes = a.scopes[:len(a.scopes)-1]
 }
 

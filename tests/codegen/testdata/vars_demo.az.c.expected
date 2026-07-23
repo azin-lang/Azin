@@ -3,7 +3,7 @@
 
 int main(void) {
 	int x = 42;
-	const const char* name = "azin";
+	const char* const name = "azin";
 	const bool flag = true;
 	x = 99;
 	printf("%s %d %d\n", name, x, flag);

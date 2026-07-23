@@ -63,6 +63,9 @@ func (a *Analyzer) resolveCallExpr(n *ast.CallExpr) *Symbol {
 
 	overloads := a.lookupFunctions(id.Value)
 	if len(overloads) == 0 {
+		if !isBuiltin(id.Value) {
+			a.errorf(n.Callee, "undefined function: %s", id.Value)
+		}
 		n.ResolvedName = id.Value
 		return nil
 	}
@@ -99,6 +102,9 @@ func (a *Analyzer) analyzeExpr(expr ast.Expr) {
 	switch n := expr.(type) {
 	case nil, *ast.BadExpr:
 		return
+
+	case *ast.Identifier:
+		a.lookup(n.Value)
 
 	case *ast.CallExpr:
 		a.analyzeExpr(n.Callee)
@@ -232,6 +238,15 @@ func (a *Analyzer) errorf(node ast.Node, format string, args ...any) {
 	)
 }
 
+func (a *Analyzer) warningf(node ast.Node, format string, args ...any) {
+	a.diag.ReportWarning(
+		node.Pos(),
+		uint32(len(node.TokenLiteral())),
+		format,
+		args...,
+	)
+}
+
 // Analyze performs sema analysis on the given AST program.
 func (a *Analyzer) Analyze(program *ast.Program) error {
 	a.pushScope()
@@ -262,6 +277,7 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 				Kind: SymbolEnum,
 				Enum: n,
 			})
+
 		}
 	}
 
@@ -337,9 +353,10 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			}
 
 			a.declare(&Symbol{
-				Name: param.Name.Value,
-				Type: param.Type,
-				Kind: SymbolVariable,
+				Name:     param.Name.Value,
+				Type:     param.Type,
+				Kind:     SymbolVariable,
+				DeclNode: param.Name,
 			})
 		}
 
@@ -355,24 +372,11 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			}
 		}
 
-		// TODO(0.3.0): This only checks whether a return statement exists.
-		// It does not verify that all execution paths return a value.
-		// It also cannot detect inconsistent return types across different
-		// control-flow paths
 		if n.ReturnType != nil && n.ReturnType.Value != "unit" {
-			hasReturn := false
-
-			for _, stmt := range n.Body {
-				if a.findReturnType(stmt) != nil {
-					hasReturn = true
-					break
-				}
-			}
-
-			if !hasReturn {
+			if !a.blockAllPathsReturn(n.Body) {
 				a.errorf(
 					n.Name,
-					"function '%s' must return %s",
+					"function '%s' must return %s on all paths",
 					n.Name.Value,
 					n.ReturnType.Value,
 				)
@@ -394,8 +398,14 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		expected := a.currentFunction.ReturnType
 
 		if expected != nil && actual != nil && expected.Value != actual.Value {
+			var posErr ast.Node
+			if n.Value == nil {
+				posErr = n
+			} else {
+				posErr = n.Value
+			}
 			a.errorf(
-				n.Value,
+				posErr,
 				"return type mismatch: expected %s, got %s",
 				expected.Value,
 				actual.Value,
@@ -424,10 +434,11 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		}
 
 		a.declare(&Symbol{
-			Name:    n.Name.Value,
-			Type:    n.Type,
-			Kind:    SymbolVariable,
-			Mutable: n.Mutable,
+			Name:     n.Name.Value,
+			Type:     n.Type,
+			Kind:     SymbolVariable,
+			Mutable:  n.Mutable,
+			DeclNode: n.Name,
 		})
 
 	case *ast.IfStmt:
@@ -548,11 +559,8 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 	}
 }
 
-func (a *Analyzer) findReturnType(stmt ast.Stmt) *ast.Identifier {
+func (a *Analyzer) findReturnExprType(stmt ast.Stmt) *ast.Identifier {
 	switch n := stmt.(type) {
-	case *ast.BadStmt:
-		return nil
-
 	case *ast.ReturnStmt:
 		if n.Value == nil {
 			return &ast.Identifier{Value: "unit"}
@@ -561,26 +569,59 @@ func (a *Analyzer) findReturnType(stmt ast.Stmt) *ast.Identifier {
 
 	case *ast.IfStmt:
 		for _, s := range n.Then {
-			if t := a.findReturnType(s); t != nil {
+			if t := a.findReturnExprType(s); t != nil {
 				return t
 			}
 		}
-
 		for _, s := range n.Else {
-			if t := a.findReturnType(s); t != nil {
+			if t := a.findReturnExprType(s); t != nil {
 				return t
 			}
 		}
 
 	case *ast.LoopStmt:
 		for _, s := range n.Body {
-			if t := a.findReturnType(s); t != nil {
+			if t := a.findReturnExprType(s); t != nil {
 				return t
 			}
 		}
 	}
 
 	return nil
+}
+
+func (a *Analyzer) blockAllPathsReturn(stmts []ast.Stmt) bool {
+	for _, stmt := range stmts {
+		if a.stmtAllPathsReturn(stmt) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *Analyzer) stmtAllPathsReturn(stmt ast.Stmt) bool {
+	switch n := stmt.(type) {
+	case *ast.ReturnStmt:
+		return true
+
+	case *ast.StopStmt:
+		return true
+
+	case *ast.IfStmt:
+		if len(n.Else) == 0 {
+			return false
+		}
+		return a.blockAllPathsReturn(n.Then) && a.blockAllPathsReturn(n.Else)
+
+	case *ast.LoopStmt:
+		return a.blockAllPathsReturn(n.Body)
+
+	case *ast.BadStmt:
+		return false
+
+	default:
+		return false
+	}
 }
 
 func (a *Analyzer) inferFunctionReturnType(fn *ast.FuncStmt) {
@@ -601,7 +642,7 @@ func (a *Analyzer) inferFunctionReturnType(fn *ast.FuncStmt) {
 	}
 
 	for _, stmt := range fn.Body {
-		if typ := a.findReturnType(stmt); typ != nil {
+		if typ := a.findReturnExprType(stmt); typ != nil {
 			fn.ReturnType = typ
 
 			if sym != nil {
@@ -748,4 +789,15 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 	}
 
 	return nil
+}
+
+func isBuiltin(name string) bool {
+	switch name {
+	case "printf", "fprintf", "sprintf", "snprintf",
+		"scanf", "sscanf",
+		"malloc", "calloc", "realloc", "free", "exit",
+		"strlen", "strcpy", "strcmp", "memset", "memcpy":
+		return true
+	}
+	return false
 }

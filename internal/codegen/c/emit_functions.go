@@ -33,13 +33,14 @@ func (t *Transpiler) emitFunction(
 func (t *Transpiler) emitFunctionSignature(
 	fn *ast.FuncStmt,
 ) {
-	if fn.ReturnType == nil {
-		panic(
-			"function missing return type",
-		)
-	}
-
 	name := t.functionName(fn)
+
+	if fn.ReturnType == nil {
+		t.printf("void %s(", name)
+		t.write("void")
+		t.write(") /* missing return type */")
+		return
+	}
 
 	ret := emitType(
 		fn.ReturnType.Value,
@@ -67,9 +68,8 @@ func (t *Transpiler) emitFunctionSignature(
 			}
 
 			if param.Type == nil {
-				panic(
-					"parameter missing type",
-				)
+				t.printf("void %s /* missing type */", param.Name.Value)
+				continue
 			}
 
 			t.printf(
