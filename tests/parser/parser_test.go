@@ -404,6 +404,20 @@ func TestParserComparisonChaining(t *testing.T) {
 	}
 }
 
+func TestParserDefer(t *testing.T) {
+	program, diag := parseProgram(t, "defer foo();\n")
+	if diag.HasErrors() {
+		t.Fatalf("unexpected errors: %v", diag.Err())
+	}
+	deferStmt, ok := program.Statements[0].(*ast.DeferStmt)
+	if !ok {
+		t.Fatalf("expected DeferStmt, got %T", program.Statements[0])
+	}
+	if _, ok := deferStmt.Call.(*ast.CallExpr); !ok {
+		t.Fatalf("expected CallExpr in defer, got %T", deferStmt.Call)
+	}
+}
+
 // Parser snapshot tests with golden files
 
 func TestParserSnapshot(t *testing.T) {
