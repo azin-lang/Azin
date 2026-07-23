@@ -29,19 +29,16 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			return n.Right
 		}
 
-		// x * 2 == x + x (if pure)
+		// x * 2^k == x << k (if pure)
 		if leftPure {
-			if r, ok := n.Right.(*ast.IntegerLiteral); ok && r.Value == 2 {
+			if k, ok := isPowerOfTwo(n.Right); ok {
 				return &ast.BinaryExpr{
 					Left:     n.Left,
-					Operator: token.Token{Kind: token.Plus},
-					Right:    n.Left,
+					Operator: token.Token{Kind: token.LessLess},
+					Right:    intLit(k),
 				}
 			}
 		}
-
-		// TODO: add x * 2^k == x << k (only if pure)
-		// Maybe also check if k > width of given literal (if known) and return 0?
 
 	case token.Slash:
 		// x / 1
@@ -49,7 +46,16 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			return n.Left
 		}
 
-		// TODO: add x / 2^k => x >> k
+		// x / 2^k == x >> k (if pure and non-negative)
+		if leftPure && isNonNegative(n.Left) {
+			if k, ok := isPowerOfTwo(n.Right); ok {
+				return &ast.BinaryExpr{
+					Left:     n.Left,
+					Operator: token.Token{Kind: token.GreaterGreater},
+					Right:    intLit(k),
+				}
+			}
+		}
 
 		// x / x == 1 only if x != 0 and x is pure
 		if leftPure && exprEqual(n.Left, n.Right) && !isZero(n.Left) {
@@ -62,7 +68,16 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			return intLit(0)
 		}
 
-		// TODO: add x % 2^k => x & (2^k - 1)
+		// x % 2^k == x & (2^k - 1) (if pure and non-negative)
+		if leftPure && isNonNegative(n.Left) {
+			if k, ok := isPowerOfTwo(n.Right); ok {
+				return &ast.BinaryExpr{
+					Left:     n.Left,
+					Operator: token.Token{Kind: token.Ampersand},
+					Right:    intLit((1 << k) - 1),
+				}
+			}
+		}
 	}
 
 	return nil

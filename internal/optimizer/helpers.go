@@ -1,6 +1,10 @@
 package optimizer
 
-import "github.com/azin-lang/Azin/internal/ast"
+import (
+	"math/bits"
+
+	"github.com/azin-lang/Azin/internal/ast"
+)
 
 func isTrue(expr ast.Expr) bool {
 	b, ok := expr.(*ast.BooleanLiteral)
@@ -32,6 +36,34 @@ func isZero(expr ast.Expr) bool {
 		return n.Value == 0
 	case *ast.CharacterLiteral:
 		return n.Value == 0
+	}
+	return false
+}
+
+func isPowerOfTwo(expr ast.Expr) (int64, bool) {
+	n, ok := expr.(*ast.IntegerLiteral)
+	if !ok || n.Value <= 0 {
+		return 0, false
+	}
+
+	v := uint64(n.Value)
+	if v&(v-1) != 0 {
+		return 0, false
+	}
+
+	return int64(bits.TrailingZeros64(v)), true
+}
+
+// isNonNegative returns true if the expression is definitely >= 0.
+// The optimizer has no type information, so this only applies to literals.
+func isNonNegative(expr ast.Expr) bool {
+	switch n := expr.(type) {
+	case *ast.IntegerLiteral:
+		return n.Value >= 0
+	case *ast.CharacterLiteral:
+		return n.Value >= 0
+	case *ast.BooleanLiteral:
+		return true
 	}
 	return false
 }

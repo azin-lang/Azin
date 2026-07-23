@@ -280,8 +280,12 @@ func TestSimplifyArithmetic(t *testing.T) {
 				if !ok {
 					t.Fatalf("got %T, want BinaryExpr", got)
 				}
-				if bin.Operator.Kind != token.Plus {
-					t.Errorf("expected + operator, got %v", bin.Operator.Kind)
+				if bin.Operator.Kind != token.LessLess {
+					t.Errorf("expected << operator, got %v", bin.Operator.Kind)
+				}
+				r, ok := bin.Right.(*ast.IntegerLiteral)
+				if !ok || r.Value != 1 {
+					t.Errorf("expected shift by 1, got %v", r)
 				}
 			},
 		},
@@ -319,9 +323,113 @@ func TestSimplifyArithmetic(t *testing.T) {
 			name: "side_effect_not_removed",
 			expr: bin(&ast.CallExpr{ResolvedName: "foo"}, token.Star, intLit(0)),
 			check: func(t *testing.T, got ast.Expr) {
-				// x * 0 → 0 only if x is pure; a call has side effects so no simplification
 				if got != nil {
 					t.Errorf("expected nil for impure x * 0, got %v", got)
+				}
+			},
+		},
+		{
+			name: "x_times_8",
+			expr: bin(id("x"), token.Star, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				bin, ok := got.(*ast.BinaryExpr)
+				if !ok {
+					t.Fatalf("got %T, want BinaryExpr", got)
+				}
+				if bin.Operator.Kind != token.LessLess {
+					t.Errorf("expected << operator, got %v", bin.Operator.Kind)
+				}
+				r, ok := bin.Right.(*ast.IntegerLiteral)
+				if !ok || r.Value != 3 {
+					t.Errorf("expected shift by 3, got %v", r)
+				}
+			},
+		},
+		{
+			name: "x_times_non_power_of_2",
+			expr: bin(id("x"), token.Star, intLit(6)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for non-power-of-2, got %v", got)
+				}
+			},
+		},
+		{
+			name: "x_times_impure_power_of_2",
+			expr: bin(&ast.CallExpr{ResolvedName: "foo"}, token.Star, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for impure left, got %v", got)
+				}
+			},
+		},
+		{
+			name: "x_div_8",
+			expr: bin(intLit(100), token.Slash, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				bin, ok := got.(*ast.BinaryExpr)
+				if !ok {
+					t.Fatalf("got %T, want BinaryExpr", got)
+				}
+				if bin.Operator.Kind != token.GreaterGreater {
+					t.Errorf("expected >> operator, got %v", bin.Operator.Kind)
+				}
+				r, ok := bin.Right.(*ast.IntegerLiteral)
+				if !ok || r.Value != 3 {
+					t.Errorf("expected shift by 3, got %v", r)
+				}
+			},
+		},
+		{
+			name: "x_div_signed_skip",
+			expr: bin(id("x"), token.Slash, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for signed variable, got %v", got)
+				}
+			},
+		},
+		{
+			name: "x_div_non_power_of_2",
+			expr: bin(intLit(100), token.Slash, intLit(6)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for non-power-of-2, got %v", got)
+				}
+			},
+		},
+		{
+			name: "x_mod_8",
+			expr: bin(intLit(100), token.Modulo, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				bin, ok := got.(*ast.BinaryExpr)
+				if !ok {
+					t.Fatalf("got %T, want BinaryExpr", got)
+				}
+				if bin.Operator.Kind != token.Ampersand {
+					t.Errorf("expected & operator, got %v", bin.Operator.Kind)
+				}
+				r, ok := bin.Right.(*ast.IntegerLiteral)
+				if !ok || r.Value != 7 {
+					t.Errorf("expected mask 7, got %v", r)
+				}
+			},
+		},
+		{
+			name: "x_mod_signed_skip",
+			expr: bin(id("x"), token.Modulo, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for signed variable, got %v", got)
+				}
+			},
+		},
+		{
+			name: "x_mod_non_power_of_2",
+			expr: bin(intLit(100), token.Modulo, intLit(6)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for non-power-of-2, got %v", got)
 				}
 			},
 		},
