@@ -385,8 +385,14 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 		expected := a.currentFunction.ReturnType
 
 		if expected != nil && actual != nil && expected.Value != actual.Value {
+			var posErr ast.Node
+			if n.Value == nil {
+				posErr = n
+			} else {
+				posErr = n.Value
+			}
 			a.errorf(
-				n.Value,
+				posErr,
 				"return type mismatch: expected %s, got %s",
 				expected.Value,
 				actual.Value,
