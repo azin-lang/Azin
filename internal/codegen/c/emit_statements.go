@@ -83,15 +83,24 @@ func (t *Transpiler) emitVariable(
 		return
 	}
 
-	if !stmt.Mutable {
-		t.write("const ")
-	}
+	if stmt.Type.Value == "string" {
+		if !stmt.Mutable {
+			t.write("const char* const ")
+		} else {
+			t.write("char* ")
+		}
+		t.write(stmt.Name.Value)
+	} else {
+		if !stmt.Mutable {
+			t.write("const ")
+		}
 
-	t.printf(
-		"%s %s",
-		emitType(stmt.Type.Value),
-		stmt.Name.Value,
-	)
+		t.printf(
+			"%s %s",
+			emitType(stmt.Type.Value),
+			stmt.Name.Value,
+		)
+	}
 
 	if stmt.Value != nil {
 		t.write(" = ")
