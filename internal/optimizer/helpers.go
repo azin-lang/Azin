@@ -36,6 +36,23 @@ func isZero(expr ast.Expr) bool {
 	return false
 }
 
+func isPowerOfTwo(expr ast.Expr) (int64, bool) {
+	n, ok := expr.(*ast.IntegerLiteral)
+	if !ok || n.Value <= 0 {
+		return 0, false
+	}
+	v := n.Value
+	if v&(v-1) != 0 {
+		return 0, false
+	}
+	k := int64(0)
+	for v > 1 {
+		v >>= 1
+		k++
+	}
+	return k, true
+}
+
 func isOne(expr ast.Expr) bool {
 	switch n := expr.(type) {
 	case *ast.IntegerLiteral:
