@@ -365,7 +365,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_div_8",
-			expr: bin(id("x"), token.Slash, intLit(8)),
+			expr: bin(intLit(100), token.Slash, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				bin, ok := got.(*ast.BinaryExpr)
 				if !ok {
@@ -381,8 +381,17 @@ func TestSimplifyArithmetic(t *testing.T) {
 			},
 		},
 		{
+			name: "x_div_signed_skip",
+			expr: bin(id("x"), token.Slash, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for signed variable, got %v", got)
+				}
+			},
+		},
+		{
 			name: "x_div_non_power_of_2",
-			expr: bin(id("x"), token.Slash, intLit(6)),
+			expr: bin(intLit(100), token.Slash, intLit(6)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for non-power-of-2, got %v", got)
@@ -391,7 +400,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_mod_8",
-			expr: bin(id("x"), token.Modulo, intLit(8)),
+			expr: bin(intLit(100), token.Modulo, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				bin, ok := got.(*ast.BinaryExpr)
 				if !ok {
@@ -407,8 +416,17 @@ func TestSimplifyArithmetic(t *testing.T) {
 			},
 		},
 		{
+			name: "x_mod_signed_skip",
+			expr: bin(id("x"), token.Modulo, intLit(8)),
+			check: func(t *testing.T, got ast.Expr) {
+				if got != nil {
+					t.Errorf("expected nil for signed variable, got %v", got)
+				}
+			},
+		},
+		{
 			name: "x_mod_non_power_of_2",
-			expr: bin(id("x"), token.Modulo, intLit(6)),
+			expr: bin(intLit(100), token.Modulo, intLit(6)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for non-power-of-2, got %v", got)

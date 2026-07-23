@@ -46,8 +46,8 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			return n.Left
 		}
 
-		// x / 2^k == x >> k (if pure)
-		if leftPure {
+		// x / 2^k == x >> k (if pure and non-negative)
+		if leftPure && isNonNegative(n.Left) {
 			if k, ok := isPowerOfTwo(n.Right); ok {
 				return &ast.BinaryExpr{
 					Left:     n.Left,
@@ -68,8 +68,8 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			return intLit(0)
 		}
 
-		// x % 2^k == x & (2^k - 1) (if pure)
-		if leftPure {
+		// x % 2^k == x & (2^k - 1) (if pure and non-negative)
+		if leftPure && isNonNegative(n.Left) {
 			if k, ok := isPowerOfTwo(n.Right); ok {
 				return &ast.BinaryExpr{
 					Left:     n.Left,
