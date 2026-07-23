@@ -186,6 +186,9 @@ func (a *Analyzer) verifyResolvedCalls(program *ast.Program) {
 
 		case *ast.ExpressionStmt:
 			visitExpr(n.Expression)
+
+		case *ast.DeferStmt:
+			visitExpr(n.Call)
 		}
 	}
 
@@ -412,6 +415,9 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			)
 		}
 
+	case *ast.DeferStmt:
+		a.analyzeExpr(n.Call)
+
 	case *ast.VarStmt:
 		if n.Type == nil {
 			n.Type = a.inferExprType(n.Value)
@@ -585,6 +591,8 @@ func (a *Analyzer) findReturnExprType(stmt ast.Stmt) *ast.Identifier {
 				return t
 			}
 		}
+
+	case *ast.DeferStmt:
 	}
 
 	return nil
@@ -617,6 +625,9 @@ func (a *Analyzer) stmtAllPathsReturn(stmt ast.Stmt) bool {
 		return a.blockAllPathsReturn(n.Body)
 
 	case *ast.BadStmt:
+		return false
+
+	case *ast.DeferStmt:
 		return false
 
 	default:
