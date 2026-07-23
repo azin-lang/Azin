@@ -52,7 +52,7 @@ func transpile(t *testing.T, input string) string {
 
 	tx := c.New()
 
-	out := tx.Transpile(parseProgram(t, input))
+	out, _ := tx.Transpile(parseProgram(t, input))
 	return normalize(out)
 }
 
@@ -656,6 +656,6 @@ end
 	b.ResetTimer()
 
 	for b.Loop() {
-		_ = tx.Transpile(program)
+		_, _ = tx.Transpile(program)
 	}
 }
