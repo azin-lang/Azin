@@ -162,7 +162,10 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 	}
 
 	optimizer.Optimize(program)
-	cCode := transpileToC(program)
+	cCode, err := transpileToC(program)
+	if err != nil {
+		return err
+	}
 
 	if opts.EmitC {
 		return writeCOutput(cCode, outputPath)
@@ -200,7 +203,7 @@ func parseSource(file *source.File, diag *diagnostics.Engine) (*ast.Program, err
 	return program, diag.Err()
 }
 
-func transpileToC(program *ast.Program) string {
+func transpileToC(program *ast.Program) (string, error) {
 	tx := c.New()
 	return tx.Transpile(program)
 }
