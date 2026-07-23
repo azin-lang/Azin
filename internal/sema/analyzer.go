@@ -63,6 +63,9 @@ func (a *Analyzer) resolveCallExpr(n *ast.CallExpr) *Symbol {
 
 	overloads := a.lookupFunctions(id.Value)
 	if len(overloads) == 0 {
+		if !isBuiltin(id.Value) {
+			a.errorf(n.Callee, "undefined function: %s", id.Value)
+		}
 		n.ResolvedName = id.Value
 		return nil
 	}
@@ -766,4 +769,15 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 	}
 
 	return nil
+}
+
+func isBuiltin(name string) bool {
+	switch name {
+	case "printf", "fprintf", "sprintf", "snprintf",
+		"scanf", "sscanf",
+		"malloc", "calloc", "realloc", "free", "exit",
+		"strlen", "strcpy", "strcmp", "memset", "memcpy":
+		return true
+	}
+	return false
 }
