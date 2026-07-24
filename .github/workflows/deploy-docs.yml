@@ -18,17 +18,30 @@ jobs:
   generate:
     name: Generate documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: stable
+          go-version-file: go.mod
+          cache: true
 
       - name: Download dependencies
         run: go mod download
+
+      - name: Set up Go binary cache
+        uses: actions/cache@v6
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-bin-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-bin-
 
       - name: Install doc2go
         run: go install go.abhg.dev/doc2go@latest
@@ -41,7 +54,7 @@ jobs:
             ./...
 
       - name: Upload docs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: doc2go-html
           path: build/docs/html
@@ -52,6 +65,7 @@ jobs:
     needs: generate
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     permissions:
       contents: read
@@ -59,12 +73,12 @@ jobs:
 
     steps:
       - name: Download docs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: doc2go-html
           path: build/docs/html
 
-      - name: Deploy
+      - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
