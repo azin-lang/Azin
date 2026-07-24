@@ -4,11 +4,11 @@ on:
   push:
     branches: [ main, dev ]
     paths-ignore:
-      - '**.md'
+      - "**.md"
   pull_request:
     branches: [ main, dev ]
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,14 +18,40 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          args: --timeout=5m
+
   build:
-    name: Go (${{ matrix.os }})
+    name: Build and test (${{ matrix.os }})
+    needs: lint
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    env:
+      BIN_NAME: ${{ runner.os == 'Windows' && 'azc.exe' || 'azc' }}
 
     defaults:
       run:
@@ -34,62 +60,30 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
-          go-version: 'stable'
+          go-version-file: go.mod
           cache: true
+          cache-dependency-path: go.sum
 
-      - name: Install modern GCC (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq software-properties-common
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get install -y -qq gcc-14
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
-
-      - name: Verify formatting
-        if: runner.os != 'Windows'
-        run: |
-          test -z "$(gofmt -l .)"
-
-      - name: Run go vet
-        run: go vet ./...
-
-      - name: Build (Unix)
-        if: runner.os != 'Windows'
-        run: go build -o azc ./cmd/azc
-
-      - name: Build (Windows)
+      - name: Setup MSVC
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: go build -o azc.exe ./cmd/azc
-      #
-      #            - name: List workspace (Windows)
-      #              if: runner.os == 'Windows'
-      #              shell: pwsh
-      #              run: |
-      #                Get-ChildItem ${{ github.workspace }}
-      #                Get-ChildItem ${{ github.workspace }} -Recurse | Where-Object { $_.Name -like "azc*" }
-      #
-      #            - name: Check build output
-      #              if: runner.os == 'Windows'
-      #              shell: pwsh
-      #              run: |
-      #                Test-Path azc.exe
-      #                Test-Path azc
-      #                Get-Location
+        uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Full test suite with coverage (Unix)
-        if: runner.os != 'Windows'
-        env:
-          AZC: ${{ github.workspace }}/azc
-        run: go test -count=1 -cover ./...
+      - name: Download dependencies
+        run: go mod download
 
-      - name: Full test suite with coverage (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - name: Build binary
+        run: go build -v -o "$BIN_NAME" ./cmd/azc
+
+      - name: Run tests
         env:
-          AZC: ${{ github.workspace }}/azc.exe
-        run: go test -count=1 -cover ./...
+          AZC: ${{ github.workspace }}/${{ env.BIN_NAME }}
+        run: go test -v -race -count=1 -cover ./...
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: azc-${{ runner.os }}
+          path: ${{ env.BIN_NAME }}
+          retention-days: 7
