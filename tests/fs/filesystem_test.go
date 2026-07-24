@@ -11,7 +11,7 @@ import (
 func TestReadSourceFileValid(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.az")
-	if err := os.WriteFile(path, []byte("fn main() do end"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("fn main() do end"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -27,7 +27,7 @@ func TestReadSourceFileValid(t *testing.T) {
 func TestReadSourceFileInvalidExtension(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.txt")
-	if err := os.WriteFile(path, []byte("content"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("content"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -40,7 +40,7 @@ func TestReadSourceFileInvalidExtension(t *testing.T) {
 func TestReadSourceFileIgnoreExtension(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.txt")
-	if err := os.WriteFile(path, []byte("content"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("content"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -63,7 +63,7 @@ func TestReadSourceFileNotFound(t *testing.T) {
 func TestReadSourceFileValidExtension(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.az")
-	if err := os.WriteFile(path, []byte("content"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("content"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -79,7 +79,7 @@ func TestReadSourceFileValidExtension(t *testing.T) {
 func TestReadSourceFileEmpty(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "empty.az")
-	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
+	if err := os.WriteFile(path, []byte{}, 0o600); err != nil {
 		t.Fatal(err)
 	}
 

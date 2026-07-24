@@ -1,3 +1,4 @@
+//nolint:goconst
 package codegen_test
 
 // This turns your Azin code into C code.
@@ -569,12 +570,12 @@ func TestCodegenSnapshot(t *testing.T) {
 func runSnapshotTest(t *testing.T, sourceFile string) {
 	t.Helper()
 
-	source, err := os.ReadFile(sourceFile)
+	src, err := os.ReadFile(sourceFile)
 	if err != nil {
 		t.Fatalf("reading %q: %v", sourceFile, err)
 	}
 
-	got := transpile(t, string(source))
+	got := transpile(t, string(src))
 
 	expectedFile := sourceFile + ".c.expected"
 
@@ -603,12 +604,13 @@ func readGoldenFile(t *testing.T, filename string) string {
 	return normalize(string(data))
 }
 
-func writeGoldenFile(t *testing.T, filename string, output string) {
+func writeGoldenFile(t *testing.T, filename, output string) {
 	t.Helper()
 
 	output = normalize(output) + "\n"
 
-	if err := os.WriteFile(filename, []byte(output), 0644); err != nil {
+	//nolint:gosec // filename is controlled by the test suite, no traversal risk
+	if err := os.WriteFile(filename, []byte(output), 0o600); err != nil {
 		t.Fatalf("writing golden file %q: %v", filename, err)
 	}
 }

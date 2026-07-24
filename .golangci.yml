@@ -49,7 +49,17 @@ linters:
         - diagnostic
         - performance
         - style
+      disabled-checks:
+        - whyNoLint
+    exhaustive:
+      default-signifies-exhaustive: true
 
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

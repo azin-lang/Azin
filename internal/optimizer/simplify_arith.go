@@ -7,7 +7,7 @@ import (
 
 func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 	leftPure := isPure(n.Left)
-
+	//nolint:exhaustive
 	switch n.Operator.Kind {
 
 	case token.Plus, token.Minus:

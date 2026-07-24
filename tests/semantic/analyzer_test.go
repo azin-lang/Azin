@@ -1,3 +1,4 @@
+//nolint:unparam
 package semantic_test
 
 import (
@@ -66,7 +67,7 @@ func TestSemanticTypeMismatchInit(t *testing.T) {
     var x: int = "hello";
     return 0;
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticTypeMismatchAssign(t *testing.T) {
@@ -75,7 +76,7 @@ func TestSemanticTypeMismatchAssign(t *testing.T) {
     x = "hello";
     return 0;
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticImmutableAssign(t *testing.T) {
@@ -84,7 +85,7 @@ func TestSemanticImmutableAssign(t *testing.T) {
     x = 99;
     return 0;
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticMutableAssign(t *testing.T) {
@@ -101,14 +102,14 @@ func TestSemanticUnknownVariable(t *testing.T) {
     x = 42;
     return 0;
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticUnknownFunction(t *testing.T) {
 	input := `fn main: int do
     return foo();
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticWrongArgCount(t *testing.T) {
@@ -118,7 +119,7 @@ end
 fn main: int do
     return add(1);
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticArgTypeMismatch(t *testing.T) {
@@ -128,14 +129,14 @@ end
 fn main: int do
     return greet(42);
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticReturnTypeMismatch(t *testing.T) {
 	input := `fn main: int do
     return "hello";
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticReturnInference(t *testing.T) {
@@ -167,7 +168,7 @@ fn main: int do
     var p: Point;
     return p.z;
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticStructAssign(t *testing.T) {
@@ -189,7 +190,7 @@ end
 fn foo: int do
     return 2;
 end`
-	mustHaveError(t, input)
+	_ = mustHaveError(t, input)
 }
 
 func TestSemanticIfElse(t *testing.T) {
@@ -240,7 +241,7 @@ end`
 	validProgram(t, input)
 }
 
-func mustHaveWarning(t *testing.T, input string, msg string) {
+func mustHaveWarning(t *testing.T, input, msg string) {
 	t.Helper()
 	_, diag := analyzeProgram(t, input)
 	for _, d := range diag.Diagnostics() {

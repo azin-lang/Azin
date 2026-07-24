@@ -8,7 +8,7 @@ import (
 )
 
 type ErrorReporter interface {
-	ReportError(pos token.Position, length uint32, format string, args ...any)
+	ReportError(pos token.Position, length int, format string, args ...any)
 	Err() error
 }
 
@@ -83,7 +83,7 @@ func (p *Parser) lexeme(tok token.Token) string {
 }
 
 func (p *Parser) reportError(tok token.Token, format string, args ...any) {
-	p.diag.ReportError(tok.Position, tok.Length, format, args...)
+	p.diag.ReportError(tok.Position, int(tok.Length), format, args...)
 }
 
 func badStmt(tok token.Token) *ast.BadStmt {
@@ -190,6 +190,7 @@ func (p *Parser) match(kinds ...token.Kind) bool {
 	return false
 }
 
+//nolint:unparam
 func (p *Parser) consumeStatementEnd() bool {
 	switch p.peek().Kind {
 	case token.Semicolon:

@@ -109,12 +109,14 @@ func (a *Analyzer) lookupFunctionSymbol(fn *ast.FuncStmt) *Symbol {
 	return nil
 }
 
+//nolint:unparam
 func (a *Analyzer) errorfSym(sym *Symbol, format string, args ...any) {
-	if sym.Function != nil {
+	switch {
+	case sym.Function != nil:
 		a.errorf(sym.Function, format, args...)
-	} else if sym.Struct != nil {
+	case sym.Struct != nil:
 		a.errorf(sym.Struct, format, args...)
-	} else if sym.Enum != nil {
+	case sym.Enum != nil:
 		a.errorf(sym.Enum, format, args...)
 	}
 }

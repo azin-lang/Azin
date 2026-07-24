@@ -1,3 +1,4 @@
+//nolint:goconst
 package compiler
 
 import (
@@ -139,7 +140,7 @@ func writeCOutput(code, output string) error {
 		output += ".c"
 	}
 
-	if err := os.WriteFile(output, []byte(code), 0644); err != nil {
+	if err := os.WriteFile(output, []byte(code), 0o600); err != nil {
 		return fmt.Errorf("failed to write C source: %w", err)
 	}
 

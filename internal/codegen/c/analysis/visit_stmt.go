@@ -1,3 +1,4 @@
+//nolint:unused
 package analysis
 
 import "github.com/azin-lang/Azin/internal/ast"

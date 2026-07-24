@@ -1,3 +1,4 @@
+//nolint:goconst
 package optimizer
 
 import (
@@ -198,15 +199,13 @@ func TestFoldBinaryExpr(t *testing.T) {
 				if got.Value != tt.want {
 					t.Errorf("got %d, want %d", got.Value, tt.want)
 				}
-			} else {
-				if result != nil {
-					// float ops should also produce result, just different type
-					switch result.(type) {
-					case *ast.FloatLiteral:
-						// OK
-					default:
-						t.Errorf("expected nil or FloatLiteral, got %T", result)
-					}
+			} else if result != nil {
+				// float ops should also produce result, just different type
+				switch result.(type) {
+				case *ast.FloatLiteral:
+					// OK
+				default:
+					t.Errorf("expected nil or FloatLiteral, got %T", result)
 				}
 			}
 		})

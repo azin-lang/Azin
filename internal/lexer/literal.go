@@ -65,7 +65,7 @@ func (l *Lexer) lexCharacter(start token.Position) token.Token {
 	}
 
 	if l.eof() {
-		l.diag.ReportError(start, l.cursor-start.Offset, "unterminated character literal")
+		l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated character literal")
 		return l.emit(token.CharacterLiteral, start)
 	}
 
@@ -111,11 +111,11 @@ func (l *Lexer) lexString(start token.Position) token.Token {
 			}
 
 		case '\n', '\r':
-			l.diag.ReportError(start, l.cursor-start.Offset, "unterminated string literal")
+			l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated string literal")
 			return l.emit(token.StringLiteral, start)
 		}
 	}
 
-	l.diag.ReportError(start, l.cursor-start.Offset, "unterminated string literal")
+	l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated string literal")
 	return l.emit(token.StringLiteral, start)
 }

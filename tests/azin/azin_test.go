@@ -80,7 +80,9 @@ func runFailureTests(t *testing.T) {
 }
 
 func compile(file string) (string, error) {
-	defer os.Remove("output.exe")
+	defer func() {
+		_ = os.Remove("output.exe")
+	}()
 
 	cmd := exec.Command(compiler, file)
 

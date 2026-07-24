@@ -4,26 +4,32 @@ type Builtin struct {
 	Include string
 }
 
+const (
+	StdioHeader  = "stdio.h"
+	StdlibHeader = "stdlib.h"
+	StringHeader = "string.h"
+)
+
 var Builtins = map[string]Builtin{
-	"printf":   {"stdio.h"},
-	"fprintf":  {"stdio.h"},
-	"sprintf":  {"stdio.h"},
-	"snprintf": {"stdio.h"},
-	"scanf":    {"stdio.h"},
-	"sscanf":   {"stdio.h"},
+	"printf":   {StdioHeader},
+	"fprintf":  {StdioHeader},
+	"sprintf":  {StdioHeader},
+	"snprintf": {StdioHeader},
+	"scanf":    {StdioHeader},
+	"sscanf":   {StdioHeader},
 
-	"malloc":  {"stdlib.h"},
-	"calloc":  {"stdlib.h"},
-	"realloc": {"stdlib.h"},
-	"free":    {"stdlib.h"},
-	"exit":    {"stdlib.h"},
-	"abs":     {"stdlib.h"},
+	"malloc":  {StdlibHeader},
+	"calloc":  {StdlibHeader},
+	"realloc": {StdlibHeader},
+	"free":    {StdlibHeader},
+	"exit":    {StdlibHeader},
+	"abs":     {StdlibHeader},
 
-	"strlen": {"string.h"},
-	"strcpy": {"string.h"},
-	"strcmp": {"string.h"},
-	"memset": {"string.h"},
-	"memcpy": {"string.h"},
+	"strlen": {StringHeader},
+	"strcpy": {StringHeader},
+	"strcmp": {StringHeader},
+	"memset": {StringHeader},
+	"memcpy": {StringHeader},
 }
 
 func LookupBuiltin(name string) (Builtin, bool) {

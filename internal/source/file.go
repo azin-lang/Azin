@@ -36,7 +36,7 @@ func New(name string, text []byte) *File {
 
 // Len returns the size of the file in bytes.
 func (f *File) Len() uint32 {
-	return uint32(len(f.text))
+	return uint32(len(f.text)) //nolint:gosec
 }
 
 // Empty reports whether the file contains no text.
@@ -55,9 +55,10 @@ func (f *File) Byte(offset uint32) byte {
 }
 
 // Rune returns the rune at the given offset, along with the byte count
-func (f *File) Rune(offset uint32) (rune, uint32) {
-	r, size := utf8.DecodeRune(f.text[offset:])
-	return r, uint32(size)
+func (f *File) Rune(offset uint32) (r rune, size uint32) {
+	var sz int
+	r, sz = utf8.DecodeRune(f.text[offset:])
+	return r, uint32(sz) //nolint:gosec
 }
 
 // Slice returns the byte slice between start and end offsets.
@@ -76,19 +77,19 @@ func (f *File) LineColumn(offset uint32) (line, column uint32) {
 		return f.lines[i] > offset
 	})-1)
 
-	line = uint32(i + 1)
+	line = uint32(i + 1) //nolint:gosec
 	column = offset - f.lines[i] + 1
 	return
 }
 
 // LineCount returns the total number of lines in the file.
 func (f *File) LineCount() uint32 {
-	return uint32(len(f.lines))
+	return uint32(len(f.lines)) //nolint:gosec
 }
 
 // LineStart returns the byte offset for the beginning of a 1-based line.
 func (f *File) LineStart(line uint32) (uint32, bool) {
-	if line == 0 || line > uint32(len(f.lines)) {
+	if line == 0 || line > uint32(len(f.lines)) { //nolint:gosec
 		return 0, false
 	}
 

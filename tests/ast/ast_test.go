@@ -8,13 +8,13 @@ import (
 	"github.com/azin-lang/Azin/internal/token"
 )
 
-func tok(kind token.Kind, offset uint32, length uint32) token.Token {
+func tok(kind token.Kind, offset, length uint32) token.Token {
 	return token.Token{Kind: kind, Position: token.Position{Offset: offset}, Length: length}
 }
 
 func ident(value string) *ast.Identifier {
 	return &ast.Identifier{
-		Token: tok(token.Identifier, 0, uint32(len(value))),
+		Token: tok(token.Identifier, 0, uint32(len(value))), //nolint:gosec
 		Value: value,
 	}
 }

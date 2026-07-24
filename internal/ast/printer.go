@@ -19,18 +19,8 @@ var (
 	cBranch  = color.New(color.FgHiBlack).SprintFunc()
 )
 
-func PrintTree(node Node) {
-	// newNormalPrinter(os.Stdout, true).Print(node)
-}
-
 func PrintDebugTree(node Node) {
 	newDebugPrinter(os.Stdout, true).Print(node)
-}
-
-func ExportTree(node Node, path string) error {
-	return export(path, func(f *os.File) {
-		// newNormalPrinter(f, false).Print(node)
-	})
 }
 
 func ExportDebugTree(node Node, path string) error {
@@ -48,7 +38,9 @@ func export(path string, fn func(*os.File)) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	fn(f)
 
@@ -164,9 +156,9 @@ func skipFalseOrEmpty(v reflect.Value) bool {
 
 	case reflect.String:
 		return v.Len() == 0
+	default:
+		return false
 	}
-
-	return false
 }
 func isInlineField(name string) bool {
 	switch name {
@@ -212,7 +204,7 @@ func meaningfulFields(v reflect.Value) []reflect.StructField {
 	t := v.Type()
 	fields := make([]reflect.StructField, 0, v.NumField())
 
-	for i := 0; i < v.NumField(); i++ {
+	for i := range v.NumField() {
 		sf := t.Field(i)
 
 		if !sf.IsExported() || shouldSkipField(sf.Name) {
@@ -265,7 +257,9 @@ func primitive(v reflect.Value) (string, bool) {
 	case reflect.Float32,
 		reflect.Float64:
 		return strconv.FormatFloat(v.Float(), 'g', -1, 64), true
+
+	default:
+		return "", false
 	}
 
-	return "", false
 }

@@ -40,7 +40,7 @@ func (e *Engine) SetErrorLimit(n int) {
 }
 
 // Report adds a diagnostic to the engine.
-func (e *Engine) Report(kind DiagnosticKind, pos token.Position, length uint32, format string, args ...any) {
+func (e *Engine) Report(kind DiagnosticKind, pos token.Position, length int, format string, args ...any) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -60,22 +60,22 @@ func (e *Engine) Report(kind DiagnosticKind, pos token.Position, length uint32, 
 	}
 
 	e.diagnostics = append(e.diagnostics, Diagnostic{
-		Kind: kind, Message: fmt.Sprintf(format, args...), Position: pos, Length: length,
+		Kind: kind, Message: fmt.Sprintf(format, args...), Position: pos, Length: uint32(length), //nolint:gosec
 	})
 }
 
 // ReportError logs an error-level diagnostic.
-func (e *Engine) ReportError(pos token.Position, length uint32, format string, args ...any) {
+func (e *Engine) ReportError(pos token.Position, length int, format string, args ...any) {
 	e.Report(Error, pos, length, format, args...)
 }
 
 // ReportWarning logs a warning-level diagnostic.
-func (e *Engine) ReportWarning(pos token.Position, length uint32, format string, args ...any) {
+func (e *Engine) ReportWarning(pos token.Position, length int, format string, args ...any) {
 	e.Report(Warning, pos, length, format, args...)
 }
 
 // ReportNote logs a note-level diagnostic.
-func (e *Engine) ReportNote(pos token.Position, length uint32, format string, args ...any) {
+func (e *Engine) ReportNote(pos token.Position, length int, format string, args ...any) {
 	e.Report(Note, pos, length, format, args...)
 }
 

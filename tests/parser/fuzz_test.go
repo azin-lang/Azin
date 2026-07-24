@@ -43,6 +43,6 @@ func FuzzParser(f *testing.F) {
 		}()
 
 		tokens := lexer.New(file, diag).Tokenize()
-		parser.Parse(string(file.Slice(0, file.Len())), tokens, diag)
+		_, _ = parser.Parse(string(file.Slice(0, file.Len())), tokens, diag)
 	})
 }

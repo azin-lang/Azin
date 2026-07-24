@@ -42,6 +42,6 @@ func FuzzSemantic(f *testing.F) {
 		}
 
 		analyzer := sema.New(diag)
-		analyzer.Analyze(program)
+		_ = analyzer.Analyze(program)
 	})
 }

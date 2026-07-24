@@ -40,7 +40,7 @@ func captureAST(program *ast.Program) string {
 
 	ast.PrintDebugTree(program)
 
-	w.Close()
+	_ = w.Close()
 	out, _ := io.ReadAll(r)
 	os.Stdout = old
 	return string(out)
@@ -442,7 +442,7 @@ func TestParserSnapshot(t *testing.T) {
 
 			golden := azfile + ".golden"
 			if *update {
-				if err := os.WriteFile(golden, []byte(got), 0644); err != nil {
+				if err := os.WriteFile(golden, []byte(got), 0o600); err != nil {
 					t.Fatal(err)
 				}
 			}

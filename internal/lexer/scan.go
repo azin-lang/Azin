@@ -1,3 +1,4 @@
+//nolint:unused,unparam
 package lexer
 
 import "github.com/azin-lang/Azin/internal/token"
@@ -52,11 +53,11 @@ func (l *Lexer) peekString(s string) bool {
 	return true
 }
 
-func (l *Lexer) advance() (rune, uint32) {
+func (l *Lexer) advance() (r rune, size uint32) {
 	if l.eof() {
 		return 0, 0
 	}
-	r, size := l.file.Rune(l.cursor)
+	r, size = l.file.Rune(l.cursor)
 	l.cursor += size
 	return r, size
 }
@@ -111,7 +112,7 @@ func (l *Lexer) emit(kind token.Kind, start token.Position) token.Token {
 	}
 }
 
-func (l *Lexer) either(ch rune, ifMatch token.Kind, otherwise token.Kind, start token.Position) token.Token {
+func (l *Lexer) either(ch rune, ifMatch, otherwise token.Kind, start token.Position) token.Token {
 	if l.match(ch) {
 		return l.emit(ifMatch, start)
 	}

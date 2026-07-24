@@ -58,6 +58,7 @@ func reassociate(root *ast.BinaryExpr) ast.Expr {
 
 	collect(root)
 
+	//nolint:exhaustive
 	switch root.Operator.Kind {
 	case token.Plus:
 		if constant != nil && !isZero(constant) {
@@ -178,6 +179,7 @@ func exprRank(expr ast.Expr) int {
 }
 
 func canonicalizeBinary(n *ast.BinaryExpr) ast.Expr {
+	//nolint:exhaustive
 	switch n.Operator.Kind {
 
 	case token.Plus,

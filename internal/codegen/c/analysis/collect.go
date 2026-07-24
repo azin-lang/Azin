@@ -166,8 +166,7 @@ func (a *Analyzer) collectTypesFromExpr(expr ast.Expr) {
 	}
 
 	walkExpr(expr, func(e ast.Expr) bool {
-		switch node := e.(type) {
-		case *ast.MemberExpr:
+		if node, ok := e.(*ast.MemberExpr); ok {
 			// Catches static enum or struct member access like `Color.Red`
 			if id, ok := node.Object.(*ast.Identifier); ok {
 				name := id.Value

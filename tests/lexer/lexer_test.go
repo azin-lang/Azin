@@ -1,3 +1,4 @@
+//nolint:goconst
 package lexer_test
 
 // If the lexer crashes, it's not our fault.
@@ -24,7 +25,7 @@ func kindString(tok token.Token) string {
 }
 
 func joinKinds(tokens []token.Token) string {
-	var kinds []string
+	kinds := make([]string, 0, len(tokens))
 	for _, t := range tokens {
 		kinds = append(kinds, t.Kind.String())
 	}

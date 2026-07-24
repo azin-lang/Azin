@@ -1,3 +1,4 @@
+//nolint:unparam
 package diagnostics_test
 
 import (
@@ -107,7 +108,7 @@ func TestConcurrentSafety(t *testing.T) {
 			diag.ReportError(token.Position{Offset: 0}, 5, "concurrent error")
 			diag.HasErrors()
 			diag.Diagnostics()
-			diag.Err()
+			_ = diag.Err()
 		})
 	}
 	wg.Wait()

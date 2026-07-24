@@ -148,7 +148,7 @@ func (p *debugPrinter) visitSlice(
 ) {
 	next := p.childPrefix(prefix, last)
 
-	for i := 0; i < v.Len(); i++ {
+	for i := range v.Len() {
 		p.visit(
 			v.Index(i),
 			next,
@@ -298,7 +298,7 @@ func (p *debugPrinter) line(
 		branch = "╰── "
 	}
 
-	fmt.Fprintf(
+	_, _ = fmt.Fprintf(
 		p.w,
 		"%s%s%s\n",
 		prefix,

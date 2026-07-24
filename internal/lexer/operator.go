@@ -110,6 +110,6 @@ func (l *Lexer) lexUnknown(start token.Position) token.Token {
 	length := l.cursor - start.Offset
 	text := string(l.file.Slice(start.Offset, l.cursor))
 
-	l.diag.ReportError(start, length, "unexpected characters: %q", text)
+	l.diag.ReportError(start, int(length), "unexpected characters: %q", text)
 	return l.emit(token.Unknown, start)
 }

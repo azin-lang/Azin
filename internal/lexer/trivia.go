@@ -65,5 +65,5 @@ func (l *Lexer) skipBlockComment(start token.Position) {
 		}
 	}
 
-	l.diag.ReportError(start, l.cursor-start.Offset, "unterminated block comment")
+	l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated block comment")
 }

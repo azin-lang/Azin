@@ -44,7 +44,7 @@ func TestE2EHelloWorld(t *testing.T) {
 
 	azFile := filepath.Join(dir, "hello.az")
 	azSrc := "fn main: int do\n    return 0;\nend\n"
-	if err := os.WriteFile(azFile, []byte(azSrc), 0644); err != nil {
+	if err := os.WriteFile(azFile, []byte(azSrc), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -82,7 +82,7 @@ func TestE2EEmitC(t *testing.T) {
 
 	azFile := filepath.Join(dir, "test.az")
 	azSrc := "fn main: int do\n    return 42;\nend\n"
-	if err := os.WriteFile(azFile, []byte(azSrc), 0644); err != nil {
+	if err := os.WriteFile(azFile, []byte(azSrc), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -132,7 +132,7 @@ func TestE2EPrintTokens(t *testing.T) {
 
 	azFile := filepath.Join(dir, "test.az")
 	azSrc := "fn main: int do\n    return 0;\nend\n"
-	if err := os.WriteFile(azFile, []byte(azSrc), 0644); err != nil {
+	if err := os.WriteFile(azFile, []byte(azSrc), 0o600); err != nil {
 		t.Fatal(err)
 	}
 

@@ -12,7 +12,7 @@ import (
 func TestCompileEmitC(t *testing.T) {
 	dir := t.TempDir()
 	azPath := filepath.Join(dir, "test.az")
-	if err := os.WriteFile(azPath, []byte("fn main: int do\n    return 0;\nend\n"), 0644); err != nil {
+	if err := os.WriteFile(azPath, []byte("fn main: int do\n    return 0;\nend\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -42,7 +42,7 @@ func TestCompileEmitCWithImport(t *testing.T) {
 	dir := t.TempDir()
 	azPath := filepath.Join(dir, "test.az")
 	input := []byte("importc \"stdio.h\"\nfn main: int do\n    return 0;\nend\n")
-	if err := os.WriteFile(azPath, input, 0644); err != nil {
+	if err := os.WriteFile(azPath, input, 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -81,7 +81,7 @@ func TestCompileDefaultOutputPath(t *testing.T) {
 	}
 
 	// Clean up the default output file
-	os.Remove("output.c")
+	_ = os.Remove("output.c")
 }
 
 func TestCompileEmptyProgram(t *testing.T) {

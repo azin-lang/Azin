@@ -1,3 +1,4 @@
+//nolint:goconst
 package sema
 
 import (
@@ -240,7 +241,7 @@ func (a *Analyzer) resolveCallOverload(name string, argTypes []*ast.Identifier) 
 func (a *Analyzer) errorf(node ast.Node, format string, args ...any) {
 	a.diag.ReportError(
 		node.Pos(),
-		uint32(len(node.TokenLiteral())),
+		len(node.TokenLiteral()),
 		format,
 		args...,
 	)
@@ -249,7 +250,7 @@ func (a *Analyzer) errorf(node ast.Node, format string, args ...any) {
 func (a *Analyzer) warningf(node ast.Node, format string, args ...any) {
 	a.diag.ReportWarning(
 		node.Pos(),
-		uint32(len(node.TokenLiteral())),
+		len(node.TokenLiteral()),
 		format,
 		args...,
 	)
@@ -727,7 +728,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 		if left == nil || right == nil {
 			return nil
 		}
-
+		//nolint:exhaustive
 		switch n.Operator.Kind {
 		case token.Plus, token.Minus, token.Star, token.Slash:
 			if (left.Value != "int" && left.Value != "float") ||
