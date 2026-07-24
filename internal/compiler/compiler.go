@@ -53,6 +53,7 @@ func runMSVC(cl, sourcePath, exeName string, opts Options) error {
 		cl,
 		[]string{
 			"/nologo",
+			"/std:c11",
 			opt,
 			"/Fe:" + exeName,
 			sourcePath,
@@ -66,7 +67,7 @@ func runClang(clang, sourcePath, exeName string, opts Options) error {
 	return runCompilerCommand(
 		clang,
 		[]string{
-			"-std=c23",
+			"-std=c11",
 			"-O" + opts.Optimization,
 			sourcePath,
 			"-o",
@@ -81,7 +82,7 @@ func runGCC(gcc, sourcePath, exeName string, opts Options) error {
 	return runCompilerCommand(
 		gcc,
 		[]string{
-			"-std=c23",
+			"-std=c11",
 			"-O" + opts.Optimization,
 			sourcePath,
 			"-o",
@@ -104,8 +105,8 @@ func runCompiler(sourcePath, exeName string, opts Options) error {
 	case "windows":
 		compilers = []compiler{
 			{"cl.exe", runMSVC},
-			{"gcc", runGCC},
 			{"clang", runClang},
+			{"gcc", runGCC},
 		}
 
 	case "darwin":
