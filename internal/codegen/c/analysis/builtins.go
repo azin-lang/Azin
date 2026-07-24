@@ -5,31 +5,63 @@ type Builtin struct {
 }
 
 const (
-	StdioHeader  = "stdio.h"
-	StdlibHeader = "stdlib.h"
-	StringHeader = "string.h"
+	Stdio  = "stdio.h"
+	Stdlib = "stdlib.h"
+	String = "string.h"
 )
 
 var Builtins = map[string]Builtin{
-	"printf":   {StdioHeader},
-	"fprintf":  {StdioHeader},
-	"sprintf":  {StdioHeader},
-	"snprintf": {StdioHeader},
-	"scanf":    {StdioHeader},
-	"sscanf":   {StdioHeader},
+	"printf":   {Stdio},
+	"fprintf":  {Stdio},
+	"sprintf":  {Stdio},
+	"snprintf": {Stdio},
+	"scanf":    {Stdio},
+	"sscanf":   {Stdio},
+	"fopen":    {Stdio},
+	"fclose":   {Stdio},
+	"fread":    {Stdio},
+	"fwrite":   {Stdio},
+	"fflush":   {Stdio},
+	"fseek":    {Stdio},
+	"ftell":    {Stdio},
+	"puts":     {Stdio},
+	"fgets":    {Stdio},
+	"fputs":    {Stdio},
+	"getchar":  {Stdio},
+	"putchar":  {Stdio},
 
-	"malloc":  {StdlibHeader},
-	"calloc":  {StdlibHeader},
-	"realloc": {StdlibHeader},
-	"free":    {StdlibHeader},
-	"exit":    {StdlibHeader},
-	"abs":     {StdlibHeader},
+	"malloc":  {Stdlib},
+	"calloc":  {Stdlib},
+	"realloc": {Stdlib},
+	"free":    {Stdlib},
+	"exit":    {Stdlib},
+	"abs" :    {Stdlib},
+	"atoi" :   {Stdlib},
+	"atof" :   {Stdlib},
+	"atol" :   {Stdlib},
+	"atoll" :  {Stdlib},
+	"strtol":  {Stdlib},
+	"strtoll": {Stdlib},
+	"strtoul": {Stdlib},
+	"strtoull":{Stdlib},
+	"strtod":  {Stdlib},
+	"strtof":  {Stdlib},
 
-	"strlen": {StringHeader},
-	"strcpy": {StringHeader},
-	"strcmp": {StringHeader},
-	"memset": {StringHeader},
-	"memcpy": {StringHeader},
+	"strlen":  {String},
+	"strcpy":  {String},
+	"strcmp":  {String},
+	"memset":  {String},
+	"memcpy":  {String},
+	"strncpy": {String},
+	"strcat":  {String},
+	"strncat": {String},
+	"strncmp": {String},
+	"strchr":  {String},
+	"strrchr": {String},
+	"strstr":  {String},
+	"strtok":  {String},
+	"memmove": {String},
+	"memcmp":  {String},
 }
 
 func LookupBuiltin(name string) (Builtin, bool) {
