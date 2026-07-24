@@ -1,6 +1,7 @@
 package optimizer
 
 import (
+	"reflect"
 	"sort"
 
 	"github.com/azin-lang/Azin/internal/ast"
@@ -10,41 +11,45 @@ import (
 func reassociateBinary(n *ast.BinaryExpr) ast.Expr {
 	switch n.Operator.Kind {
 	case token.Plus, token.Star:
-		return reassociate(n)
-
 	default:
 		return nil
 	}
+
+	if _, ok := n.Left.(*ast.BinaryExpr); ok {
+		return reassociate(n)
+	}
+	if _, ok := n.Right.(*ast.BinaryExpr); ok {
+		return reassociate(n)
+	}
+
+	if isConstant(n.Left) && isConstant(n.Right) {
+		return reassociate(n)
+	}
+
+	return nil
 }
 
 func reassociate(root *ast.BinaryExpr) ast.Expr {
 	var (
 		terms    []ast.Expr
 		constant ast.Expr
-		changed  bool
 	)
 
 	var collect func(ast.Expr)
-
 	collect = func(expr ast.Expr) {
 		if bin, ok := expr.(*ast.BinaryExpr); ok &&
 			bin.Operator.Kind == root.Operator.Kind {
-
-			changed = true
 			collect(bin.Left)
 			collect(bin.Right)
 			return
 		}
 
 		if isConstant(expr) {
-			changed = true
-
 			if constant == nil {
 				constant = expr
 			} else {
 				constant = foldConstant(root.Operator, constant, expr)
 			}
-
 			return
 		}
 
@@ -52,14 +57,6 @@ func reassociate(root *ast.BinaryExpr) ast.Expr {
 	}
 
 	collect(root)
-
-	if !changed {
-		return nil
-	}
-
-	sort.SliceStable(terms, func(i, j int) bool {
-		return exprLess(terms[i], terms[j])
-	})
 
 	switch root.Operator.Kind {
 	case token.Plus:
@@ -72,18 +69,31 @@ func reassociate(root *ast.BinaryExpr) ast.Expr {
 			if isZero(constant) {
 				return constant
 			}
-
 			if !isOne(constant) || len(terms) == 0 {
 				terms = append(terms, constant)
 			}
 		}
 	}
 
-	if len(terms) == 0 {
-		return constant
+	sort.SliceStable(terms, func(i, j int) bool {
+		return exprLess(terms[i], terms[j])
+	})
+
+	var rebuilt ast.Expr
+	switch len(terms) {
+	case 0:
+		rebuilt = constant
+	case 1:
+		rebuilt = terms[0]
+	default:
+		rebuilt = buildAssociativeTree(root.Operator, terms)
 	}
 
-	return buildAssociativeTree(root.Operator, terms)
+	if reflect.DeepEqual(root, rebuilt) {
+		return nil
+	}
+
+	return rebuilt
 }
 
 func foldConstant(op token.Token, left, right ast.Expr) ast.Expr {
