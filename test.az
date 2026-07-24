@@ -26,11 +26,15 @@ end
 
 
 fn main do
-    var color: Color = Color.Blue
-    var color2 = color
-    var color3 = color
+    var color: Color = Color.Red
+    var a = color
+    var b = a
+    var c = b
+    var d = c
+    var e = d
+    var f = e
 
-    if color2 != Color.Blue then
+    if f != Color.Blue then
         return 1
 
         printf("dead code\n")
