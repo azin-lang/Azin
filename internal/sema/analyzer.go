@@ -705,8 +705,8 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *ast.Identifier {
 	case *ast.CallExpr:
 		sym := a.resolveCallExpr(n)
 		if sym == nil {
-		// FIXME: any function returning a C call's result will fail. When are we creating a signature table for the headers? 
-		// Or better yet, add actual header parsing...
+			// FIXME: any function returning a C call's result will fail. When are we creating a signature table for the headers?
+			// Or better yet, add actual header parsing...
 			return nil
 		}
 
