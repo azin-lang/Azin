@@ -27,8 +27,14 @@ end
 
 fn main do
     var color: Color = Color.Red
+    var a = color
+    var b = a
+    var c = b
+    var d = c
+    var e = d
+    var f = e
 
-    if color == Color.Blue then
+    if f != Color.Blue then
         return 1
 
         printf("dead code\n")

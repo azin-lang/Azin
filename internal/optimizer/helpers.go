@@ -28,6 +28,7 @@ func exprEqual(left, right ast.Expr) bool {
 
 	return left.Equals(right)
 }
+
 func isZero(expr ast.Expr) bool {
 	switch n := expr.(type) {
 	case *ast.IntegerLiteral:
@@ -114,4 +115,33 @@ func isPure(expr ast.Expr) bool {
 	default:
 		return false
 	}
+}
+
+func isCopyable(expr ast.Expr) bool {
+	switch expr.(type) {
+	case *ast.IntegerLiteral, *ast.FloatLiteral, *ast.BooleanLiteral, *ast.CharacterLiteral, *ast.StringLiteral:
+		return true
+	case *ast.Identifier:
+		// An identifier can be propagated as long as it's pure/safe.
+		return true
+	}
+	return false
+}
+
+func cloneValue(expr ast.Expr) ast.Expr {
+	switch n := expr.(type) {
+	case *ast.IntegerLiteral:
+		return &ast.IntegerLiteral{Token: n.Token, Value: n.Value}
+	case *ast.FloatLiteral:
+		return &ast.FloatLiteral{Token: n.Token, Value: n.Value}
+	case *ast.BooleanLiteral:
+		return &ast.BooleanLiteral{Token: n.Token, Value: n.Value}
+	case *ast.CharacterLiteral:
+		return &ast.CharacterLiteral{Token: n.Token, Value: n.Value}
+	case *ast.StringLiteral:
+		return &ast.StringLiteral{Token: n.Token, Value: n.Value}
+	case *ast.Identifier:
+		return &ast.Identifier{Token: n.Token, Value: n.Value}
+	}
+	return expr
 }

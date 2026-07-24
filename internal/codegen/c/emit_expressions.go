@@ -169,6 +169,12 @@ func emitOperator(
 	case token.Ampersand:
 		return "&"
 
+	case token.LogicalAnd:
+		return "&&"
+
+	case token.LogicalOr:
+		return "||"
+
 	default:
 		return "/* unsupported operator */"
 	}

@@ -4,40 +4,58 @@ import (
 	"github.com/azin-lang/Azin/internal/ast"
 )
 
-func optimizeExpr(expr ast.Expr) ast.Expr {
+func (o *Optimizer) optimizeExpr(expr ast.Expr) ast.Expr {
 	if expr == nil {
 		return nil
 	}
 
 	switch n := expr.(type) {
+	case *ast.Identifier:
+		if val, ok := o.currentScope.GetValue(n.Value); ok {
+			return cloneValue(val)
+		}
+
+		// If it remains an identifier in the AST, it has officially been read.
+		o.currentScope.MarkRead(n.Value)
+
 	case *ast.BinaryExpr:
 		// Bottom-up: optimize children first
-		n.Left = optimizeExpr(n.Left)
-		n.Right = optimizeExpr(n.Right)
+		n.Left = o.optimizeExpr(n.Left)
+		n.Right = o.optimizeExpr(n.Right)
 
 		// Try constant folding
 		if folded := foldBinaryExpr(n.Left, n.Operator, n.Right); folded != nil {
-			return optimizeExpr(folded)
+			return o.optimizeExpr(folded)
 		}
 
 		// Try algebraic/boolean simplifications
 		if simplified := simplifyBinary(n); simplified != nil {
-			return optimizeExpr(simplified)
+			return o.optimizeExpr(simplified)
 		}
 
 	case *ast.MemberExpr:
-		n.Object = optimizeExpr(n.Object)
+		n.Object = o.optimizeExpr(n.Object)
+
+		// Evaluate constants in assignments/comparisons (e.g., Color.Blue)
+		if objId, ok := n.Object.(*ast.Identifier); ok {
+			if n.Property != nil {
+				key := objId.Value + "." + n.Property.Value
+				if val, ok := o.currentScope.GetValue(key); ok {
+					return cloneValue(val)
+				}
+			}
+		}
 
 	case *ast.CallExpr:
-		n.Callee = optimizeExpr(n.Callee)
-		optimizeExprs(n.Args)
+		n.Callee = o.optimizeExpr(n.Callee)
+		o.optimizeExprs(n.Args)
 	}
 
 	return expr
 }
 
-func optimizeExprs(exprs []ast.Expr) {
+func (o *Optimizer) optimizeExprs(exprs []ast.Expr) {
 	for i := range exprs {
-		exprs[i] = optimizeExpr(exprs[i])
+		exprs[i] = o.optimizeExpr(exprs[i])
 	}
 }

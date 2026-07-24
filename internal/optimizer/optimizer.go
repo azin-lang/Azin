@@ -5,12 +5,144 @@ import (
 	"github.com/azin-lang/Azin/internal/ast"
 )
 
-// Optimize traverses the program AST and applies compile-time simplifications.
-// It currently performs constant folding and conditional dead-code elimination.
+// Optimizer holds the global state for the optimization pass.
+type Optimizer struct {
+	currentScope *Scope
+	deadStores   map[ast.Stmt]bool
+}
+
+// Scope tracks variables for a specific block (e.g., global, function, if-body).
+type Scope struct {
+	parent   *Scope
+	values   map[string]ast.Expr
+	modified map[string]bool
+
+	lastStore map[string]ast.Stmt
+	read      map[string]bool
+}
+
+func NewOptimizer() *Optimizer {
+	return &Optimizer{
+		currentScope: &Scope{
+			values:    make(map[string]ast.Expr),
+			modified:  make(map[string]bool),
+			lastStore: make(map[string]ast.Stmt),
+			read:      make(map[string]bool),
+		},
+		deadStores: make(map[ast.Stmt]bool),
+	}
+}
+
+// Optimize is the main entry point.
 func Optimize(program *ast.Program) {
 	if program == nil {
 		return
 	}
+	opt := NewOptimizer()
 
-	program.Statements = optimizeStatements(program.Statements)
+	// Pre-scan statements to register enum constants into the global scope
+	for _, stmt := range program.Statements {
+		if enumStmt, ok := stmt.(*ast.EnumStmt); ok {
+			for i, field := range enumStmt.Variants {
+				// Register e.g., "Color.Red" = 0, "Color.Green" = 1, etc.
+				key := enumStmt.Name.Value + "." + field.Value
+				opt.currentScope.SetValue(key, intLit(int64(i)))
+			}
+		}
+	}
+
+	program.Statements = opt.optimizeStatements(program.Statements)
+}
+
+func (o *Optimizer) Enter() {
+	o.currentScope = &Scope{
+		parent:    o.currentScope,
+		values:    make(map[string]ast.Expr),
+		modified:  make(map[string]bool),
+		lastStore: make(map[string]ast.Stmt),
+		read:      make(map[string]bool),
+	}
+}
+
+func (o *Optimizer) Leave() {
+	child := o.currentScope
+	o.currentScope = child.parent
+
+	if o.currentScope != nil {
+		// Propagate reads to parent: if a branch read a variable,
+		// the parent's prior store cannot be killed.
+		for name := range child.read {
+			o.currentScope.MarkRead(name)
+		}
+
+		for name := range child.modified {
+			o.currentScope.Invalidate(name)
+			// A branch modified it, we can no longer safely guarantee killing
+			// a store before the branch (since the branch may not execute).
+			delete(o.currentScope.lastStore, name)
+		}
+	}
+}
+
+func (s *Scope) MarkRead(name string) {
+	delete(s.lastStore, name)
+	s.read[name] = true
+	if s.parent != nil {
+		s.parent.MarkRead(name)
+	}
+}
+
+func (s *Scope) GetValue(name string) (ast.Expr, bool) {
+	if val, ok := s.values[name]; ok {
+		if id, ok := val.(*ast.Identifier); ok && id.Value != name {
+			if resolved, ok := s.GetValue(id.Value); ok {
+				return resolved, true
+			}
+		}
+		return val, true
+	}
+
+	if s.parent != nil {
+		return s.parent.GetValue(name)
+	}
+
+	return nil, false
+}
+
+func (s *Scope) SetValue(name string, val ast.Expr) {
+	s.values[name] = val
+	s.modified[name] = true
+}
+
+func (s *Scope) Invalidate(name string) {
+	delete(s.values, name)
+	s.modified[name] = true
+
+	// Invalidate any variable holding a propagated copy of this variable
+	// We extract keys to safely modify the map during iteration
+	var aliases []string
+	for k, v := range s.values {
+		if id, ok := v.(*ast.Identifier); ok && id.Value == name {
+			aliases = append(aliases, k)
+		}
+	}
+
+	for _, alias := range aliases {
+		s.Invalidate(alias)
+	}
+
+	if s.parent != nil {
+		s.parent.Invalidate(name)
+	}
+}
+
+func (s *Scope) ClearAll() {
+	// Wipe this scope's known values and stores (e.g. for Loops)
+	s.values = make(map[string]ast.Expr)
+	s.lastStore = make(map[string]ast.Stmt)
+
+	// Recursively wipe parent scopes
+	if s.parent != nil {
+		s.parent.ClearAll()
+	}
 }
