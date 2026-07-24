@@ -13,8 +13,10 @@ permissions:
 
 jobs:
   notify:
-    name: Send Webhook
+    name: Send webhook
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+
     steps:
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@v7.0.0
@@ -26,7 +28,9 @@ jobs:
 
             Branch: `${{ github.event.pull_request.head.ref }}` into `${{ github.event.pull_request.base.ref }}`
           embed-url: ${{ github.event.pull_request.html_url }}
-          embed-color: 5814783
+          # Dynamically set color: green for opened/reopened, blue for updates (synchronize)
+          embed-color: ${{ github.event.action == 'synchronize' && '3447003' || '5814783' }}
           embed-author-name: ${{ github.event.pull_request.user.login }}
+          embed-author-url: ${{ github.event.pull_request.user.html_url }}
           embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
           embed-footer-text: ${{ github.repository }}
