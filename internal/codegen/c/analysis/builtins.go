@@ -54,7 +54,6 @@ var Builtins = map[string]Builtin{
 	"strrchr": {"string.h"},
 	"strstr":  {"string.h"},
 	"strtok":  {"string.h"},
-	"strdup":  {"string.h"},
 	"memmove": {"string.h"},
 	"memcmp":  {"string.h"},
 }
