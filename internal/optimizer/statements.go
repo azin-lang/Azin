@@ -57,13 +57,17 @@ func (o *Optimizer) optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 }
 
 func (o *Optimizer) optimizeLoop(n *ast.LoopStmt) []ast.Stmt {
+	if len(n.Body) == 0 {
+		return nil
+	}
+
 	o.currentScope.ClearAll()
 
 	o.Enter()
 	n.Body = o.optimizeStatements(n.Body)
 	o.Leave()
 
-	if len(n.Body) == 0 || !canUnwrapLoop(n.Body) {
+	if !canUnwrapLoop(n.Body) {
 		return []ast.Stmt{n}
 	}
 
