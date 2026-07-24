@@ -102,15 +102,13 @@ func TestConcurrentSafety(t *testing.T) {
 	diag, _ := newTestEngine("hello world")
 
 	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 20 {
+		wg.Go(func() {
 			diag.ReportError(token.Position{Offset: 0}, 5, "concurrent error")
 			diag.HasErrors()
 			diag.Diagnostics()
 			diag.Err()
-		}()
+		})
 	}
 	wg.Wait()
 
@@ -158,7 +156,7 @@ func TestErrorLimitSuppressesExcess(t *testing.T) {
 	diag, _ := newTestEngine("hello world")
 	diag.SetErrorLimit(3)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
 	}
 
@@ -183,7 +181,7 @@ func TestErrorLimitUnlimited(t *testing.T) {
 	diag, _ := newTestEngine("hello world")
 	diag.SetErrorLimit(0)
 
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
 	}
 
@@ -197,10 +195,10 @@ func TestErrorLimitWarningsNotAffected(t *testing.T) {
 	diag, _ := newTestEngine("hello world")
 	diag.SetErrorLimit(2)
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
 	}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		diag.ReportWarning(token.Position{Offset: 0}, 5, "warning %d", i)
 	}
 
@@ -220,7 +218,7 @@ func TestErrorLimitDefault(t *testing.T) {
 	diag, _ := newTestEngine("hello world")
 
 	// Default limit is 50, so 60 errors should trigger the limit
-	for i := 0; i < 60; i++ {
+	for i := range 60 {
 		diag.ReportError(token.Position{Offset: 0}, 5, "error %d", i)
 	}
 

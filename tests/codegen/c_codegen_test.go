@@ -135,7 +135,6 @@ end
 	}
 
 	for _, tt := range tests {
-		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			out := transpile(t, tt.input)
@@ -203,7 +202,6 @@ end
 	}
 
 	for _, tt := range tests {
-		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			requireContains(t, transpile(t, tt.input), tt.contains...)
@@ -279,7 +277,6 @@ end
 	}
 
 	for _, tt := range tests {
-		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			requireContains(t, transpile(t, tt.input), tt.contains...)
@@ -378,7 +375,6 @@ end
 	}
 
 	for _, tt := range tests {
-		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			out := transpile(t, tt.input)
@@ -433,7 +429,6 @@ end
 	}
 
 	for _, tt := range tests {
-		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			requireContains(t, transpile(t, tt.input), tt.contains...)
@@ -485,7 +480,6 @@ end
 	}
 
 	for _, tt := range tests {
-		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			out := transpile(t, tt.input)
@@ -563,7 +557,6 @@ func TestCodegenSnapshot(t *testing.T) {
 	}
 
 	for _, input := range files {
-		input := input
 
 		name := strings.TrimSuffix(filepath.Base(input), ".az")
 

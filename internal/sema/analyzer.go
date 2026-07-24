@@ -1,6 +1,10 @@
 package sema
 
 import (
+	"slices"
+
+	"strings"
+
 	"github.com/azin-lang/Azin/internal/ast"
 	"github.com/azin-lang/Azin/internal/diagnostics"
 	"github.com/azin-lang/Azin/internal/token"
@@ -32,12 +36,13 @@ func mangleFunctionName(fn *ast.FuncStmt) string {
 		return fn.Name.Value + "__unit"
 	}
 
-	name := fn.Name.Value
+	var name strings.Builder
+	name.WriteString(fn.Name.Value)
 	for _, param := range fn.Params {
-		name += "__" + param.Type.Value
+		name.WriteString("__" + param.Type.Value)
 	}
 
-	return name
+	return name.String()
 }
 
 func (a *Analyzer) assignFunctionCNames() {
@@ -287,7 +292,7 @@ func (a *Analyzer) Analyze(program *ast.Program) error {
 	a.assignFunctionCNames()
 
 	// Infer function return types before sema analysis.
-	//for _, stmt := range program.Statements {
+	// for _, stmt := range program.Statements {
 	//	if fn, ok := stmt.(*ast.FuncStmt); ok {
 	//		a.inferFunctionReturnType(fn)
 	//
@@ -599,12 +604,7 @@ func (a *Analyzer) findReturnExprType(stmt ast.Stmt) *ast.Identifier {
 }
 
 func (a *Analyzer) blockAllPathsReturn(stmts []ast.Stmt) bool {
-	for _, stmt := range stmts {
-		if a.stmtAllPathsReturn(stmt) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(stmts, a.stmtAllPathsReturn)
 }
 
 func (a *Analyzer) stmtAllPathsReturn(stmt ast.Stmt) bool {

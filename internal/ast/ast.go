@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/azin-lang/Azin/internal/token"
 )
@@ -152,31 +153,32 @@ func (*FuncStmt) stmtNode()              {}
 func (f *FuncStmt) TokenLiteral() string { return f.Token.Kind.String() }
 func (f *FuncStmt) Pos() token.Position  { return f.Token.Position }
 func (f *FuncStmt) Label() string {
-	s := "fn " + f.Name.Value + "("
+	var s strings.Builder
+	s.WriteString("fn " + f.Name.Value + "(")
 
 	for i, p := range f.Params {
 		if i != 0 {
-			s += ", "
+			s.WriteString(", ")
 		}
 
 		if p.Mutable {
-			s += "mut "
+			s.WriteString("mut ")
 		}
 
-		s += p.Name.Value
+		s.WriteString(p.Name.Value)
 
 		if p.Type != nil {
-			s += ": " + p.Type.Value
+			s.WriteString(": " + p.Type.Value)
 		}
 	}
 
-	s += ")"
+	s.WriteString(")")
 
 	if f.ReturnType != nil {
-		s += ": " + f.ReturnType.Value
+		s.WriteString(": " + f.ReturnType.Value)
 	}
 
-	return s
+	return s.String()
 }
 
 type ReturnStmt struct {

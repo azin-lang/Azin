@@ -319,7 +319,7 @@ func (p *debugPrinter) childPrefix(
 }
 
 func (p *debugPrinter) style(
-	fn func(...interface{}) string,
+	fn func(...any) string,
 	s string,
 ) string {
 	if !p.useColor {

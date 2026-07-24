@@ -17,7 +17,7 @@ var Builtins = map[string]Builtin{
 	"realloc": {"stdlib.h"},
 	"free":    {"stdlib.h"},
 	"exit":    {"stdlib.h"},
-	"abs" :    {"stdlib.h"},
+	"abs":     {"stdlib.h"},
 
 	"strlen": {"string.h"},
 	"strcpy": {"string.h"},

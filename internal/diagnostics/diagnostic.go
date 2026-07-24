@@ -22,7 +22,7 @@ const (
 type Diagnostic struct {
 	Kind     DiagnosticKind //  kind
 	Message  string         // diagnostic message
-	Position token.Position // position at which the diagnostic was emited
+	Position token.Position // position at which the diagnostic was emitted
 	Length   uint32         // length of the offending
 }
 

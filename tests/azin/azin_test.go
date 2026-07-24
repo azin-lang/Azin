@@ -35,7 +35,6 @@ func runSuccessTests(t *testing.T) {
 	t.Helper()
 
 	for _, file := range testFiles(t, "success") {
-		file := file
 
 		t.Run(filepath.Base(file), func(t *testing.T) {
 			output, err := compile(file)
@@ -55,7 +54,6 @@ func runFailureTests(t *testing.T) {
 	t.Helper()
 
 	for _, file := range testFiles(t, "fail") {
-		file := file
 
 		t.Run(filepath.Base(file), func(t *testing.T) {
 			output, err := compile(file)

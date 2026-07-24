@@ -46,7 +46,7 @@ func (w *writer) newline() {
 }
 
 func (w *writer) indentLine() {
-	for i := 0; i < w.indent; i++ {
+	for range w.indent {
 		w.write("\t")
 	}
 }

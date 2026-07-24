@@ -139,13 +139,7 @@ func (e *Engine) Error() string {
 		_, _ = fmt.Fprintf(&b, "%*d | %s\n", gutter, line, src)
 		_, _ = fmt.Fprintf(&b, "%*s | ", gutter, "")
 
-		colIdx := int(column) - 1
-		if colIdx < 0 {
-			colIdx = 0
-		}
-		if colIdx > len(src) {
-			colIdx = len(src)
-		}
+		colIdx := min(max(int(column)-1, 0), len(src))
 
 		prefix := src[:colIdx]
 		for _, ch := range prefix {

@@ -2,6 +2,7 @@ package c
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/azin-lang/Azin/internal/ast"
 )
@@ -128,9 +129,9 @@ func (t *Transpiler) emitBlock(
 }
 
 func (t *Transpiler) flushDefers() {
-	for i := len(t.defers) - 1; i >= 0; i-- {
+	for _, v := range slices.Backward(t.defers) {
 		t.indentLine()
-		t.emitExpression(t.defers[i])
+		t.emitExpression(v)
 		t.write(";\n")
 	}
 	t.defers = nil

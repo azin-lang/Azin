@@ -174,7 +174,7 @@ func canUnwrapLoop(body []ast.Stmt) bool {
 		return false
 	}
 
-	for i := 0; i < len(body)-1; i++ {
+	for i := range len(body) - 1 {
 		if !isSimpleStmt(body[i]) {
 			return false
 		}
