@@ -216,7 +216,8 @@ $RECYCLE.BIN/
 
 azin_old/
 /build/
-**/azc
+./azc/**
+!./azc
 *.sum
 **/output
 **/main
