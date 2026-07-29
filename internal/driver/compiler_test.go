@@ -1,4 +1,4 @@
-package compiler_test
+package driver_test
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/azin-lang/Azin/internal/compiler"
+	"github.com/azin-lang/Azin/internal/driver"
 	"github.com/azin-lang/Azin/pkg/source"
 )
 
@@ -64,8 +64,8 @@ end
 			dir := t.TempDir()
 			file := writeSource(t, dir, "test.az", tt.source)
 			out := filepath.Join(dir, "output.c")
-			opts := compiler.Options{Output: out, EmitC: true}
-			if err := compiler.Compile(file, out, opts); err != nil {
+			opts := driver.Options{Output: out, EmitC: true}
+			if err := driver.Compile(file, out, opts); err != nil {
 				t.Fatalf("Compile() failed: %v", err)
 			}
 			got := readOutput(t, out)
@@ -91,8 +91,8 @@ fn main: int do
 end 
 `)
 
-	opts := compiler.Options{EmitC: true}
-	if err := compiler.Compile(file, "", opts); err != nil {
+	opts := driver.Options{EmitC: true}
+	if err := driver.Compile(file, "", opts); err != nil {
 		t.Fatalf("Compile() failed: %v", err)
 	}
 
@@ -107,8 +107,8 @@ func TestCompileEmptyProgram(t *testing.T) {
 	dir := t.TempDir()
 	file := writeSource(t, dir, "empty.az", "")
 	out := filepath.Join(dir, "empty.c")
-	opts := compiler.Options{Output: out, EmitC: true}
-	if err := compiler.Compile(file, out, opts); err != nil {
+	opts := driver.Options{Output: out, EmitC: true}
+	if err := driver.Compile(file, out, opts); err != nil {
 		t.Fatalf("Compile() failed: %v", err)
 	}
 	got := readOutput(t, out)

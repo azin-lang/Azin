@@ -1,4 +1,4 @@
-package optimizer
+package opt
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"

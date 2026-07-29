@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/azin-lang/Azin/internal/compiler"
+	"github.com/azin-lang/Azin/internal/driver"
 	"github.com/azin-lang/Azin/internal/fs"
 	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/diagnostics"
@@ -88,14 +88,14 @@ func main() {
 		return
 	}
 
-	opts := compiler.Options{
+	opts := driver.Options{
 		Output:       *output,
 		EmitC:        *emitC,
 		Optimization: *optimization,
 		Debug:        *debug,
 	}
 
-	err := compiler.Compile(file, *output, opts)
+	err := driver.Compile(file, *output, opts)
 	if err != nil {
 		fatal(err)
 	}

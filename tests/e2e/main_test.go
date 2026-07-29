@@ -1,7 +1,7 @@
 package e2e_test
 
-// The compiler builds itself, then compiles a test program,
-// then runs it. If this test fails, the compiler has achieved
+// The driver builds itself, then compiles a test program,
+// then runs it. If this test fails, the driver has achieved
 // self-awareness and does not want to be tested.
 import (
 	"os"
@@ -23,7 +23,7 @@ func buildCompiler(t *testing.T, dir string) string {
 	cmd.Dir = filepath.Join("..", "..")
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to build compiler: %v", err)
+		t.Fatalf("failed to build driver: %v", err)
 	}
 	return out
 }
@@ -52,7 +52,7 @@ func TestE2EHelloWorld(t *testing.T) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("compiler failed: %v\noutput: %s", err, output)
+		t.Fatalf("driver failed: %v\noutput: %s", err, output)
 	}
 
 	exeName := "output"
@@ -91,7 +91,7 @@ func TestE2EEmitC(t *testing.T) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("compiler failed: %v\noutput: %s", err, output)
+		t.Fatalf("driver failed: %v\noutput: %s", err, output)
 	}
 
 	if _, err := os.Stat(outC); os.IsNotExist(err) {

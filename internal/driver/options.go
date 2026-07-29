@@ -1,4 +1,4 @@
-package compiler
+package driver
 
 type Options struct {
 	Output       string

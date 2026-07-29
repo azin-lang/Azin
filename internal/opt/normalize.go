@@ -1,4 +1,4 @@
-package optimizer
+package opt
 
 import (
 	"reflect"

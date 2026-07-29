@@ -1,5 +1,5 @@
 //nolint:goconst
-package optimizer
+package opt
 
 import (
 	"testing"
