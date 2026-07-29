@@ -12,7 +12,7 @@ import (
 // SourceExtension is the expected file extension for source files.
 const SourceExtension = ".az"
 
-func validateSourcePath(path string) (string, error) {
+func ValidateSourcePath(path string) (string, error) {
 	path = filepath.Clean(path)
 
 	base := filepath.Base(path)
@@ -38,7 +38,7 @@ func ReadSourceFile(path string, ignoreExtension bool) ([]byte, error) {
 	path = filepath.Clean(path)
 
 	if !ignoreExtension {
-		path, err = validateSourcePath(path)
+		path, err = ValidateSourcePath(path)
 		if err != nil {
 			return nil, err
 		}
