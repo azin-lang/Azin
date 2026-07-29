@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/azin-lang/Azin/internal/codegen/c"
+	"github.com/azin-lang/Azin/internal/backend/c"
 	"github.com/azin-lang/Azin/internal/optimizer"
 	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/diagnostics"

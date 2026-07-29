@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/azin-lang/Azin/internal/codegen/c"
+	"github.com/azin-lang/Azin/internal/backend/c"
 	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/lexer"
@@ -136,7 +136,6 @@ end
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
 			out := transpile(t, tt.input)
 

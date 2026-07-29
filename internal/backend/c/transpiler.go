@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/azin-lang/Azin/internal/codegen/c/analysis"
+	"github.com/azin-lang/Azin/internal/backend/c/analysis"
 	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/types"
 )
