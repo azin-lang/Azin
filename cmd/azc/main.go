@@ -17,133 +17,145 @@ import (
 
 const Version = "0.2.2"
 
-var (
-	debug           = flag.Bool("debug", false, "Enable debug output")
-	printTokens     = flag.Bool("print-tokens", false, "Print lexer tokens")
-	printAST        = flag.Bool("print-ast", false, "Print the parsed AST")
-	optimization    = flag.String("O", "0", "Optimization level (0,1,2,3,s,z)")
-	output          = flag.String("o", "", "Output file")
-	ignoreExtension = flag.Bool("ignore-extension", false, "Ignore source file extension")
-	version         = flag.Bool("version", false, "Print compiler version")
-	emitC           = flag.Bool("emit-c", false, "Generate C source instead of compiling")
-)
-
-func init() {
-	flag.Usage = func() {
-		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags] <file>\n\n", os.Args[0])
-		flag.PrintDefaults()
-	}
+type Config struct {
+	Debug           bool
+	PrintTokens     bool
+	PrintAST        bool
+	Optimization    string
+	Output          string
+	IgnoreExtension bool
+	Version         bool
+	EmitC           bool
 }
 
 func main() {
-	flag.Parse()
+	if err := run(); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
 
-	if *version {
-		fmt.Printf("Azin compiler %s\n", Version)
-		return
+func run() error {
+	cfg := parseFlags()
+
+	if cfg.Version {
+		fmt.Printf("Azin compiler v%s\n", Version)
+		return nil
 	}
 
 	if flag.NArg() != 1 {
 		flag.Usage()
-		os.Exit(1)
-	}
-
-	if *debug {
-		printDebug()
+		return fmt.Errorf("expected exactly one source file")
 	}
 
 	filename := flag.Arg(0)
-	data := mustReadSource(filename)
-	file := source.New(filename, data)
 
-	diag := diagnostics.New(file)
-	l := lexer.New(file, diag)
-	tokens := l.Tokenize()
-
-	if err := diag.Err(); err != nil {
-		fatal(err)
+	if cfg.Debug {
+		printDebugInfo(cfg, filename)
 	}
 
-	if *printTokens {
+	data, err := fs.ReadSourceFile(filename, cfg.IgnoreExtension)
+	if err != nil {
+		return fmt.Errorf("reading source: %w", err)
+	}
+	file := source.New(filename, data)
+
+	if cfg.PrintTokens || cfg.PrintAST {
+		return handleFrontendDebug(cfg, file)
+	}
+
+	opts := driver.Options{
+		Output:       cfg.Output,
+		EmitC:        cfg.EmitC,
+		Optimization: cfg.Optimization,
+		Debug:        cfg.Debug,
+	}
+
+	if err := driver.Compile(file, cfg.Output, opts); err != nil {
+		return fmt.Errorf("compilation failed: %w", err)
+	}
+
+	if cfg.Debug {
+		fmt.Printf("Compiled %.2f KiB\n", float64(file.Len())/1024)
+	}
+
+	return nil
+}
+
+func parseFlags() Config {
+	var cfg Config
+
+	flag.BoolVar(&cfg.Debug, "debug", false, "Enable debug output")
+	flag.BoolVar(&cfg.PrintTokens, "print-tokens", false, "Print lexer tokens and exit")
+	flag.BoolVar(&cfg.PrintAST, "print-ast", false, "Print the parsed AST and exit")
+	flag.StringVar(&cfg.Optimization, "O", "0", "Optimization level (0,1,2,3,s,z)")
+	flag.StringVar(&cfg.Output, "o", "", "Output file path")
+	flag.BoolVar(&cfg.IgnoreExtension, "ignore-extension", false, "Ignore source file extension")
+	flag.BoolVar(&cfg.Version, "version", false, "Print compiler version")
+	flag.BoolVar(&cfg.EmitC, "emit-c", false, "Generate C source instead of compiling")
+
+	flag.Usage = func() {
+		_, _ = fmt.Fprintf(os.Stderr, "Usage: %s [flags] <file.az>\n\nFlags:\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+	return cfg
+}
+
+func handleFrontendDebug(cfg Config, file *source.File) error {
+	diag := diagnostics.New(file)
+
+	l := lexer.New(file, diag)
+	tokens := l.Tokenize()
+	if err := diag.Err(); err != nil {
+		return err
+	}
+
+	if cfg.PrintTokens {
 		for _, tok := range tokens {
 			fmt.Println(formatToken(file, tok))
 		}
-		return
+		return nil
 	}
 
-	program, parseErr := parser.Parse(string(file.Slice(0, file.Len())), tokens, diag)
-
-	if parseErr != nil {
-		fatal(parseErr)
+	program, err := parser.Parse(string(file.Slice(0, file.Len())), tokens, diag)
+	if err != nil {
+		return err
+	}
+	if err := diag.Err(); err != nil {
+		return err
 	}
 
-	if *printAST {
-		if *output != "" {
-			if err := ast.ExportDebugTree(program, *output); err != nil {
-				fatal(err)
+	if cfg.PrintAST {
+		if cfg.Output != "" {
+			if err := ast.ExportDebugTree(program, cfg.Output); err != nil {
+				return fmt.Errorf("exporting AST: %w", err)
 			}
 		} else {
 			ast.PrintDebugTree(program)
 		}
-		return
 	}
 
-	opts := driver.Options{
-		Output:       *output,
-		EmitC:        *emitC,
-		Optimization: *optimization,
-		Debug:        *debug,
-	}
-
-	err := driver.Compile(file, *output, opts)
-	if err != nil {
-		fatal(err)
-	}
-
-	if err := diag.Err(); err != nil {
-		fatal(err)
-	}
-
-	if *debug {
-		fmt.Printf("Compiled %.2f KiB\n", float64(file.Len())/1024)
-	}
+	return nil
 }
 
-func printDebug() {
-	fmt.Printf("Debug: %t\n", *debug)
-	fmt.Printf("Print tokens: %t\n", *printTokens)
-	fmt.Printf("Output: %q\n", *output)
-	fmt.Printf("Emit C: %t\n", *emitC)
-}
-
-func mustReadSource(filename string) []byte {
-	data, err := fs.ReadSourceFile(filename, *ignoreExtension)
-	if err != nil {
-		fatal(err)
-	}
-	return data
-}
-
-func fatal(err error) {
-	_, _ = fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
+func printDebugInfo(cfg Config, filename string) {
+	fmt.Println("=== Compiler Config ===")
+	fmt.Printf("File:         %q\n", filename)
+	fmt.Printf("Output:       %q\n", cfg.Output)
+	fmt.Printf("Optimization: %s\n", cfg.Optimization)
+	fmt.Printf("Emit C:       %t\n", cfg.EmitC)
+	fmt.Printf("Print Tokens: %t\n", cfg.PrintTokens)
+	fmt.Printf("Print AST:    %t\n", cfg.PrintAST)
+	fmt.Println("=======================")
 }
 
 func formatToken(f *source.File, tok token.Token) string {
 	line, column := f.LineColumn(tok.Position.Offset)
-
-	s := fmt.Sprintf(
-		"%-18s %4d:%4d [%d:%d]",
-		tok.Kind,
-		line,
-		column,
-		tok.Position.Offset,
-		tok.Length,
-	)
-
+	s := fmt.Sprintf("%-18s %4d:%4d [%d:%d]", tok.Kind, line, column, tok.Position.Offset, tok.Length)
 	if tok.Kind.HasText() {
 		s += fmt.Sprintf(" %q", f.Text(tok))
 	}
-
 	return s
 }
