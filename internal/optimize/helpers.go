@@ -1,4 +1,4 @@
-package opt
+package optimize
 
 import (
 	"math/bits"

@@ -1,23 +1,28 @@
-package opt
+package optimize
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
 	token2 "github.com/azin-lang/Azin/pkg/token"
 )
 
-func foldFloat(left *ast.FloatLiteral, op token2.Token, right *ast.FloatLiteral) ast.Expr {
+func foldInteger(left *ast.IntegerLiteral, op token2.Token, right *ast.IntegerLiteral) ast.Expr {
 	switch op.Kind {
 	case token2.Plus:
-		return floatLit(left.Value + right.Value)
+		return intLit(left.Value + right.Value)
 	case token2.Minus:
-		return floatLit(left.Value - right.Value)
+		return intLit(left.Value - right.Value)
 	case token2.Star:
-		return floatLit(left.Value * right.Value)
+		return intLit(left.Value * right.Value)
 	case token2.Slash:
 		if right.Value == 0 {
 			return nil
 		}
-		return floatLit(left.Value / right.Value)
+		return intLit(left.Value / right.Value)
+	case token2.Modulo:
+		if right.Value == 0 {
+			return nil
+		}
+		return intLit(left.Value % right.Value)
 	case token2.EqualEqual:
 		return boolLit(left.Value == right.Value)
 	case token2.BangEqual:

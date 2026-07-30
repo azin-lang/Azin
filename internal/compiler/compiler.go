@@ -1,5 +1,5 @@
 //nolint:goconst
-package driver
+package compiler
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/azin-lang/Azin/internal/codegen/c"
-	"github.com/azin-lang/Azin/internal/opt"
+	"github.com/azin-lang/Azin/internal/optimize"
 	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/lexer"
@@ -165,7 +165,7 @@ func Compile(file *source.File, outputPath string, opts Options) error {
 		return err
 	}
 
-	opt.Optimize(program)
+	optimize.Optimize(program)
 	cCode, err := transpileToC(program)
 	if err != nil {
 		return err

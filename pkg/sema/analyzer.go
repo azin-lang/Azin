@@ -143,7 +143,7 @@ func (a *Analyzer) verifyResolvedCalls(program *ast.Program) {
 
 		case *ast.CallExpr:
 			if n.ResolvedName == "" {
-				a.errorf(n.Callee, "internal driver error: unresolved function call")
+				a.errorf(n.Callee, "internal compiler error: unresolved function call")
 			}
 
 			visitExpr(n.Callee)
@@ -225,7 +225,7 @@ func (a *Analyzer) resolveCallOverload(name string, argTypes []*types2.TypeInfo)
 			want := overload.Function.Params[i].SemaType
 
 			if want == nil || want.IsUnknown() {
-				a.errorf(overload.Function.Params[i].SynType, "internal driver error: parameter type not inferred")
+				a.errorf(overload.Function.Params[i].SynType, "internal compiler error: parameter type not inferred")
 			}
 
 			if got == nil || want == nil || !types2.IsAssignable(got, want) {
@@ -466,7 +466,7 @@ func (a *Analyzer) lookupType(name string) *types2.TypeInfo {
 			return sym.Type
 		}
 
-		fmt.Println("internal driver error: symbol has no type info:", sym.Name)
+		fmt.Println("internal compiler error: symbol has no type info:", sym.Name)
 		return nil
 	}
 }
@@ -520,7 +520,7 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 			}
 
 			if param.SemaType == nil || param.SemaType.IsUnknown() {
-				a.errorf(param.SynType, "internal driver error: parameter type is null or not inferred")
+				a.errorf(param.SynType, "internal compiler error: parameter type is null or not inferred")
 				param.SemaType = types2.ErrorType()
 			}
 
@@ -1003,7 +1003,7 @@ func (a *Analyzer) inferExprType(expr ast.Expr) *types2.TypeInfo {
 		return n.SemaResultType
 	}
 
-	a.errorf(expr, "internal driver error: cannot infer type for expression")
+	a.errorf(expr, "internal compiler error: cannot infer type for expression")
 	return types2.ErrorType()
 }
 

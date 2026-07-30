@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/azin-lang/Azin/internal/driver"
+	"github.com/azin-lang/Azin/internal/compiler"
 	"github.com/azin-lang/Azin/internal/fs"
 	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/diagnostics"
@@ -64,14 +64,14 @@ func run() error {
 		return handleFrontendDebug(cfg, file)
 	}
 
-	opts := driver.Options{
+	opts := compiler.Options{
 		Output:       cfg.Output,
 		EmitC:        cfg.EmitC,
 		Optimization: cfg.Optimization,
 		Debug:        cfg.Debug,
 	}
 
-	if err := driver.Compile(file, cfg.Output, opts); err != nil {
+	if err := compiler.Compile(file, cfg.Output, opts); err != nil {
 		return fmt.Errorf("compilation failed: %w", err)
 	}
 

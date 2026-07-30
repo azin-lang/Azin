@@ -1,5 +1,5 @@
-// Package opt provides basic optimizations before transpiling to C.
-package opt
+// Package optimize provides basic optimizations before transpiling to C.
+package optimize
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
