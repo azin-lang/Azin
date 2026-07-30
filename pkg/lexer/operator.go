@@ -52,8 +52,6 @@ func (l *Lexer) lexOperator(ch rune, start token.Position) token.Token {
 			return l.emit(token.PipeEqual, start)
 		}
 		return l.emit(token.Pipe, start)
-	case '"':
-		return l.lexString(start)
 	default:
 		return l.lexUnknown(start)
 	}
