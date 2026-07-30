@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // lexOperator evaluates and returns a token for multi-character or single-character operator symbols.
@@ -85,31 +85,26 @@ func (l *Lexer) lexMinus(start token.Position) token.Token {
 
 // lexUnknown handles unexpected or invalid sequences of characters, reporting a diagnostic error and returning an Unknown token.
 func (l *Lexer) lexUnknown(start token.Position) token.Token {
-	l.consumeWhile(func(r rune) bool {
-		// Stop on EOF
-		if r == 0 {
-			return false
-		}
-
-		// Stop on whitespace
+	for !l.eof() {
+		r := l.peek()
 		if r == ' ' || r == '\t' || r == '\n' || r == '\r' {
-			return false
+			break
 		}
-
-		// Stop on any character that could start a valid token
 		if isIdentifierStart(r) || isDigit(r) || isPunctuation(r) {
-			return false
+			break
 		}
 
-		// Stop on valid operator characters and quotes
+		stop := false
 		switch r {
 		case '+', '-', '*', '/', '%', '=', '!', '<', '>', '&', '|', '"':
-			return false
+			stop = true
+		}
+		if stop {
+			break
 		}
 
-		// Otherwise, it's more garbage. Keep eating it!
-		return true
-	})
+		l.advance()
+	}
 
 	length := l.cursor - start.Offset
 	text := string(l.src[start.Offset:l.cursor])

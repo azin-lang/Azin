@@ -1,59 +1,64 @@
 package lexer
 
 import (
+	"unicode"
+	"unicode/utf8"
+
 	token "github.com/azin-lang/Azin/pkg/token"
 )
 
 // lexNumber processes and returns a token for integer, floating-point, hexadecimal, or binary number literals.
 func (l *Lexer) lexNumber(pos token.Position) token.Token {
 	if l.src[pos.Offset] == '0' {
-		if l.matchAny("xX") {
+		p := l.peek()
+		if p == 'x' || p == 'X' {
+			l.advance()
 			if !isHexDigit(l.peek()) {
 				l.diag.ReportError(pos, int(l.cursor-pos.Offset), "empty hex literal")
 			}
-			l.consumeWhile(isHexDigit)
+			l.consumeHexDigits()
 			return l.emit(token.IntegerLiteral, pos)
 		}
 
-		if l.matchAny("bB") {
+		if p == 'b' || p == 'B' {
+			l.advance()
 			if !isBinaryDigit(l.peek()) {
 				l.diag.ReportError(pos, int(l.cursor-pos.Offset), "empty binary literal")
 			}
-			l.consumeWhile(isBinaryDigit)
+			l.consumeBinaryDigits()
 			return l.emit(token.IntegerLiteral, pos)
 		}
 	}
 
-	l.consumeWhile(isDigit)
+	l.consumeDecimalDigits()
 
 	isFloat := false
-
 	if l.peek() == '.' && isDigit(l.peekNext()) {
-		l.advance()             // Consume the '.'
-		l.consumeWhile(isDigit) // Consume the fractional digits
+		l.advance() // Consume '.'
+		l.consumeDecimalDigits()
 		isFloat = true
 	}
 
-	// Support scientific notation (e.g., 1e10, 1.23E-4)
-	if l.peek() == 'e' || l.peek() == 'E' {
-		l.advance() // Consume 'e' or 'E'
+	p := l.peek()
+	if p == 'e' || p == 'E' {
+		l.advance()
 		isFloat = true
 
-		if l.peek() == '+' || l.peek() == '-' {
+		nxt := l.peek()
+		if nxt == '+' || nxt == '-' {
 			l.advance()
 		}
 
 		if !isDigit(l.peek()) {
 			l.diag.ReportError(l.pos(), 1, "malformed floating-point literal: missing exponent")
 		} else {
-			l.consumeWhile(isDigit)
+			l.consumeDecimalDigits()
 		}
 	}
 
 	if isFloat {
 		return l.emit(token.FloatLiteral, pos)
 	}
-
 	return l.emit(token.IntegerLiteral, pos)
 }
 
@@ -74,9 +79,8 @@ func (l *Lexer) lexCharacter(pos token.Position) token.Token {
 		return l.emit(token.CharacterLiteral, pos)
 	}
 
-	ch, _ := l.advance()
+	ch := l.advance()
 
-	// Reject ''
 	if ch == '\'' {
 		l.diag.ReportError(pos, 2, "empty character literal")
 		return l.emit(token.CharacterLiteral, pos)
@@ -88,18 +92,12 @@ func (l *Lexer) lexCharacter(pos token.Position) token.Token {
 			return l.emit(token.CharacterLiteral, pos)
 		}
 
-		escape, _ := l.advance()
-
+		escape := l.advance()
 		switch escape {
 		case '\'', '"', '\\', 'a', 'b', 'f', 'n', 'r', 't', 'v', '0':
-			// valid escape
+			// valid
 		default:
-			l.diag.ReportError(
-				token.Position{Offset: l.cursor - 1},
-				1,
-				"invalid escape sequence \\%c",
-				escape,
-			)
+			l.diag.ReportError(token.Position{Offset: l.cursor - 1}, 1, "invalid escape sequence \\%c", escape)
 		}
 	}
 
@@ -109,13 +107,7 @@ func (l *Lexer) lexCharacter(pos token.Position) token.Token {
 	}
 
 	if l.peek() != '\'' {
-		l.diag.ReportError(
-			token.Position{Offset: l.cursor},
-			1,
-			"character literal may contain exactly one character",
-		)
-
-		// Recover by skipping to the closing quote or newline.
+		l.diag.ReportError(token.Position{Offset: l.cursor}, 1, "character literal may contain exactly one character")
 		for !l.eof() && l.peek() != '\'' && l.peek() != '\n' && l.peek() != '\r' {
 			l.advance()
 		}
@@ -131,7 +123,7 @@ func (l *Lexer) lexCharacter(pos token.Position) token.Token {
 // lexString scans a string literal starting at pos, handling multi-line checks and escape sequence validation.
 func (l *Lexer) lexString(start token.Position) token.Token {
 	for !l.eof() {
-		ch, _ := l.advance()
+		ch := l.advance()
 
 		switch ch {
 		case '"':
@@ -142,10 +134,10 @@ func (l *Lexer) lexString(start token.Position) token.Token {
 				l.diag.ReportError(token.Position{Offset: l.cursor - 1}, 1, "unterminated escape sequence")
 				return l.emit(token.StringLiteral, start)
 			}
-			escape, _ := l.advance()
+			escape := l.advance()
 			switch escape {
 			case '"', '\\', 'n', 'r', 't', '0':
-				// Valid escape sequence
+				// valid
 			default:
 				l.diag.ReportError(token.Position{Offset: l.cursor - 1}, 1, "invalid escape sequence \\%c", escape)
 			}
@@ -158,4 +150,47 @@ func (l *Lexer) lexString(start token.Position) token.Token {
 
 	l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated string literal")
 	return l.emit(token.StringLiteral, start)
+}
+
+func (l *Lexer) consumeDecimalDigits() {
+	length := len(l.src)
+	for int(l.cursor) < length {
+		c := l.src[l.cursor]
+		if c >= '0' && c <= '9' {
+			l.cursor++
+			continue
+		}
+		if c >= utf8.RuneSelf {
+			r, sz := utf8.DecodeRune(l.src[l.cursor:])
+			if unicode.IsDigit(r) {
+				l.cursor += uint32(sz)
+				continue
+			}
+		}
+		break
+	}
+}
+
+func (l *Lexer) consumeHexDigits() {
+	length := len(l.src)
+	for int(l.cursor) < length {
+		c := l.src[l.cursor]
+		if ('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') {
+			l.cursor++
+			continue
+		}
+		break
+	}
+}
+
+func (l *Lexer) consumeBinaryDigits() {
+	length := len(l.src)
+	for int(l.cursor) < length {
+		c := l.src[l.cursor]
+		if c == '0' || c == '1' {
+			l.cursor++
+			continue
+		}
+		break
+	}
 }

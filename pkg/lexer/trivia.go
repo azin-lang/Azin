@@ -7,67 +7,68 @@ import (
 // skipTrivia consumes whitespace and comments, advancing the cursor
 // to the next meaningful syntax token.
 func (l *Lexer) skipTrivia() {
-	for {
-		l.consumeWhile(func(r rune) bool {
-			return r == ' ' || r == '\t'
-		})
+	length := len(l.src)
+	for int(l.cursor) < length {
+		c := l.src[l.cursor]
 
-		if l.peek() == '/' {
-			next := l.peekNext()
+		if c == ' ' || c == '\t' {
+			l.cursor++
+			continue
+		}
 
+		if c == '/' && int(l.cursor)+1 < length {
+			next := l.src[l.cursor+1]
 			if next == '/' {
-				l.advance() // Consume first '/'
-				l.advance() // Consume second '/'
+				l.cursor += 2
 				l.skipLineComment()
 				continue
 			}
-
 			if next == '*' {
 				start := l.pos()
-				l.advance() // Consume '/'
-				l.advance() // Consume '*'
+				l.cursor += 2
 				l.skipBlockComment(start)
 				continue
 			}
 		}
-
 		return
 	}
 }
 
 // skipLineComment consumes characters until the end of the line.
 func (l *Lexer) skipLineComment() {
-	for !l.eof() {
-		switch l.peek() {
-		case '\n', '\r':
+	length := len(l.src)
+	for int(l.cursor) < length {
+		c := l.src[l.cursor]
+		if c == '\n' || c == '\r' {
 			return
-		default:
-			_, _ = l.advance()
 		}
+		l.cursor++
 	}
 }
 
-// skipBlockComment consumes characters until the matching closing block comment delimiter, properly supporting nested block comments.
+// skipBlockComment consumes characters until the matching closing delimiter.
 func (l *Lexer) skipBlockComment(start token.Position) {
 	depth := 1
+	length := len(l.src)
 
-	for !l.eof() {
-		ch, _ := l.advance()
-
-		switch ch {
-		case '/':
-			if l.match('*') {
-				depth++
+	for int(l.cursor)+1 < length {
+		c := l.src[l.cursor]
+		if c == '*' && l.src[l.cursor+1] == '/' {
+			depth--
+			l.cursor += 2
+			if depth == 0 {
+				return
 			}
-		case '*':
-			if l.match('/') {
-				depth--
-				if depth == 0 {
-					return
-				}
-			}
+			continue
 		}
+		if c == '/' && l.src[l.cursor+1] == '*' {
+			depth++
+			l.cursor += 2
+			continue
+		}
+		l.cursor++
 	}
 
+	l.cursor = uint32(length)
 	l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated block comment")
 }

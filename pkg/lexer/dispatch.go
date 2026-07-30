@@ -13,7 +13,7 @@ func (l *Lexer) nextToken() token.Token {
 	}
 
 	start := l.pos()
-	ch, _ := l.advance()
+	ch := l.advance()
 
 	switch {
 	case ch == '\n':
