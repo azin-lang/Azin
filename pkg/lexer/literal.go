@@ -4,22 +4,23 @@ import (
 	token "github.com/azin-lang/Azin/pkg/token"
 )
 
-func (l *Lexer) lexNumber(start token.Position) token.Token {
-	if l.src[start.Offset] == '0' {
+// lexNumber processes and returns a token for integer, floating-point, hexadecimal, or binary number literals.
+func (l *Lexer) lexNumber(pos token.Position) token.Token {
+	if l.src[pos.Offset] == '0' {
 		if l.matchAny("xX") {
 			if !isHexDigit(l.peek()) {
-				l.diag.ReportError(start, int(l.cursor-start.Offset), "empty hex literal")
+				l.diag.ReportError(pos, int(l.cursor-pos.Offset), "empty hex literal")
 			}
 			l.consumeWhile(isHexDigit)
-			return l.emit(token.IntegerLiteral, start)
+			return l.emit(token.IntegerLiteral, pos)
 		}
 
 		if l.matchAny("bB") {
 			if !isBinaryDigit(l.peek()) {
-				l.diag.ReportError(start, int(l.cursor-start.Offset), "empty binary literal")
+				l.diag.ReportError(pos, int(l.cursor-pos.Offset), "empty binary literal")
 			}
 			l.consumeWhile(isBinaryDigit)
-			return l.emit(token.IntegerLiteral, start)
+			return l.emit(token.IntegerLiteral, pos)
 		}
 	}
 
@@ -50,38 +51,41 @@ func (l *Lexer) lexNumber(start token.Position) token.Token {
 	}
 
 	if isFloat {
-		return l.emit(token.FloatLiteral, start)
+		return l.emit(token.FloatLiteral, pos)
 	}
 
-	return l.emit(token.IntegerLiteral, start)
+	return l.emit(token.IntegerLiteral, pos)
 }
 
+// isHexDigit reports whether r is a valid hexadecimal digit.
 func isHexDigit(r rune) bool {
 	return ('0' <= r && r <= '9') || ('a' <= r && r <= 'f') || ('A' <= r && r <= 'F')
 }
 
+// isBinaryDigit reports whether r is a valid binary digit.
 func isBinaryDigit(r rune) bool {
 	return r == '0' || r == '1'
 }
 
-func (l *Lexer) lexCharacter(start token.Position) token.Token {
+// lexCharacter scans a character literal starting at pos, validating any escape sequences.
+func (l *Lexer) lexCharacter(pos token.Position) token.Token {
 	if l.eof() {
-		l.diag.ReportError(start, 1, "unterminated character literal")
-		return l.emit(token.CharacterLiteral, start)
+		l.diag.ReportError(pos, 1, "unterminated character literal")
+		return l.emit(token.CharacterLiteral, pos)
 	}
 
 	ch, _ := l.advance()
 
 	// Reject ''
 	if ch == '\'' {
-		l.diag.ReportError(start, 2, "empty character literal")
-		return l.emit(token.CharacterLiteral, start)
+		l.diag.ReportError(pos, 2, "empty character literal")
+		return l.emit(token.CharacterLiteral, pos)
 	}
 
 	if ch == '\\' {
 		if l.eof() {
-			l.diag.ReportError(start, 1, "unterminated escape sequence")
-			return l.emit(token.CharacterLiteral, start)
+			l.diag.ReportError(pos, 1, "unterminated escape sequence")
+			return l.emit(token.CharacterLiteral, pos)
 		}
 
 		escape, _ := l.advance()
@@ -100,8 +104,8 @@ func (l *Lexer) lexCharacter(start token.Position) token.Token {
 	}
 
 	if l.eof() {
-		l.diag.ReportError(start, int(l.cursor-start.Offset), "unterminated character literal")
-		return l.emit(token.CharacterLiteral, start)
+		l.diag.ReportError(pos, int(l.cursor-pos.Offset), "unterminated character literal")
+		return l.emit(token.CharacterLiteral, pos)
 	}
 
 	if l.peek() != '\'' {
@@ -121,9 +125,10 @@ func (l *Lexer) lexCharacter(start token.Position) token.Token {
 		l.advance()
 	}
 
-	return l.emit(token.CharacterLiteral, start)
+	return l.emit(token.CharacterLiteral, pos)
 }
 
+// lexString scans a string literal starting at pos, handling multi-line checks and escape sequence validation.
 func (l *Lexer) lexString(start token.Position) token.Token {
 	for !l.eof() {
 		ch, _ := l.advance()

@@ -5,7 +5,7 @@ import (
 )
 
 // skipTrivia consumes whitespace and comments, advancing the cursor
-// to the next meaningful token.
+// to the next meaningful syntax token.
 func (l *Lexer) skipTrivia() {
 	for {
 		l.consumeWhile(func(r rune) bool {
@@ -35,6 +35,7 @@ func (l *Lexer) skipTrivia() {
 	}
 }
 
+// skipLineComment consumes characters until the end of the line.
 func (l *Lexer) skipLineComment() {
 	for !l.eof() {
 		switch l.peek() {
@@ -46,6 +47,7 @@ func (l *Lexer) skipLineComment() {
 	}
 }
 
+// skipBlockComment consumes characters until the matching closing block comment delimiter, properly supporting nested block comments.
 func (l *Lexer) skipBlockComment(start token.Position) {
 	depth := 1
 

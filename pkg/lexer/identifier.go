@@ -4,6 +4,7 @@ import (
 	token "github.com/azin-lang/Azin/pkg/token"
 )
 
+// lexIdentifier consumes a sequence of identifier continuation characters and resolves it to a keyword or identifier token.
 func (l *Lexer) lexIdentifier(start token.Position) token.Token {
 	l.consumeWhile(isIdentifierContinue)
 

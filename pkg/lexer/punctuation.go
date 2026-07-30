@@ -1,34 +1,35 @@
 package lexer
 
 import (
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	token "github.com/azin-lang/Azin/pkg/token"
 )
 
-func (l *Lexer) lexPunctuation(ch rune, start token2.Position) token2.Token {
+// lexPunctuation maps individual punctuation marks to their respective token kinds and returns the corresponding token.
+func (l *Lexer) lexPunctuation(ch rune, start token.Position) token.Token {
 	switch ch {
 	case '(':
-		return l.emit(token2.LeftParen, start)
+		return l.emit(token.LeftParen, start)
 	case ')':
-		return l.emit(token2.RightParen, start)
+		return l.emit(token.RightParen, start)
 	case '{':
-		return l.emit(token2.LeftBrace, start)
+		return l.emit(token.LeftBrace, start)
 	case '}':
-		return l.emit(token2.RightBrace, start)
+		return l.emit(token.RightBrace, start)
 	case '[':
-		return l.emit(token2.LeftBracket, start)
+		return l.emit(token.LeftBracket, start)
 	case ']':
-		return l.emit(token2.RightBracket, start)
+		return l.emit(token.RightBracket, start)
 	case ',':
-		return l.emit(token2.Comma, start)
+		return l.emit(token.Comma, start)
 	case ';':
-		return l.emit(token2.Semicolon, start)
+		return l.emit(token.Semicolon, start)
 	case ':':
-		return l.emit(token2.Colon, start)
+		return l.emit(token.Colon, start)
 	case '.':
-		return l.emit(token2.Dot, start)
+		return l.emit(token.Dot, start)
 	}
 
 	// Should be unreachable as long as isPunctuation guards this method.
 	l.diag.ReportError(start, 1, "internal error: unexpected character '%c'", ch)
-	return l.emit(token2.Error, start)
+	return l.emit(token.Error, start)
 }

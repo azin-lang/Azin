@@ -4,6 +4,7 @@ import (
 	token "github.com/azin-lang/Azin/pkg/token"
 )
 
+// lexOperator evaluates and returns a token for multi-character or single-character operator symbols.
 func (l *Lexer) lexOperator(ch rune, start token.Position) token.Token {
 	switch ch {
 	case '+':
@@ -57,6 +58,7 @@ func (l *Lexer) lexOperator(ch rune, start token.Position) token.Token {
 	}
 }
 
+// lexPlus handles plus, increment, and addition assignment operators.
 func (l *Lexer) lexPlus(start token.Position) token.Token {
 	if l.match('=') {
 		return l.emit(token.PlusEqual, start)
@@ -67,6 +69,7 @@ func (l *Lexer) lexPlus(start token.Position) token.Token {
 	return l.emit(token.Plus, start)
 }
 
+// lexMinus handles minus, decrement, subtraction assignment, and arrow operators.
 func (l *Lexer) lexMinus(start token.Position) token.Token {
 	if l.match('=') {
 		return l.emit(token.MinusEqual, start)
@@ -80,6 +83,7 @@ func (l *Lexer) lexMinus(start token.Position) token.Token {
 	return l.emit(token.Minus, start)
 }
 
+// lexUnknown handles unexpected or invalid sequences of characters, reporting a diagnostic error and returning an Unknown token.
 func (l *Lexer) lexUnknown(start token.Position) token.Token {
 	l.consumeWhile(func(r rune) bool {
 		// Stop on EOF

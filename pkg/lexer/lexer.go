@@ -18,7 +18,7 @@ type Lexer struct {
 	diag   *diagnostics.Engine
 }
 
-// New initializes a new Lexer for the given source file.
+// New returns a new Lexer configured for the given source file.
 func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	return &Lexer{
 		file:   file,
@@ -28,7 +28,7 @@ func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	}
 }
 
-// Tokenize eagerly scans the entire file and returns a slice of all tokens.
+// Tokenize eagerly scans the entire file and returns a slice of all parsed tokens.
 func (l *Lexer) Tokenize() []token2.Token {
 	return slices.Collect(l.Tokens())
 }
