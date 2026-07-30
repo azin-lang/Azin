@@ -1,57 +1,57 @@
 package lexer
 
 import (
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	token "github.com/azin-lang/Azin/pkg/token"
 )
 
-func (l *Lexer) lexOperator(ch rune, start token2.Position) token2.Token {
+func (l *Lexer) lexOperator(ch rune, start token.Position) token.Token {
 	switch ch {
 	case '+':
 		return l.lexPlus(start)
 	case '-':
 		return l.lexMinus(start)
 	case '*':
-		return l.either('=', token2.StarEqual, token2.Star, start)
+		return l.either('=', token.StarEqual, token.Star, start)
 	case '/':
-		return l.either('=', token2.SlashEqual, token2.Slash, start)
+		return l.either('=', token.SlashEqual, token.Slash, start)
 	case '%':
-		return l.either('=', token2.ModuloEqual, token2.Modulo, start)
+		return l.either('=', token.ModuloEqual, token.Modulo, start)
 	case '=':
-		return l.either('=', token2.EqualEqual, token2.Equal, start)
+		return l.either('=', token.EqualEqual, token.Equal, start)
 	case '!':
-		return l.either('=', token2.BangEqual, token2.Bang, start)
+		return l.either('=', token.BangEqual, token.Bang, start)
 	case '<':
 		if l.match('=') {
-			return l.emit(token2.LessEqual, start)
+			return l.emit(token.LessEqual, start)
 		}
 		if l.match('<') {
-			return l.emit(token2.LessLess, start)
+			return l.emit(token.LessLess, start)
 		}
-		return l.emit(token2.Less, start)
+		return l.emit(token.Less, start)
 	case '>':
 		if l.match('=') {
-			return l.emit(token2.GreaterEqual, start)
+			return l.emit(token.GreaterEqual, start)
 		}
 		if l.match('>') {
-			return l.emit(token2.GreaterGreater, start)
+			return l.emit(token.GreaterGreater, start)
 		}
-		return l.emit(token2.Greater, start)
+		return l.emit(token.Greater, start)
 	case '&':
 		if l.match('&') {
-			return l.emit(token2.LogicalAnd, start)
+			return l.emit(token.LogicalAnd, start)
 		}
 		if l.match('=') {
-			return l.emit(token2.AmpersandEqual, start)
+			return l.emit(token.AmpersandEqual, start)
 		}
-		return l.emit(token2.Ampersand, start)
+		return l.emit(token.Ampersand, start)
 	case '|':
 		if l.match('|') {
-			return l.emit(token2.LogicalOr, start)
+			return l.emit(token.LogicalOr, start)
 		}
 		if l.match('=') {
-			return l.emit(token2.PipeEqual, start)
+			return l.emit(token.PipeEqual, start)
 		}
-		return l.emit(token2.Pipe, start)
+		return l.emit(token.Pipe, start)
 	case '"':
 		return l.lexString(start)
 	default:
@@ -59,30 +59,30 @@ func (l *Lexer) lexOperator(ch rune, start token2.Position) token2.Token {
 	}
 }
 
-func (l *Lexer) lexPlus(start token2.Position) token2.Token {
+func (l *Lexer) lexPlus(start token.Position) token.Token {
 	if l.match('=') {
-		return l.emit(token2.PlusEqual, start)
+		return l.emit(token.PlusEqual, start)
 	}
 	if l.match('+') {
-		return l.emit(token2.PlusPlus, start)
+		return l.emit(token.PlusPlus, start)
 	}
-	return l.emit(token2.Plus, start)
+	return l.emit(token.Plus, start)
 }
 
-func (l *Lexer) lexMinus(start token2.Position) token2.Token {
+func (l *Lexer) lexMinus(start token.Position) token.Token {
 	if l.match('=') {
-		return l.emit(token2.MinusEqual, start)
+		return l.emit(token.MinusEqual, start)
 	}
 	if l.match('-') {
-		return l.emit(token2.MinusMinus, start)
+		return l.emit(token.MinusMinus, start)
 	}
 	if l.match('>') {
-		return l.emit(token2.Arrow, start)
+		return l.emit(token.Arrow, start)
 	}
-	return l.emit(token2.Minus, start)
+	return l.emit(token.Minus, start)
 }
 
-func (l *Lexer) lexUnknown(start token2.Position) token2.Token {
+func (l *Lexer) lexUnknown(start token.Position) token.Token {
 	l.consumeWhile(func(r rune) bool {
 		// Stop on EOF
 		if r == 0 {
@@ -110,8 +110,8 @@ func (l *Lexer) lexUnknown(start token2.Position) token2.Token {
 	})
 
 	length := l.cursor - start.Offset
-	text := string(l.file.Slice(start.Offset, l.cursor))
+	text := string(l.src[start.Offset:l.cursor])
 
 	l.diag.ReportError(start, int(length), "unexpected characters: %q", text)
-	return l.emit(token2.Unknown, start)
+	return l.emit(token.Unknown, start)
 }

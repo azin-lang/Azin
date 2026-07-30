@@ -1,26 +1,34 @@
-//nolint:unused,unparam
 package lexer
 
 import (
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"unicode/utf8"
+
+	token "github.com/azin-lang/Azin/pkg/token"
 )
 
-func (l *Lexer) eofToken() token2.Token {
-	return token2.Token{
-		Kind:     token2.EOF,
+func (l *Lexer) eofToken() token.Token {
+	return token.Token{
+		Kind:     token.EOF,
 		Position: l.pos(),
 	}
 }
 
 func (l *Lexer) eof() bool {
-	return l.file.EOF(l.cursor)
+	return int(l.cursor) >= len(l.src)
 }
 
 func (l *Lexer) peek() rune {
 	if l.eof() {
 		return 0
 	}
-	r, _ := l.file.Rune(l.cursor)
+
+	// Fast path for ASCII
+	c := l.src[l.cursor]
+	if c < utf8.RuneSelf {
+		return rune(c)
+	}
+
+	r, _ := utf8.DecodeRune(l.src[l.cursor:])
 	return r
 }
 
@@ -29,14 +37,25 @@ func (l *Lexer) peekNext() rune {
 		return 0
 	}
 
-	_, size := l.file.Rune(l.cursor)
-	nextCursor := l.cursor + size
+	c := l.src[l.cursor]
+	var size uint32 = 1
 
-	if l.file.EOF(nextCursor) {
+	if c >= utf8.RuneSelf {
+		_, sz := utf8.DecodeRune(l.src[l.cursor:])
+		size = uint32(sz)
+	}
+
+	nextCursor := l.cursor + size
+	if int(nextCursor) >= len(l.src) {
 		return 0
 	}
 
-	nextRune, _ := l.file.Rune(nextCursor)
+	nextC := l.src[nextCursor]
+	if nextC < utf8.RuneSelf {
+		return rune(nextC)
+	}
+
+	nextRune, _ := utf8.DecodeRune(l.src[nextCursor:])
 	return nextRune
 }
 
@@ -44,9 +63,16 @@ func (l *Lexer) advance() (r rune, size uint32) {
 	if l.eof() {
 		return 0, 0
 	}
-	r, size = l.file.Rune(l.cursor)
-	l.cursor += size
-	return r, size
+
+	c := l.src[l.cursor]
+	if c < utf8.RuneSelf {
+		l.cursor++
+		return rune(c), 1
+	}
+
+	r, sz := utf8.DecodeRune(l.src[l.cursor:])
+	l.cursor += uint32(sz)
+	return r, uint32(sz)
 }
 
 func (l *Lexer) match(ch rune) bool {
@@ -74,21 +100,21 @@ func (l *Lexer) consumeWhile(pred func(rune) bool) {
 	}
 }
 
-func (l *Lexer) emit(kind token2.Kind, start token2.Position) token2.Token {
-	return token2.Token{
+func (l *Lexer) emit(kind token.Kind, start token.Position) token.Token {
+	return token.Token{
 		Kind:     kind,
 		Position: start,
 		Length:   l.cursor - start.Offset,
 	}
 }
 
-func (l *Lexer) either(ch rune, ifMatch, otherwise token2.Kind, start token2.Position) token2.Token {
+func (l *Lexer) either(ch rune, ifMatch, otherwise token.Kind, start token.Position) token.Token {
 	if l.match(ch) {
 		return l.emit(ifMatch, start)
 	}
 	return l.emit(otherwise, start)
 }
 
-func (l *Lexer) pos() token2.Position {
-	return token2.Position{Offset: l.cursor}
+func (l *Lexer) pos() token.Position {
+	return token.Position{Offset: l.cursor}
 }

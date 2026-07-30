@@ -13,7 +13,10 @@ func isIdentifierStart(r rune) bool {
 }
 
 func isIdentifierContinue(r rune) bool {
-	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsMark(r)
+	if r < utf8.RuneSelf {
+		return ('a' <= r && r <= 'z') || ('A' <= r && r <= 'Z') || ('0' <= r && r <= '9') || r == '_'
+	}
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsMark(r)
 }
 
 func isDigit(r rune) bool {

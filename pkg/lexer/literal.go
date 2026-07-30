@@ -5,7 +5,7 @@ import (
 )
 
 func (l *Lexer) lexNumber(start token2.Position) token2.Token {
-	if ch, _ := l.file.Rune(start.Offset); ch == '0' {
+	if l.src[start.Offset] == '0' {
 		if l.matchAny("xX") {
 			l.consumeWhile(func(r rune) bool {
 				return isDigit(r) || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')

@@ -13,6 +13,7 @@ import (
 // into a stream of syntax tokens.
 type Lexer struct {
 	file   *source.File
+	src    []byte
 	cursor uint32
 	diag   *diagnostics.Engine
 }
@@ -20,8 +21,10 @@ type Lexer struct {
 // New initializes a new Lexer for the given source file.
 func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 	return &Lexer{
-		file: file,
-		diag: diag,
+		file:   file,
+		src:    file.Bytes(),
+		cursor: 0,
+		diag:   diag,
 	}
 }
 
