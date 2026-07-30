@@ -2,7 +2,7 @@ package optimize
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 func (o *Optimizer) optimizeIf(n *ast.IfStmt) []ast.Stmt {
@@ -83,7 +83,7 @@ func (o *Optimizer) optimizeIf(n *ast.IfStmt) []ast.Stmt {
 		if inner, ok := n.Then[0].(*ast.IfStmt); ok && len(inner.Else) == 0 {
 			combined := &ast.BinaryExpr{
 				Left:     n.Condition,
-				Operator: token2.Token{Kind: token2.LogicalAnd},
+				Operator: token.Token{Kind: token.LogicalAnd},
 				Right:    inner.Condition,
 			}
 			// Re-optimize the new condition in case `a && b` can be folded
@@ -139,27 +139,27 @@ func invertConditionRelaxed(expr ast.Expr) ast.Expr {
 		return nil
 	}
 
-	var inverse token2.Kind
+	var inverse token.Kind
 	switch bin.Operator.Kind {
-	case token2.EqualEqual:
-		inverse = token2.BangEqual
-	case token2.BangEqual:
-		inverse = token2.EqualEqual
-	case token2.Less:
-		inverse = token2.GreaterEqual
-	case token2.LessEqual:
-		inverse = token2.Greater
-	case token2.Greater:
-		inverse = token2.LessEqual
-	case token2.GreaterEqual:
-		inverse = token2.Less
+	case token.EqualEqual:
+		inverse = token.BangEqual
+	case token.BangEqual:
+		inverse = token.EqualEqual
+	case token.Less:
+		inverse = token.GreaterEqual
+	case token.LessEqual:
+		inverse = token.Greater
+	case token.Greater:
+		inverse = token.LessEqual
+	case token.GreaterEqual:
+		inverse = token.Less
 	default:
 		return nil
 	}
 
 	return &ast.BinaryExpr{
 		Left:     bin.Left,
-		Operator: token2.Token{Kind: inverse},
+		Operator: token.Token{Kind: inverse},
 		Right:    bin.Right,
 	}
 }

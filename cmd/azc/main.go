@@ -9,7 +9,7 @@ import (
 
 func main() {
 	code := x86_64.EmitMinimalExit()
-	if err := elf.WriteMinimalExecutable("output", code); err != nil {
+	if err := elf.WriteRelocatableObject("output", code); err != nil {
 		log.Fatalf("failed to emit executable: %v", err)
 	}
 }

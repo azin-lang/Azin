@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/azin-lang/Azin/pkg/ast"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // ---- helpers ----
@@ -18,11 +18,11 @@ func str(v string) *ast.StringLiteral {
 	return &ast.StringLiteral{Value: v}
 }
 
-func tok(kind token2.Kind) token2.Token {
-	return token2.Token{Kind: kind}
+func tok(kind token.Kind) token.Token {
+	return token.Token{Kind: kind}
 }
 
-func bin(left ast.Expr, op token2.Kind, right ast.Expr) *ast.BinaryExpr {
+func bin(left ast.Expr, op token.Kind, right ast.Expr) *ast.BinaryExpr {
 	return &ast.BinaryExpr{
 		Left:     left,
 		Operator: tok(op),
@@ -35,27 +35,27 @@ func bin(left ast.Expr, op token2.Kind, right ast.Expr) *ast.BinaryExpr {
 func TestFoldInteger(t *testing.T) {
 	tests := []struct {
 		name string
-		op   token2.Kind
+		op   token.Kind
 		a, b int64
 		want int64
 	}{
-		{"add", token2.Plus, 3, 4, 7},
-		{"sub", token2.Minus, 10, 3, 7},
-		{"mul", token2.Star, 6, 7, 42},
-		{"div", token2.Slash, 10, 2, 5},
-		{"mod", token2.Modulo, 10, 3, 1},
-		{"eq_true", token2.EqualEqual, 5, 5, 1},
-		{"eq_false", token2.EqualEqual, 5, 6, 0},
-		{"ne_true", token2.BangEqual, 5, 6, 1},
-		{"ne_false", token2.BangEqual, 5, 5, 0},
-		{"lt_true", token2.Less, 3, 5, 1},
-		{"lt_false", token2.Less, 5, 3, 0},
-		{"le_true", token2.LessEqual, 5, 5, 1},
-		{"le_false", token2.LessEqual, 6, 5, 0},
-		{"gt_true", token2.Greater, 5, 3, 1},
-		{"gt_false", token2.Greater, 3, 5, 0},
-		{"ge_true", token2.GreaterEqual, 5, 5, 1},
-		{"ge_false", token2.GreaterEqual, 3, 5, 0},
+		{"add", token.Plus, 3, 4, 7},
+		{"sub", token.Minus, 10, 3, 7},
+		{"mul", token.Star, 6, 7, 42},
+		{"div", token.Slash, 10, 2, 5},
+		{"mod", token.Modulo, 10, 3, 1},
+		{"eq_true", token.EqualEqual, 5, 5, 1},
+		{"eq_false", token.EqualEqual, 5, 6, 0},
+		{"ne_true", token.BangEqual, 5, 6, 1},
+		{"ne_false", token.BangEqual, 5, 5, 0},
+		{"lt_true", token.Less, 3, 5, 1},
+		{"lt_false", token.Less, 5, 3, 0},
+		{"le_true", token.LessEqual, 5, 5, 1},
+		{"le_false", token.LessEqual, 6, 5, 0},
+		{"gt_true", token.Greater, 5, 3, 1},
+		{"gt_false", token.Greater, 3, 5, 0},
+		{"ge_true", token.GreaterEqual, 5, 5, 1},
+		{"ge_false", token.GreaterEqual, 3, 5, 0},
 	}
 
 	for _, tt := range tests {
@@ -82,10 +82,10 @@ func TestFoldInteger(t *testing.T) {
 }
 
 func TestFoldIntegerDivByZero(t *testing.T) {
-	if r := foldInteger(intLit(5), tok(token2.Slash), intLit(0)); r != nil {
+	if r := foldInteger(intLit(5), tok(token.Slash), intLit(0)); r != nil {
 		t.Errorf("expected nil for division by zero, got %v", r)
 	}
-	if r := foldInteger(intLit(5), tok(token2.Modulo), intLit(0)); r != nil {
+	if r := foldInteger(intLit(5), tok(token.Modulo), intLit(0)); r != nil {
 		t.Errorf("expected nil for modulo by zero, got %v", r)
 	}
 }
@@ -93,18 +93,18 @@ func TestFoldIntegerDivByZero(t *testing.T) {
 func TestFoldFloat(t *testing.T) {
 	tests := []struct {
 		name string
-		op   token2.Kind
+		op   token.Kind
 		a, b float64
 		want float64
 	}{
-		{"add", token2.Plus, 1.5, 2.5, 4.0},
-		{"sub", token2.Minus, 5.0, 2.0, 3.0},
-		{"mul", token2.Star, 3.0, 1.5, 4.5},
-		{"div", token2.Slash, 10.0, 2.0, 5.0},
-		{"eq_true", token2.EqualEqual, 3.0, 3.0, 1},
-		{"eq_false", token2.EqualEqual, 1.0, 2.0, 0},
-		{"lt_true", token2.Less, 1.0, 2.0, 1},
-		{"lt_false", token2.Less, 2.0, 1.0, 0},
+		{"add", token.Plus, 1.5, 2.5, 4.0},
+		{"sub", token.Minus, 5.0, 2.0, 3.0},
+		{"mul", token.Star, 3.0, 1.5, 4.5},
+		{"div", token.Slash, 10.0, 2.0, 5.0},
+		{"eq_true", token.EqualEqual, 3.0, 3.0, 1},
+		{"eq_false", token.EqualEqual, 1.0, 2.0, 0},
+		{"lt_true", token.Less, 1.0, 2.0, 1},
+		{"lt_false", token.Less, 2.0, 1.0, 0},
 	}
 
 	for _, tt := range tests {
@@ -131,7 +131,7 @@ func TestFoldFloat(t *testing.T) {
 }
 
 func TestFoldFloatDivByZero(t *testing.T) {
-	if r := foldFloat(floatLit(5.0), tok(token2.Slash), floatLit(0)); r != nil {
+	if r := foldFloat(floatLit(5.0), tok(token.Slash), floatLit(0)); r != nil {
 		t.Errorf("expected nil for float division by zero, got %v", r)
 	}
 }
@@ -139,16 +139,16 @@ func TestFoldFloatDivByZero(t *testing.T) {
 func TestFoldBoolean(t *testing.T) {
 	tests := []struct {
 		name string
-		op   token2.Kind
+		op   token.Kind
 		a, b bool
 		want bool
 	}{
-		{"and_true", token2.LogicalAnd, true, true, true},
-		{"and_false", token2.LogicalAnd, true, false, false},
-		{"or_true", token2.LogicalOr, false, true, true},
-		{"or_false", token2.LogicalOr, false, false, false},
-		{"eq_true", token2.EqualEqual, true, true, true},
-		{"ne_true", token2.BangEqual, true, false, true},
+		{"and_true", token.LogicalAnd, true, true, true},
+		{"and_false", token.LogicalAnd, true, false, false},
+		{"or_true", token.LogicalOr, false, true, true},
+		{"or_false", token.LogicalOr, false, false, false},
+		{"eq_true", token.EqualEqual, true, true, true},
+		{"ne_true", token.BangEqual, true, false, true},
 	}
 
 	for _, tt := range tests {
@@ -174,14 +174,14 @@ func TestFoldBinaryExpr(t *testing.T) {
 		expr ast.Expr
 		want int64
 	}{
-		{"int_add", bin(intLit(1), token2.Plus, intLit(2)), 3},
-		{"int_mul", bin(intLit(3), token2.Star, intLit(4)), 12},
-		{"int_sub", bin(intLit(10), token2.Minus, intLit(3)), 7},
-		{"char_add", bin(&ast.CharacterLiteral{Value: 'A'}, token2.Plus, &ast.CharacterLiteral{Value: 1}), 66},
-		{"char_int_add", bin(&ast.CharacterLiteral{Value: 'A'}, token2.Plus, intLit(1)), 66},
-		{"int_float_add", bin(intLit(3), token2.Plus, floatLit(2.5)), -1},
-		{"float_int_add", bin(floatLit(1.5), token2.Plus, intLit(2)), -1},
-		{"not_foldable", bin(id("x"), token2.Plus, intLit(1)), -1},
+		{"int_add", bin(intLit(1), token.Plus, intLit(2)), 3},
+		{"int_mul", bin(intLit(3), token.Star, intLit(4)), 12},
+		{"int_sub", bin(intLit(10), token.Minus, intLit(3)), 7},
+		{"char_add", bin(&ast.CharacterLiteral{Value: 'A'}, token.Plus, &ast.CharacterLiteral{Value: 1}), 66},
+		{"char_int_add", bin(&ast.CharacterLiteral{Value: 'A'}, token.Plus, intLit(1)), 66},
+		{"int_float_add", bin(intLit(3), token.Plus, floatLit(2.5)), -1},
+		{"float_int_add", bin(floatLit(1.5), token.Plus, intLit(2)), -1},
+		{"not_foldable", bin(id("x"), token.Plus, intLit(1)), -1},
 	}
 
 	for _, tt := range tests {
@@ -223,7 +223,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 	}{
 		{
 			name: "x_plus_0",
-			expr: bin(id("x"), token2.Plus, intLit(0)),
+			expr: bin(id("x"), token.Plus, intLit(0)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -233,7 +233,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_minus_0",
-			expr: bin(id("x"), token2.Minus, intLit(0)),
+			expr: bin(id("x"), token.Minus, intLit(0)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -243,7 +243,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_minus_x",
-			expr: bin(id("x"), token2.Minus, id("x")),
+			expr: bin(id("x"), token.Minus, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				lit, ok := got.(*ast.IntegerLiteral)
 				if !ok || lit.Value != 0 {
@@ -253,7 +253,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_times_1",
-			expr: bin(id("x"), token2.Star, intLit(1)),
+			expr: bin(id("x"), token.Star, intLit(1)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -263,7 +263,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_times_0",
-			expr: bin(id("x"), token2.Star, intLit(0)),
+			expr: bin(id("x"), token.Star, intLit(0)),
 			check: func(t *testing.T, got ast.Expr) {
 				lit, ok := got.(*ast.IntegerLiteral)
 				if !ok || lit.Value != 0 {
@@ -273,13 +273,13 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_times_2",
-			expr: bin(id("x"), token2.Star, intLit(2)),
+			expr: bin(id("x"), token.Star, intLit(2)),
 			check: func(t *testing.T, got ast.Expr) {
 				bin, ok := got.(*ast.BinaryExpr)
 				if !ok {
 					t.Fatalf("got %T, want BinaryExpr", got)
 				}
-				if bin.Operator.Kind != token2.LessLess {
+				if bin.Operator.Kind != token.LessLess {
 					t.Errorf("expected << operator, got %v", bin.Operator.Kind)
 				}
 				r, ok := bin.Right.(*ast.IntegerLiteral)
@@ -290,7 +290,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_div_1",
-			expr: bin(id("x"), token2.Slash, intLit(1)),
+			expr: bin(id("x"), token.Slash, intLit(1)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -300,7 +300,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_div_x",
-			expr: bin(id("x"), token2.Slash, id("x")),
+			expr: bin(id("x"), token.Slash, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				lit, ok := got.(*ast.IntegerLiteral)
 				if !ok || lit.Value != 1 {
@@ -310,7 +310,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_mod_1",
-			expr: bin(id("x"), token2.Modulo, intLit(1)),
+			expr: bin(id("x"), token.Modulo, intLit(1)),
 			check: func(t *testing.T, got ast.Expr) {
 				lit, ok := got.(*ast.IntegerLiteral)
 				if !ok || lit.Value != 0 {
@@ -320,7 +320,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "side_effect_not_removed",
-			expr: bin(&ast.CallExpr{ResolvedName: "foo"}, token2.Star, intLit(0)),
+			expr: bin(&ast.CallExpr{ResolvedName: "foo"}, token.Star, intLit(0)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for impure x * 0, got %v", got)
@@ -329,13 +329,13 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_times_8",
-			expr: bin(id("x"), token2.Star, intLit(8)),
+			expr: bin(id("x"), token.Star, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				bin, ok := got.(*ast.BinaryExpr)
 				if !ok {
 					t.Fatalf("got %T, want BinaryExpr", got)
 				}
-				if bin.Operator.Kind != token2.LessLess {
+				if bin.Operator.Kind != token.LessLess {
 					t.Errorf("expected << operator, got %v", bin.Operator.Kind)
 				}
 				r, ok := bin.Right.(*ast.IntegerLiteral)
@@ -346,7 +346,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_times_non_power_of_2",
-			expr: bin(id("x"), token2.Star, intLit(6)),
+			expr: bin(id("x"), token.Star, intLit(6)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for non-power-of-2, got %v", got)
@@ -355,7 +355,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_times_impure_power_of_2",
-			expr: bin(&ast.CallExpr{ResolvedName: "foo"}, token2.Star, intLit(8)),
+			expr: bin(&ast.CallExpr{ResolvedName: "foo"}, token.Star, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for impure left, got %v", got)
@@ -364,13 +364,13 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_div_8",
-			expr: bin(intLit(100), token2.Slash, intLit(8)),
+			expr: bin(intLit(100), token.Slash, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				bin, ok := got.(*ast.BinaryExpr)
 				if !ok {
 					t.Fatalf("got %T, want BinaryExpr", got)
 				}
-				if bin.Operator.Kind != token2.GreaterGreater {
+				if bin.Operator.Kind != token.GreaterGreater {
 					t.Errorf("expected >> operator, got %v", bin.Operator.Kind)
 				}
 				r, ok := bin.Right.(*ast.IntegerLiteral)
@@ -381,7 +381,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_div_signed_skip",
-			expr: bin(id("x"), token2.Slash, intLit(8)),
+			expr: bin(id("x"), token.Slash, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for signed variable, got %v", got)
@@ -390,7 +390,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_div_non_power_of_2",
-			expr: bin(intLit(100), token2.Slash, intLit(6)),
+			expr: bin(intLit(100), token.Slash, intLit(6)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for non-power-of-2, got %v", got)
@@ -399,13 +399,13 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_mod_8",
-			expr: bin(intLit(100), token2.Modulo, intLit(8)),
+			expr: bin(intLit(100), token.Modulo, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				bin, ok := got.(*ast.BinaryExpr)
 				if !ok {
 					t.Fatalf("got %T, want BinaryExpr", got)
 				}
-				if bin.Operator.Kind != token2.Ampersand {
+				if bin.Operator.Kind != token.Ampersand {
 					t.Errorf("expected & operator, got %v", bin.Operator.Kind)
 				}
 				r, ok := bin.Right.(*ast.IntegerLiteral)
@@ -416,7 +416,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_mod_signed_skip",
-			expr: bin(id("x"), token2.Modulo, intLit(8)),
+			expr: bin(id("x"), token.Modulo, intLit(8)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for signed variable, got %v", got)
@@ -425,7 +425,7 @@ func TestSimplifyArithmetic(t *testing.T) {
 		},
 		{
 			name: "x_mod_non_power_of_2",
-			expr: bin(intLit(100), token2.Modulo, intLit(6)),
+			expr: bin(intLit(100), token.Modulo, intLit(6)),
 			check: func(t *testing.T, got ast.Expr) {
 				if got != nil {
 					t.Errorf("expected nil for non-power-of-2, got %v", got)
@@ -454,7 +454,7 @@ func TestSimplifyBoolean(t *testing.T) {
 	}{
 		{
 			name: "true_and_x",
-			expr: bin(boolLit(true), token2.LogicalAnd, id("x")),
+			expr: bin(boolLit(true), token.LogicalAnd, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -464,7 +464,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "false_and_x",
-			expr: bin(boolLit(false), token2.LogicalAnd, id("x")),
+			expr: bin(boolLit(false), token.LogicalAnd, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				b, ok := got.(*ast.BooleanLiteral)
 				if !ok || b.Value {
@@ -474,7 +474,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "x_and_true",
-			expr: bin(id("x"), token2.LogicalAnd, boolLit(true)),
+			expr: bin(id("x"), token.LogicalAnd, boolLit(true)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -484,7 +484,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "false_or_x",
-			expr: bin(boolLit(false), token2.LogicalOr, id("x")),
+			expr: bin(boolLit(false), token.LogicalOr, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -494,7 +494,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "true_or_x",
-			expr: bin(boolLit(true), token2.LogicalOr, id("x")),
+			expr: bin(boolLit(true), token.LogicalOr, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				b, ok := got.(*ast.BooleanLiteral)
 				if !ok || !b.Value {
@@ -504,7 +504,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "x_or_false",
-			expr: bin(id("x"), token2.LogicalOr, boolLit(false)),
+			expr: bin(id("x"), token.LogicalOr, boolLit(false)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -514,7 +514,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "x_eq_x",
-			expr: bin(intLit(5), token2.EqualEqual, intLit(5)),
+			expr: bin(intLit(5), token.EqualEqual, intLit(5)),
 			check: func(t *testing.T, got ast.Expr) {
 				b, ok := got.(*ast.BooleanLiteral)
 				if !ok || !b.Value {
@@ -524,7 +524,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "x_lt_x",
-			expr: bin(id("x"), token2.Less, id("x")),
+			expr: bin(id("x"), token.Less, id("x")),
 			check: func(t *testing.T, got ast.Expr) {
 				b, ok := got.(*ast.BooleanLiteral)
 				if !ok || b.Value {
@@ -534,7 +534,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "x_le_x",
-			expr: bin(intLit(3), token2.LessEqual, intLit(3)),
+			expr: bin(intLit(3), token.LessEqual, intLit(3)),
 			check: func(t *testing.T, got ast.Expr) {
 				b, ok := got.(*ast.BooleanLiteral)
 				if !ok || !b.Value {
@@ -544,7 +544,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "x_eq_true",
-			expr: bin(id("x"), token2.EqualEqual, boolLit(true)),
+			expr: bin(id("x"), token.EqualEqual, boolLit(true)),
 			check: func(t *testing.T, got ast.Expr) {
 				id, ok := got.(*ast.Identifier)
 				if !ok || id.Value != "x" {
@@ -554,7 +554,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "float_eq_float_skipped",
-			expr: bin(floatLit(1.0), token2.EqualEqual, floatLit(1.0)),
+			expr: bin(floatLit(1.0), token.EqualEqual, floatLit(1.0)),
 			check: func(t *testing.T, got ast.Expr) {
 				// NaN != NaN, so float x == x must NOT optimize
 				if got != nil {
@@ -564,7 +564,7 @@ func TestSimplifyBoolean(t *testing.T) {
 		},
 		{
 			name: "int_eq_int_allowed",
-			expr: bin(intLit(5), token2.EqualEqual, intLit(5)),
+			expr: bin(intLit(5), token.EqualEqual, intLit(5)),
 			check: func(t *testing.T, got ast.Expr) {
 				b, ok := got.(*ast.BooleanLiteral)
 				if !ok || !b.Value {
@@ -588,8 +588,8 @@ func TestSimplifyBoolean(t *testing.T) {
 
 func TestReassociateBinary(t *testing.T) {
 	// (x + 1) + 2 → x + 3
-	inner := bin(id("x"), token2.Plus, intLit(1))
-	outer := bin(inner, token2.Plus, intLit(2))
+	inner := bin(id("x"), token.Plus, intLit(1))
+	outer := bin(inner, token.Plus, intLit(2))
 
 	got := reassociateBinary(outer)
 	if got == nil {
@@ -604,7 +604,7 @@ func TestReassociateBinary(t *testing.T) {
 	if !ok || left.Value != "x" {
 		t.Errorf("expected left 'x', got %v", binExpr.Left)
 	}
-	if binExpr.Operator.Kind != token2.Plus {
+	if binExpr.Operator.Kind != token.Plus {
 		t.Errorf("expected +, got %v", binExpr.Operator.Kind)
 	}
 	right, ok := binExpr.Right.(*ast.IntegerLiteral)
@@ -613,8 +613,8 @@ func TestReassociateBinary(t *testing.T) {
 	}
 
 	// (x * 2) * 3 → x * 6
-	inner2 := bin(id("x"), token2.Star, intLit(2))
-	outer2 := bin(inner2, token2.Star, intLit(3))
+	inner2 := bin(id("x"), token.Star, intLit(2))
+	outer2 := bin(inner2, token.Star, intLit(3))
 
 	got2 := reassociateBinary(outer2)
 	if got2 == nil {
@@ -632,7 +632,7 @@ func TestReassociateBinary(t *testing.T) {
 
 func TestCanonicalizeBinary(t *testing.T) {
 	// 1 + x → x + 1 (constant moved to right)
-	expr := bin(intLit(1), token2.Plus, id("x"))
+	expr := bin(intLit(1), token.Plus, id("x"))
 	got := canonicalizeBinary(expr)
 	if got != expr {
 		t.Fatal("expected same pointer back")
@@ -933,7 +933,7 @@ func TestIsPure(t *testing.T) {
 	if !isPure(id("x")) {
 		t.Error("identifier should be pure")
 	}
-	if !isPure(bin(intLit(1), token2.Plus, intLit(2))) {
+	if !isPure(bin(intLit(1), token.Plus, intLit(2))) {
 		t.Error("pure binary expr should be pure")
 	}
 	if isPure(&ast.CallExpr{ResolvedName: "foo"}) {
@@ -946,8 +946,8 @@ func TestIsPure(t *testing.T) {
 func TestOptimizeFullProgram(t *testing.T) {
 	program := &ast.Program{
 		Statements: []ast.Stmt{
-			&ast.ExpressionStmt{Expression: bin(intLit(1), token2.Plus, intLit(2))},
-			&ast.ReturnStmt{Value: bin(intLit(3), token2.Minus, intLit(1))},
+			&ast.ExpressionStmt{Expression: bin(intLit(1), token.Plus, intLit(2))},
+			&ast.ReturnStmt{Value: bin(intLit(3), token.Minus, intLit(1))},
 		},
 	}
 	Optimize(program)

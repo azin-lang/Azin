@@ -2,38 +2,38 @@ package optimize
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
-func foldInteger(left *ast.IntegerLiteral, op token2.Token, right *ast.IntegerLiteral) ast.Expr {
+func foldInteger(left *ast.IntegerLiteral, op token.Token, right *ast.IntegerLiteral) ast.Expr {
 	switch op.Kind {
-	case token2.Plus:
+	case token.Plus:
 		return intLit(left.Value + right.Value)
-	case token2.Minus:
+	case token.Minus:
 		return intLit(left.Value - right.Value)
-	case token2.Star:
+	case token.Star:
 		return intLit(left.Value * right.Value)
-	case token2.Slash:
+	case token.Slash:
 		if right.Value == 0 {
 			return nil
 		}
 		return intLit(left.Value / right.Value)
-	case token2.Modulo:
+	case token.Modulo:
 		if right.Value == 0 {
 			return nil
 		}
 		return intLit(left.Value % right.Value)
-	case token2.EqualEqual:
+	case token.EqualEqual:
 		return boolLit(left.Value == right.Value)
-	case token2.BangEqual:
+	case token.BangEqual:
 		return boolLit(left.Value != right.Value)
-	case token2.Less:
+	case token.Less:
 		return boolLit(left.Value < right.Value)
-	case token2.LessEqual:
+	case token.LessEqual:
 		return boolLit(left.Value <= right.Value)
-	case token2.Greater:
+	case token.Greater:
 		return boolLit(left.Value > right.Value)
-	case token2.GreaterEqual:
+	case token.GreaterEqual:
 		return boolLit(left.Value >= right.Value)
 	default:
 		return nil

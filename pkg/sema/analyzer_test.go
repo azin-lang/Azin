@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"github.com/azin-lang/Azin/pkg/ast"
-	diagnostics2 "github.com/azin-lang/Azin/pkg/diagnostics"
+	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/lexer"
 	"github.com/azin-lang/Azin/pkg/parser"
-	sema "github.com/azin-lang/Azin/pkg/sema"
+	"github.com/azin-lang/Azin/pkg/sema"
 	"github.com/azin-lang/Azin/pkg/source"
 )
 
-func analyzeProgram(t *testing.T, input string) (*ast.Program, *diagnostics2.Engine) {
+func analyzeProgram(t *testing.T, input string) (*ast.Program, *diagnostics.Engine) {
 	t.Helper()
 	file := source.New("test.az", []byte(input))
-	diag := diagnostics2.New(file)
+	diag := diagnostics.New(file)
 	tokens := lexer.New(file, diag).Tokenize()
 	program, err := parser.Parse(string(file.Slice(0, file.Len())), tokens, diag)
 	if err != nil {
@@ -38,7 +38,7 @@ func validProgram(t *testing.T, input string) {
 	}
 }
 
-func mustHaveError(t *testing.T, input string) *diagnostics2.Engine {
+func mustHaveError(t *testing.T, input string) *diagnostics.Engine {
 	t.Helper()
 	_, diag := analyzeProgram(t, input)
 	if !diag.HasErrors() {
@@ -245,7 +245,7 @@ func mustHaveWarning(t *testing.T, input, msg string) {
 	t.Helper()
 	_, diag := analyzeProgram(t, input)
 	for _, d := range diag.Diagnostics() {
-		if d.Kind == diagnostics2.Warning && strings.Contains(d.Message, msg) {
+		if d.Kind == diagnostics.Warning && strings.Contains(d.Message, msg) {
 			return
 		}
 	}
@@ -256,7 +256,7 @@ func mustNotHaveWarning(t *testing.T, input string) {
 	t.Helper()
 	_, diag := analyzeProgram(t, input)
 	for _, d := range diag.Diagnostics() {
-		if d.Kind == diagnostics2.Warning {
+		if d.Kind == diagnostics.Warning {
 			t.Errorf("unexpected warning: %s", d.Message)
 		}
 	}

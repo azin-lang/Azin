@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	diagnostics "github.com/azin-lang/Azin/pkg/diagnostics"
+	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/source"
 	"github.com/azin-lang/Azin/pkg/token"
 )

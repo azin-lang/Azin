@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // nextToken scans and returns the next token from the source input stream.

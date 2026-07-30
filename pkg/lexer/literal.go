@@ -4,7 +4,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // lexNumber processes and returns a token for integer, floating-point, hexadecimal, or binary number literals.

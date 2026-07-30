@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/azin-lang/Azin/pkg/ast"
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 func tok(kind token.Kind, offset, length uint32) token.Token {
