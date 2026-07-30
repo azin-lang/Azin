@@ -3,9 +3,18 @@ package binary
 // Align calculates the next offset that satisfies the given alignment boundary.
 // If the alignment is 1 or less, it returns the offset unchanged.
 func Align(offset, alignment uint64) uint64 {
-	if alignment <= 1 {
+	if alignment == 0 {
+		panic("alignment cannot be zero")
+	}
+
+	if alignment == 1 {
 		return offset
 	}
+
+	if alignment&(alignment-1) != 0 {
+		panic("alignment must be a power of two")
+	}
+
 	return (offset + alignment - 1) &^ (alignment - 1)
 }
 
