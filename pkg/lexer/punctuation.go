@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // lexPunctuation maps individual punctuation marks to their respective token kinds and returns the corresponding token.

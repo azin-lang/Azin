@@ -1,4 +1,3 @@
-// ===== FILE: internal/binary/emitter.go =====
 package binary
 
 import (

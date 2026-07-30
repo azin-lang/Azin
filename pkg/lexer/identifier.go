@@ -4,7 +4,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // lexIdentifier consumes a sequence of identifier continuation characters and resolves it to a keyword or identifier token.

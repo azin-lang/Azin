@@ -3,9 +3,9 @@ package lexer_test
 import (
 	"testing"
 
-	diagnostics "github.com/azin-lang/Azin/pkg/diagnostics"
+	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/lexer"
-	source "github.com/azin-lang/Azin/pkg/source"
+	"github.com/azin-lang/Azin/pkg/source"
 )
 
 func FuzzLexer(f *testing.F) {

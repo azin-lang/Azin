@@ -2,7 +2,7 @@ package parser
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
-	token "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 type ErrorReporter interface {

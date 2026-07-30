@@ -10,21 +10,21 @@ import (
 	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/lexer"
 	"github.com/azin-lang/Azin/pkg/source"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
-func lex(input string) ([]token2.Token, *diagnostics.Engine) {
+func lex(input string) ([]token.Token, *diagnostics.Engine) {
 	file := source.New("test.az", []byte(input))
 	diag := diagnostics.New(file)
 	tokens := lexer.New(file, diag).Tokenize()
 	return tokens, diag
 }
 
-func kindString(tok token2.Token) string {
+func kindString(tok token.Token) string {
 	return tok.Kind.String()
 }
 
-func joinKinds(tokens []token2.Token) string {
+func joinKinds(tokens []token.Token) string {
 	kinds := make([]string, 0, len(tokens))
 	for _, t := range tokens {
 		kinds = append(kinds, t.Kind.String())
@@ -58,7 +58,7 @@ func TestLexerIdentifiers(t *testing.T) {
 
 	idents := 0
 	for _, tok := range tokens {
-		if tok.Kind == token2.Identifier {
+		if tok.Kind == token.Identifier {
 			idents++
 		}
 	}
@@ -85,7 +85,7 @@ func TestLexerIntegers(t *testing.T) {
 			if diag.HasErrors() {
 				t.Fatalf("unexpected errors: %v", diag.Err())
 			}
-			if len(tokens) < 1 || tokens[0].Kind != token2.IntegerLiteral {
+			if len(tokens) < 1 || tokens[0].Kind != token.IntegerLiteral {
 				t.Errorf("expected IntegerLiteral for %s, got %s", tt.input, tokens[0].Kind)
 			}
 		})
@@ -108,7 +108,7 @@ func TestLexerFloats(t *testing.T) {
 			if diag.HasErrors() {
 				t.Fatalf("unexpected errors: %v", diag.Err())
 			}
-			if len(tokens) < 1 || tokens[0].Kind != token2.FloatLiteral {
+			if len(tokens) < 1 || tokens[0].Kind != token.FloatLiteral {
 				t.Errorf("expected FloatLiteral for %s, got %s", tt.input, tokens[0].Kind)
 			}
 		})
@@ -134,7 +134,7 @@ func TestLexerStrings(t *testing.T) {
 			if diag.HasErrors() {
 				t.Fatalf("unexpected errors: %v", diag.Err())
 			}
-			if len(tokens) < 1 || tokens[0].Kind != token2.StringLiteral {
+			if len(tokens) < 1 || tokens[0].Kind != token.StringLiteral {
 				t.Errorf("expected StringLiteral for %s, got %s", tt.input, tokens[0].Kind)
 			}
 		})
@@ -159,7 +159,7 @@ func TestLexerChars(t *testing.T) {
 			if diag.HasErrors() {
 				t.Fatalf("unexpected errors: %v", diag.Err())
 			}
-			if len(tokens) < 1 || tokens[0].Kind != token2.CharacterLiteral {
+			if len(tokens) < 1 || tokens[0].Kind != token.CharacterLiteral {
 				t.Errorf("expected CharacterLiteral for %s, got %s", tt.input, tokens[0].Kind)
 			}
 		})
@@ -253,7 +253,7 @@ func TestLexerLineComment(t *testing.T) {
 	// Should have newline, integer_literal, eof
 	hasInt := false
 	for _, tok := range tokens {
-		if tok.Kind == token2.IntegerLiteral {
+		if tok.Kind == token.IntegerLiteral {
 			hasInt = true
 			break
 		}
@@ -273,7 +273,7 @@ func TestLexerBlockComment(t *testing.T) {
 
 	hasInt := false
 	for _, tok := range tokens {
-		if tok.Kind == token2.IntegerLiteral {
+		if tok.Kind == token.IntegerLiteral {
 			hasInt = true
 			break
 		}
@@ -293,7 +293,7 @@ func TestLexerNestedBlockComment(t *testing.T) {
 
 	hasInt := false
 	for _, tok := range tokens {
-		if tok.Kind == token2.IntegerLiteral {
+		if tok.Kind == token.IntegerLiteral {
 			hasInt = true
 			break
 		}
@@ -310,7 +310,7 @@ func TestLexerUnterminatedString(t *testing.T) {
 	if !diag.HasErrors() {
 		t.Error("expected error for unterminated string")
 	}
-	if len(tokens) < 1 || tokens[0].Kind != token2.StringLiteral {
+	if len(tokens) < 1 || tokens[0].Kind != token.StringLiteral {
 		t.Errorf("expected StringLiteral token, got %s", kindString(tokens[0]))
 	}
 }
@@ -322,7 +322,7 @@ func TestLexerEmptyChar(t *testing.T) {
 	if !diag.HasErrors() {
 		t.Error("expected error for empty char literal")
 	}
-	if len(tokens) < 1 || tokens[0].Kind != token2.CharacterLiteral {
+	if len(tokens) < 1 || tokens[0].Kind != token.CharacterLiteral {
 		t.Errorf("expected CharacterLiteral token, got %s", kindString(tokens[0]))
 	}
 }
@@ -337,7 +337,7 @@ func TestLexerNewlines(t *testing.T) {
 
 	newlineCount := 0
 	for _, tok := range tokens {
-		if tok.Kind == token2.Newline {
+		if tok.Kind == token.Newline {
 			newlineCount++
 		}
 	}
@@ -355,9 +355,9 @@ func TestLexerCRLF(t *testing.T) {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
 
-	if len(tokens) < 3 || tokens[0].Kind != token2.Identifier ||
-		tokens[1].Kind != token2.Newline ||
-		tokens[2].Kind != token2.Identifier {
+	if len(tokens) < 3 || tokens[0].Kind != token.Identifier ||
+		tokens[1].Kind != token.Newline ||
+		tokens[2].Kind != token.Identifier {
 		t.Errorf("unexpected tokens for CRLF: %s", joinKinds(tokens))
 	}
 }
@@ -379,7 +379,7 @@ func TestLexerInvalidEscapeString(t *testing.T) {
 	if !diag.HasErrors() {
 		t.Error("expected error for invalid escape in string")
 	}
-	if len(tokens) < 1 || tokens[0].Kind != token2.StringLiteral {
+	if len(tokens) < 1 || tokens[0].Kind != token.StringLiteral {
 		t.Errorf("expected StringLiteral token, got %s", kindString(tokens[0]))
 	}
 }
@@ -391,7 +391,7 @@ func TestLexerUnknownChar(t *testing.T) {
 	if !diag.HasErrors() {
 		t.Error("expected error for unknown character")
 	}
-	if len(tokens) < 2 || tokens[0].Kind != token2.Unknown {
+	if len(tokens) < 2 || tokens[0].Kind != token.Unknown {
 		t.Errorf("expected Unknown token, got %s", kindString(tokens[0]))
 	}
 }
@@ -404,19 +404,19 @@ func TestLexerMultipleTokens(t *testing.T) {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
 
-	expectedKinds := []token2.Kind{
-		token2.KwFn, token2.Identifier,
-		token2.LeftParen, token2.Identifier, token2.Colon, token2.KwInt,
-		token2.Comma, token2.Identifier, token2.Colon, token2.KwInt,
-		token2.RightParen, token2.Colon, token2.KwInt, token2.KwDo,
-		token2.Newline,
-		token2.KwReturn, token2.Identifier, token2.Plus, token2.Identifier,
-		token2.Semicolon, token2.Newline,
-		token2.KwEnd,
-		token2.EOF,
+	expectedKinds := []token.Kind{
+		token.KwFn, token.Identifier,
+		token.LeftParen, token.Identifier, token.Colon, token.KwInt,
+		token.Comma, token.Identifier, token.Colon, token.KwInt,
+		token.RightParen, token.Colon, token.KwInt, token.KwDo,
+		token.Newline,
+		token.KwReturn, token.Identifier, token.Plus, token.Identifier,
+		token.Semicolon, token.Newline,
+		token.KwEnd,
+		token.EOF,
 	}
 
-	got := make([]token2.Kind, 0, len(tokens))
+	got := make([]token.Kind, 0, len(tokens))
 	for _, tok := range tokens {
 		got = append(got, tok.Kind)
 	}

@@ -5,12 +5,12 @@ import (
 	"sort"
 
 	"github.com/azin-lang/Azin/pkg/ast"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 func reassociateBinary(n *ast.BinaryExpr) ast.Expr {
 	switch n.Operator.Kind {
-	case token2.Plus, token2.Star:
+	case token.Plus, token.Star:
 	default:
 		return nil
 	}
@@ -60,12 +60,12 @@ func reassociate(root *ast.BinaryExpr) ast.Expr {
 
 	//nolint:exhaustive
 	switch root.Operator.Kind {
-	case token2.Plus:
+	case token.Plus:
 		if constant != nil && !isZero(constant) {
 			terms = append(terms, constant)
 		}
 
-	case token2.Star:
+	case token.Star:
 		if constant != nil {
 			if isZero(constant) {
 				return constant
@@ -97,7 +97,7 @@ func reassociate(root *ast.BinaryExpr) ast.Expr {
 	return rebuilt
 }
 
-func foldConstant(op token2.Token, left, right ast.Expr) ast.Expr {
+func foldConstant(op token.Token, left, right ast.Expr) ast.Expr {
 	if folded := foldBinaryExpr(left, op, right); folded != nil {
 		return folded
 	}
@@ -109,7 +109,7 @@ func foldConstant(op token2.Token, left, right ast.Expr) ast.Expr {
 	}
 }
 
-func buildAssociativeTree(op token2.Token, terms []ast.Expr) ast.Expr {
+func buildAssociativeTree(op token.Token, terms []ast.Expr) ast.Expr {
 	switch len(terms) {
 	case 0:
 		return nil
@@ -182,10 +182,10 @@ func canonicalizeBinary(n *ast.BinaryExpr) ast.Expr {
 	//nolint:exhaustive
 	switch n.Operator.Kind {
 
-	case token2.Plus,
-		token2.Star,
-		token2.EqualEqual,
-		token2.BangEqual:
+	case token.Plus,
+		token.Star,
+		token.EqualEqual,
+		token.BangEqual:
 
 		if isConstant(n.Left) && !isConstant(n.Right) {
 			n.Left, n.Right = n.Right, n.Left

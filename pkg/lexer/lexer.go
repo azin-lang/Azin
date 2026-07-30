@@ -6,7 +6,7 @@ import (
 
 	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/source"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 // Lexer performs lexical analysis on a source file, transforming raw text
@@ -29,14 +29,14 @@ func New(file *source.File, diag *diagnostics.Engine) *Lexer {
 }
 
 // Tokenize eagerly scans the entire file and returns a slice of all parsed tokens.
-func (l *Lexer) Tokenize() []token2.Token {
+func (l *Lexer) Tokenize() []token.Token {
 	return slices.Collect(l.Tokens())
 }
 
 // Tokens returns an iterator over the tokens in the source file.
 // It yields tokens lazily until the end of the file is reached.
-func (l *Lexer) Tokens() iter.Seq[token2.Token] {
-	return func(yield func(token2.Token) bool) {
+func (l *Lexer) Tokens() iter.Seq[token.Token] {
+	return func(yield func(token.Token) bool) {
 		for {
 			tok := l.nextToken()
 
@@ -44,7 +44,7 @@ func (l *Lexer) Tokens() iter.Seq[token2.Token] {
 				return
 			}
 
-			if tok.Kind == token2.EOF {
+			if tok.Kind == token.EOF {
 				return
 			}
 		}

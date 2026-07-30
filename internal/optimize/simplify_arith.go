@@ -2,7 +2,7 @@ package optimize
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
 func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
@@ -10,15 +10,15 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 	//nolint:exhaustive
 	switch n.Operator.Kind {
 
-	case token2.Plus, token2.Minus:
+	case token.Plus, token.Minus:
 		if isZero(n.Right) {
 			return n.Left
 		}
-		if n.Operator.Kind == token2.Minus && leftPure && exprEqual(n.Left, n.Right) {
+		if n.Operator.Kind == token.Minus && leftPure && exprEqual(n.Left, n.Right) {
 			return intLit(0)
 		}
 
-	case token2.Star:
+	case token.Star:
 		// x * 1 == x
 		if isOne(n.Right) {
 			return n.Left
@@ -34,13 +34,13 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			if k, ok := isPowerOfTwo(n.Right); ok {
 				return &ast.BinaryExpr{
 					Left:     n.Left,
-					Operator: token2.Token{Kind: token2.LessLess},
+					Operator: token.Token{Kind: token.LessLess},
 					Right:    intLit(k),
 				}
 			}
 		}
 
-	case token2.Slash:
+	case token.Slash:
 		// x / 1
 		if isOne(n.Right) {
 			return n.Left
@@ -51,7 +51,7 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			if k, ok := isPowerOfTwo(n.Right); ok {
 				return &ast.BinaryExpr{
 					Left:     n.Left,
-					Operator: token2.Token{Kind: token2.GreaterGreater},
+					Operator: token.Token{Kind: token.GreaterGreater},
 					Right:    intLit(k),
 				}
 			}
@@ -62,7 +62,7 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			return intLit(1)
 		}
 
-	case token2.Modulo:
+	case token.Modulo:
 		// x % 1
 		if isOne(n.Right) {
 			return intLit(0)
@@ -73,7 +73,7 @@ func simplifyArithmetic(n *ast.BinaryExpr) ast.Expr {
 			if k, ok := isPowerOfTwo(n.Right); ok {
 				return &ast.BinaryExpr{
 					Left:     n.Left,
-					Operator: token2.Token{Kind: token2.Ampersand},
+					Operator: token.Token{Kind: token.Ampersand},
 					Right:    intLit((1 << k) - 1),
 				}
 			}

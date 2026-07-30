@@ -2,18 +2,18 @@ package optimize
 
 import (
 	"github.com/azin-lang/Azin/pkg/ast"
-	token2 "github.com/azin-lang/Azin/pkg/token"
+	"github.com/azin-lang/Azin/pkg/token"
 )
 
-func foldBoolean(left *ast.BooleanLiteral, op token2.Token, right *ast.BooleanLiteral) ast.Expr {
+func foldBoolean(left *ast.BooleanLiteral, op token.Token, right *ast.BooleanLiteral) ast.Expr {
 	switch op.Kind {
-	case token2.LogicalAnd:
+	case token.LogicalAnd:
 		return boolLit(left.Value && right.Value)
-	case token2.LogicalOr:
+	case token.LogicalOr:
 		return boolLit(left.Value || right.Value)
-	case token2.EqualEqual:
+	case token.EqualEqual:
 		return boolLit(left.Value == right.Value)
-	case token2.BangEqual:
+	case token.BangEqual:
 		return boolLit(left.Value != right.Value)
 	default:
 		return nil

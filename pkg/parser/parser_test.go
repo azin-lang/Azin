@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	ast2 "github.com/azin-lang/Azin/pkg/ast"
+	"github.com/azin-lang/Azin/pkg/ast"
 	"github.com/azin-lang/Azin/pkg/diagnostics"
 	"github.com/azin-lang/Azin/pkg/lexer"
 	"github.com/azin-lang/Azin/pkg/parser"
@@ -18,7 +18,7 @@ import (
 
 var update = flag.Bool("update", false, "update golden files")
 
-func parseProgram(t *testing.T, input string) (*ast2.Program, *diagnostics.Engine) {
+func parseProgram(t *testing.T, input string) (*ast.Program, *diagnostics.Engine) {
 	t.Helper()
 	file := source.New("test.az", []byte(input))
 	diag := diagnostics.New(file)
@@ -30,7 +30,7 @@ func parseProgram(t *testing.T, input string) (*ast2.Program, *diagnostics.Engin
 	return program, diag
 }
 
-func captureAST(program *ast2.Program) string {
+func captureAST(program *ast.Program) string {
 	old := os.Stdout
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -38,7 +38,7 @@ func captureAST(program *ast2.Program) string {
 	}
 	os.Stdout = w
 
-	ast2.PrintDebugTree(program)
+	ast.PrintDebugTree(program)
 
 	_ = w.Close()
 	out, _ := io.ReadAll(r)
@@ -54,7 +54,7 @@ func TestParserVarDecl(t *testing.T) {
 	if len(program.Statements) != 1 {
 		t.Fatalf("expected 1 statement, got %d", len(program.Statements))
 	}
-	if _, ok := program.Statements[0].(*ast2.VarStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.VarStmt); !ok {
 		t.Fatalf("expected VarStmt, got %T", program.Statements[0])
 	}
 }
@@ -74,7 +74,7 @@ func TestParserVarMut(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	v := program.Statements[0].(*ast2.VarStmt)
+	v := program.Statements[0].(*ast.VarStmt)
 	if !v.Mutable {
 		t.Error("expected mutable variable")
 	}
@@ -95,7 +95,7 @@ func TestParserFnDecl(t *testing.T) {
 	if len(program.Statements) != 1 {
 		t.Fatalf("expected 1 statement, got %d", len(program.Statements))
 	}
-	if _, ok := program.Statements[0].(*ast2.FuncStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.FuncStmt); !ok {
 		t.Fatalf("expected FuncStmt, got %T", program.Statements[0])
 	}
 }
@@ -105,7 +105,7 @@ func TestParserFnWithParams(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	fn := program.Statements[0].(*ast2.FuncStmt)
+	fn := program.Statements[0].(*ast.FuncStmt)
 	if len(fn.Params) != 2 {
 		t.Fatalf("expected 2 params, got %d", len(fn.Params))
 	}
@@ -119,7 +119,7 @@ func TestParserFnNoReturnType(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	fn := program.Statements[0].(*ast2.FuncStmt)
+	fn := program.Statements[0].(*ast.FuncStmt)
 	if fn.SynReturnType != nil {
 		t.Errorf("expected nil return type, got %v", fn.SynReturnType)
 	}
@@ -130,7 +130,7 @@ func TestParserIf(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	if _, ok := program.Statements[0].(*ast2.IfStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.IfStmt); !ok {
 		t.Fatalf("expected IfStmt, got %T", program.Statements[0])
 	}
 }
@@ -141,7 +141,7 @@ func TestParserIfElse(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	ifstmt := program.Statements[0].(*ast2.IfStmt)
+	ifstmt := program.Statements[0].(*ast.IfStmt)
 	if len(ifstmt.Else) == 0 {
 		t.Error("expected else branch to have statements")
 	}
@@ -152,7 +152,7 @@ func TestParserLoop(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	if _, ok := program.Statements[0].(*ast2.LoopStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.LoopStmt); !ok {
 		t.Fatalf("expected LoopStmt, got %T", program.Statements[0])
 	}
 }
@@ -163,7 +163,7 @@ func TestParserStruct(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	s := program.Statements[0].(*ast2.StructStmt)
+	s := program.Statements[0].(*ast.StructStmt)
 	if s.Name.Value != "Point" {
 		t.Errorf("struct name = %q, want %q", s.Name.Value, "Point")
 	}
@@ -181,7 +181,7 @@ func TestParserStructWithMutable(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	s := program.Statements[0].(*ast2.StructStmt)
+	s := program.Statements[0].(*ast.StructStmt)
 	if !s.Fields[0].Mutable {
 		t.Error("expected first field to be mutable")
 	}
@@ -195,7 +195,7 @@ func TestParserImportC(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	if _, ok := program.Statements[0].(*ast2.ImportCStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.ImportCStmt); !ok {
 		t.Fatalf("expected ImportCStmt, got %T", program.Statements[0])
 	}
 }
@@ -205,7 +205,7 @@ func TestParserAssignment(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	if _, ok := program.Statements[0].(*ast2.AssignmentStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.AssignmentStmt); !ok {
 		t.Fatalf("expected AssignmentStmt, got %T", program.Statements[0])
 	}
 }
@@ -215,8 +215,8 @@ func TestParserMemberAssignment(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	a := program.Statements[0].(*ast2.AssignmentStmt)
-	if _, ok := a.Left.(*ast2.MemberExpr); !ok {
+	a := program.Statements[0].(*ast.AssignmentStmt)
+	if _, ok := a.Left.(*ast.MemberExpr); !ok {
 		t.Fatalf("expected MemberExpr on left, got %T", a.Left)
 	}
 }
@@ -226,7 +226,7 @@ func TestParserExpressionStmt(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	if _, ok := program.Statements[0].(*ast2.ExpressionStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.ExpressionStmt); !ok {
 		t.Fatalf("expected ExpressionStmt, got %T", program.Statements[0])
 	}
 }
@@ -237,8 +237,8 @@ func TestParserExpressionPrecedence(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	assign := program.Statements[0].(*ast2.AssignmentStmt)
-	bin, ok := assign.Value.(*ast2.BinaryExpr)
+	assign := program.Statements[0].(*ast.AssignmentStmt)
+	bin, ok := assign.Value.(*ast.BinaryExpr)
 	if !ok {
 		t.Fatalf("expected BinaryExpr for value, got %T", assign.Value)
 	}
@@ -246,7 +246,7 @@ func TestParserExpressionPrecedence(t *testing.T) {
 		t.Errorf("expected root operator +, got %s", bin.Operator.Kind.String())
 	}
 	// Right side should be (b * c)
-	if _, ok := bin.Right.(*ast2.BinaryExpr); !ok {
+	if _, ok := bin.Right.(*ast.BinaryExpr); !ok {
 		t.Fatalf("expected BinaryExpr on right side")
 	}
 }
@@ -266,7 +266,7 @@ func TestParserStringLiteral(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	if _, ok := program.Statements[0].(*ast2.VarStmt); !ok {
+	if _, ok := program.Statements[0].(*ast.VarStmt); !ok {
 		t.Fatalf("expected VarStmt, got %T", program.Statements[0])
 	}
 }
@@ -276,8 +276,8 @@ func TestParserCharLiteral(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	v := program.Statements[0].(*ast2.VarStmt)
-	if _, ok := v.Value.(*ast2.CharacterLiteral); !ok {
+	v := program.Statements[0].(*ast.VarStmt)
+	if _, ok := v.Value.(*ast.CharacterLiteral); !ok {
 		t.Fatalf("expected CharacterLiteral, got %T", v.Value)
 	}
 }
@@ -287,8 +287,8 @@ func TestParserHexLiteral(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	v := program.Statements[0].(*ast2.VarStmt)
-	if _, ok := v.Value.(*ast2.IntegerLiteral); !ok {
+	v := program.Statements[0].(*ast.VarStmt)
+	if _, ok := v.Value.(*ast.IntegerLiteral); !ok {
 		t.Fatalf("expected IntegerLiteral, got %T", v.Value)
 	}
 }
@@ -298,8 +298,8 @@ func TestParserBinaryLiteral(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	v := program.Statements[0].(*ast2.VarStmt)
-	if _, ok := v.Value.(*ast2.IntegerLiteral); !ok {
+	v := program.Statements[0].(*ast.VarStmt)
+	if _, ok := v.Value.(*ast.IntegerLiteral); !ok {
 		t.Fatalf("expected IntegerLiteral, got %T", v.Value)
 	}
 }
@@ -309,8 +309,8 @@ func TestParserFloatLiteral(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	v := program.Statements[0].(*ast2.VarStmt)
-	if _, ok := v.Value.(*ast2.FloatLiteral); !ok {
+	v := program.Statements[0].(*ast.VarStmt)
+	if _, ok := v.Value.(*ast.FloatLiteral); !ok {
 		t.Fatalf("expected FloatLiteral, got %T", v.Value)
 	}
 }
@@ -320,8 +320,8 @@ func TestParserCallExpr(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	expr := program.Statements[0].(*ast2.ExpressionStmt)
-	call, ok := expr.Expression.(*ast2.CallExpr)
+	expr := program.Statements[0].(*ast.ExpressionStmt)
+	call, ok := expr.Expression.(*ast.CallExpr)
 	if !ok {
 		t.Fatalf("expected CallExpr, got %T", expr.Expression)
 	}
@@ -335,8 +335,8 @@ func TestParserMemberExpr(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	expr := program.Statements[0].(*ast2.ExpressionStmt)
-	if _, ok := expr.Expression.(*ast2.MemberExpr); !ok {
+	expr := program.Statements[0].(*ast.ExpressionStmt)
+	if _, ok := expr.Expression.(*ast.MemberExpr); !ok {
 		t.Fatalf("expected MemberExpr, got %T", expr.Expression)
 	}
 }
@@ -371,7 +371,7 @@ func TestParserTrailingNewline(t *testing.T) {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
 	for _, stmt := range program.Statements {
-		if _, ok := stmt.(*ast2.BadStmt); ok {
+		if _, ok := stmt.(*ast.BadStmt); ok {
 			t.Error("found unexpected BadStmt from trailing newline")
 		}
 	}
@@ -393,8 +393,8 @@ func TestParserComparisonChaining(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	assign := program.Statements[0].(*ast2.AssignmentStmt)
-	bin, ok := assign.Value.(*ast2.BinaryExpr)
+	assign := program.Statements[0].(*ast.AssignmentStmt)
+	bin, ok := assign.Value.(*ast.BinaryExpr)
 	if !ok {
 		t.Fatalf("expected BinaryExpr, got %T", assign.Value)
 	}
@@ -409,11 +409,11 @@ func TestParserDefer(t *testing.T) {
 	if diag.HasErrors() {
 		t.Fatalf("unexpected errors: %v", diag.Err())
 	}
-	deferStmt, ok := program.Statements[0].(*ast2.DeferStmt)
+	deferStmt, ok := program.Statements[0].(*ast.DeferStmt)
 	if !ok {
 		t.Fatalf("expected DeferStmt, got %T", program.Statements[0])
 	}
-	if _, ok := deferStmt.Call.(*ast2.CallExpr); !ok {
+	if _, ok := deferStmt.Call.(*ast.CallExpr); !ok {
 		t.Fatalf("expected CallExpr in defer, got %T", deferStmt.Call)
 	}
 }
