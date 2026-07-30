@@ -2,9 +2,9 @@
 package source
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
-	"sort"
 	"unicode/utf8"
 
 	"github.com/azin-lang/Azin/pkg/token"
@@ -19,12 +19,19 @@ type File struct {
 
 // New returns a new File, parsing line offsets from the provided text.
 func New(name string, text []byte) *File {
-	lines := []uint32{0}
+	// Pre-allocate assuming an average line length of ~40 bytes
+	// to minimize slice reallocation overhead.
+	lines := make([]uint32, 0, len(text)/40+1)
+	lines = append(lines, 0)
 
-	for i, ch := range text {
-		if ch == '\n' {
-			lines = append(lines, uint32(i+1)) //nolint:gosec
+	offset := 0
+	for {
+		i := bytes.IndexByte(text[offset:], '\n')
+		if i == -1 {
+			break
 		}
+		offset += i + 1
+		lines = append(lines, uint32(offset)) //nolint:gosec
 	}
 
 	return &File{
@@ -34,6 +41,12 @@ func New(name string, text []byte) *File {
 	}
 }
 
+// Bytes returns the raw underlying byte slice for fast, zero-allocation access.
+// This allows the lexer to bypass getter methods in its hot path.
+func (f *File) Bytes() []byte {
+	return f.text
+}
+
 // Len returns the size of the file in bytes.
 func (f *File) Len() uint32 {
 	return uint32(len(f.text)) //nolint:gosec
@@ -41,12 +54,12 @@ func (f *File) Len() uint32 {
 
 // Empty reports whether the file contains no text.
 func (f *File) Empty() bool {
-	return f.Len() == 0
+	return len(f.text) == 0
 }
 
 // EOF reports whether the offset is at or beyond the end of the file.
 func (f *File) EOF(offset uint32) bool {
-	return offset >= f.Len()
+	return int(offset) >= len(f.text)
 }
 
 // Byte returns the character at the given offset.
@@ -68,14 +81,27 @@ func (f *File) Slice(start, end uint32) []byte {
 
 // Text returns the exact byte slice for a given token.
 func (f *File) Text(tok token.Token) []byte {
-	return f.Slice(tok.Position.Offset, tok.Position.Offset+tok.Length)
+	return f.text[tok.Position.Offset : tok.Position.Offset+tok.Length]
 }
 
 // LineColumn returns the 1-based line and column numbers for the offset.
 func (f *File) LineColumn(offset uint32) (line, column uint32) {
-	var i = max(0, sort.Search(len(f.lines), func(i int) bool {
-		return f.lines[i] > offset
-	})-1)
+	// Inline binary search to avoid the closure allocation and function
+	// call overhead of sort.Search.
+	low, high := 0, len(f.lines)
+	for low < high {
+		mid := int(uint(low+high) >> 1)
+		if f.lines[mid] > offset {
+			high = mid
+		} else {
+			low = mid + 1
+		}
+	}
+
+	i := low - 1
+	if i < 0 {
+		i = 0
+	}
 
 	line = uint32(i + 1) //nolint:gosec
 	column = offset - f.lines[i] + 1
@@ -89,7 +115,7 @@ func (f *File) LineCount() uint32 {
 
 // LineStart returns the byte offset for the beginning of a 1-based line.
 func (f *File) LineStart(line uint32) (uint32, bool) {
-	if line == 0 || line > uint32(len(f.lines)) { //nolint:gosec
+	if line == 0 || int(line) > len(f.lines) {
 		return 0, false
 	}
 
@@ -104,7 +130,7 @@ func (f *File) Line(line uint32) []byte {
 	}
 
 	var end uint32
-	if line == f.LineCount() {
+	if int(line) == len(f.lines) {
 		end = f.Len()
 	} else {
 		end = f.lines[line] // start of next line
