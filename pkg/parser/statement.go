@@ -15,7 +15,6 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 		stmt := p.parseStatement()
 
-		// Reached EOF while skipping trailing newlines
 		if stmt == nil && p.isAtEnd() {
 			break
 		}
@@ -24,7 +23,6 @@ func (p *Parser) ParseProgram() *ast.Program {
 			program.Statements = append(program.Statements, stmt)
 		}
 
-		// Only recover if we're genuinely stuck
 		if p.current == before {
 			p.synchronize()
 		}
@@ -173,11 +171,11 @@ func (p *Parser) parseStruct() ast.Stmt {
 	tok := p.advance()
 	name := p.parseIdentifier()
 	if name == nil {
-		return badStmt(tok) // Without a name, the struct is useless
+		return badStmt(tok)
 	}
 	p.expect(token.KwIs, "after struct name")
 
-	var fields []*ast.FieldDecl
+	fields := make([]*ast.FieldDecl, 0, 4)
 	for !p.isAtEnd() {
 		p.skipNewlines()
 		if p.check(token.KwEnd) {
@@ -188,7 +186,6 @@ func (p *Parser) parseStruct() ast.Stmt {
 		if field != nil {
 			fields = append(fields, field)
 		} else {
-			// If field parsing failed, sync to the next newline to try parsing the next field
 			p.synchronize()
 		}
 
@@ -212,7 +209,7 @@ func (p *Parser) parseEnum() ast.Stmt {
 	}
 	p.expect(token.KwIs, "after enum name")
 
-	var variants []*ast.Identifier
+	variants := make([]*ast.Identifier, 0, 4)
 	for !p.isAtEnd() {
 		p.skipNewlines()
 		if p.check(token.KwEnd) {
@@ -223,7 +220,6 @@ func (p *Parser) parseEnum() ast.Stmt {
 		if variant != nil {
 			variants = append(variants, variant)
 		} else {
-			// if variant parsing failed, sync to try parsing the next variant
 			p.synchronize()
 		}
 
@@ -265,6 +261,7 @@ func (p *Parser) parseFunc() ast.Stmt {
 
 	var params []*ast.FieldDecl
 	if p.match(token.LeftParen) {
+		params = make([]*ast.FieldDecl, 0, 4)
 		if !p.check(token.RightParen) {
 			for {
 				param := p.parseFieldDecl(false)
@@ -288,7 +285,6 @@ func (p *Parser) parseFunc() ast.Stmt {
 	body := p.parseBlock(token.KwEnd)
 	p.expect(token.KwEnd, "to close function")
 
-	// Return partial function node even if errors occurred (allows autocomplete to work inside)
 	return &ast.FuncStmt{Token: tok, Name: name, Params: params, SynReturnType: retType, Body: body}
 }
 
@@ -386,8 +382,7 @@ func (p *Parser) parsePrefix() ast.Expr {
 func (p *Parser) parseInfix(left ast.Expr, nextPrec int) ast.Expr {
 	switch {
 	case p.match(token.LeftParen):
-		var args []ast.Expr
-
+		args := make([]ast.Expr, 0, 4)
 		if !p.check(token.RightParen) {
 			for {
 				args = append(args, p.parseExpression(PrecLowest))
