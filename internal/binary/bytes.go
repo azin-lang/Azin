@@ -46,7 +46,7 @@ func (e *Emitter) RepeatU32(v uint32, count uint64) {
 
 	start := len(e.data)
 	size := int(count * 4)
-	e.Grow(uint64(size))
+	e.Grow(size)
 	e.data = e.data[:start+size]
 
 	buf := e.data[start:]
@@ -66,7 +66,7 @@ func (e *Emitter) RepeatU64(v uint64, count uint64) {
 
 	start := len(e.data)
 	size := int(count * 8)
-	e.Grow(uint64(size))
+	e.Grow(size)
 	e.data = e.data[:start+size]
 
 	buf := e.data[start:]
@@ -96,7 +96,7 @@ func (e *Emitter) RepeatBytes(data []byte, count uint64) {
 
 	start := len(e.data)
 	size := int(count) * len(data)
-	e.Grow(uint64(size))
+	e.Grow(size)
 	e.data = e.data[:start+size]
 
 	buf := e.data[start:]

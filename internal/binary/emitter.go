@@ -55,9 +55,9 @@ func (e *Emitter) Reset() {
 }
 
 // Grow ensures that at least 'n' more bytes can be written without triggering an allocation.
-func (e *Emitter) Grow(n uint64) {
-	if e.CapacityLeft() < int(n) {
-		e.data = slices.Grow(e.data, int(n))
+func (e *Emitter) Grow(n int) {
+	if e.CapacityLeft() < n {
+		e.data = slices.Grow(e.data, n)
 	}
 }
 
@@ -68,14 +68,17 @@ func (e *Emitter) Clone() []byte {
 
 // Truncate rolls back the emitter's length to the specified offset, discarding data written after it.
 func (e *Emitter) Truncate(offset uint64) {
-	e.data = e.data[:offset]
+	if offset > uint64(len(e.data)) {
+		panic("binary.Emitter: truncate beyond end of buffer")
+	}
+	e.data = e.data[:int(offset)]
 }
 
 // SetOffset manually adjusts the write cursor. If the target offset is greater than
 // the current length, it pads the gap with zeroes. If it's smaller, it truncates.
 func (e *Emitter) SetOffset(offset uint64) {
 	if offset <= uint64(e.Len()) {
-		e.data = e.data[:offset]
+		e.data = e.data[:int(offset)]
 		return
 	}
 	e.Pad(offset - uint64(e.Len()))
@@ -96,9 +99,10 @@ func (e *Emitter) CapacityLeft() int {
 	return cap(e.data) - len(e.data)
 }
 
-// ReserveCapacity forces the underlying slice to grow to accommodate 'n' total bytes.
 func (e *Emitter) ReserveCapacity(n int) {
-	e.data = slices.Grow(e.data, n)
+	if cap(e.data) < n {
+		e.data = slices.Grow(e.data, n-cap(e.data))
+	}
 }
 
 // Compact reallocates the buffer to exactly fit the data, freeing unused trailing capacity.
