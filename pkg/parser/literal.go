@@ -2,7 +2,6 @@ package parser
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/azin-lang/Azin/pkg/ast"
 )
@@ -14,12 +13,16 @@ func (p *Parser) parseIntegerLiteral() *ast.IntegerLiteral {
 	var value int64
 	var err error
 
-	switch {
-	case strings.HasPrefix(text, "0x"):
-		value, err = strconv.ParseInt(text[2:], 16, 64)
-	case strings.HasPrefix(text, "0b"):
-		value, err = strconv.ParseInt(text[2:], 2, 64)
-	default:
+	if len(text) >= 2 && text[0] == '0' {
+		switch text[1] {
+		case 'x', 'X':
+			value, err = strconv.ParseInt(text[2:], 16, 64)
+		case 'b', 'B':
+			value, err = strconv.ParseInt(text[2:], 2, 64)
+		default:
+			value, err = strconv.ParseInt(text, 10, 64)
+		}
+	} else {
 		value, err = strconv.ParseInt(text, 10, 64)
 	}
 
