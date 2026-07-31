@@ -27,6 +27,7 @@ install -D -m 0755 bin/azc %{buildroot}%{_bindir}/azc
 
 %check
 export CGO_ENABLED=0
+export AZC=$(pwd)/bin/azc
 go test ./...
 
 %files
