@@ -17,19 +17,13 @@ License:        MIT
 Group:          Development/Languages/Other
 URL:            https://azin-lang.org
 Source0:        %{name}-%{version}.tar.gz
-# Source1 generated via OBS `obs-service-go_modules` or `go mod vendor`
 Source1:        vendor.tar.gz
-
-# Explicitly list architectures to prevent OBS unexpanded macro exclusion
-ExclusiveArch:  x86_64 aarch64 %{arm} ppc64le s390x riscv64
 
 BuildRequires:  golang >= 1.22
 
 # Azin compiles source code by transpiling to C11 and invoking a native C compiler.
-# GCC or Clang is required at runtime to generate native binaries.
 Requires:       gcc
 Recommends:     clang
-Recommends:     glibc-devel
 
 %description
 Azin is a modern, high-performance systems programming language engineered for
@@ -45,7 +39,6 @@ Key features:
 %autosetup -n %{name}-%{version} -a 1
 
 %build
-# Disable cgo for static compiler binary, set trimpath for reproducible builds
 export CGO_ENABLED=0
 export GOFLAGS="-buildmode=pie -trimpath -mod=vendor"
 
@@ -58,7 +51,6 @@ go build \
 install -D -m 0755 bin/azc %{buildroot}%{_bindir}/azc
 
 %check
-# Run internal unit tests during build
 export CGO_ENABLED=0
 export GOFLAGS="-mod=vendor"
 go test ./...
@@ -70,4 +62,4 @@ go test ./...
 
 %changelog
 * Fri Jul 31 2026 Azin Packaging Team <packaging@azin-lang.org> - 0.2.2-1
-- Fix ExclusiveArch macro expansion issue on OBS for Fedora/RHEL targets
+- Initial RPM package spec for Open Build Service (OBS)
