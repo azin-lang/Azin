@@ -1,3 +1,5 @@
+%global debug_package %{nil}
+
 Name:           azin
 Version:        0.2.2
 Release:        1%{?dist}
