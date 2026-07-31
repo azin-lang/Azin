@@ -1,58 +1,32 @@
-#
-# spec file for package azin
-#
-# Copyright (c) 2026 Azin Contributors
-#
-# All modifications and additions to the file contributed by third parties
-# remain the property of their respective owners, unless otherwise agreed
-# upon. The license for this file, and modifications and additions to the
-# file, is the same license as for the pristine package itself (MIT).
-#
-
 Name:           azin
 Version:        0.2.2
 Release:        1%{?dist}
 Summary:        A modern, high-performance systems programming language compiler
+
 License:        MIT
-Group:          Development/Languages/Other
-URL:            https://azin-lang.org
-Source0:        %{name}-%{version}.tar.gz
-Source1:        vendor.tar.gz
+URL:            https://azin-lang.org/
+
+Source0:        https://github.com/azin-lang/Azin/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  golang >= 1.22
-
-# Azin compiles source code by transpiling to C11 and invoking a native C compiler.
 Requires:       gcc
 Recommends:     clang
 
 %description
-Azin is a modern, high-performance systems programming language engineered for
-structural clarity, low-level execution control, and human readability.
-
-Key features:
-- Explicit block scoping: Replaces traditional brace nesting ({}) with clean do / end blocks.
-- Static typing: Compiler-enforced type safety with no runtime type checks or garbage collection.
-- Minimalist punctuation: Eliminates unnecessary syntax where program structure is explicit.
-- Systems-first: Designed for direct native compilation via C11 transpilation.
+Azin is a modern, high-performance systems programming language compiler engineered for structural clarity, low-level execution control, and human readability.
 
 %prep
-%autosetup -n %{name}-%{version} -a 1
+%autosetup -n Azin-%{version}
 
 %build
 export CGO_ENABLED=0
-export GOFLAGS="-buildmode=pie -trimpath -mod=vendor"
-
-go build \
-    -ldflags="-s -w -X main.Version=%{version}" \
-    -o bin/azc \
-    ./cmd/azc
+go build -trimpath -ldflags="-s -w -X main.Version=%{version}" -o bin/azc ./cmd/azc
 
 %install
 install -D -m 0755 bin/azc %{buildroot}%{_bindir}/azc
 
 %check
 export CGO_ENABLED=0
-export GOFLAGS="-mod=vendor"
 go test ./...
 
 %files
@@ -61,5 +35,5 @@ go test ./...
 %{_bindir}/azc
 
 %changelog
-* Fri Jul 31 2026 Azin Packaging Team <packaging@azin-lang.org> - 0.2.2-1
-- Initial RPM package spec for Open Build Service (OBS)
+* Fri Jul 31 2026 Azin Contributors <https://github.com/azin-lang/Azin> - 0.2.2-1
+- Initial release for Copr
