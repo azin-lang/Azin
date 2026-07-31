@@ -60,7 +60,8 @@ func IsAssignable(from, to *TypeInfo) bool {
 	}
 
 	if from.Kind == Error || to.Kind == Error {
-		return false
+		// Error types are assignable to any type to prevent cascading errors
+		return true
 	}
 
 	if from.IsPrimitive() {

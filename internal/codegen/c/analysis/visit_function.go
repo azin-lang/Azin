@@ -10,7 +10,7 @@ func (a *Analyzer) visitFunction(fn *ast.FuncStmt) {
 		a.MarkTypeUsed(fn.SemaReturnType)
 	}
 	for _, param := range fn.Params {
-		if !param.SemaType.IsComplete() {
+		if !param.SemaType.IsUseable() {
 			continue
 		}
 

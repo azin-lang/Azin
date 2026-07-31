@@ -23,7 +23,7 @@ func (t *Transpiler) emitFunction(
 	t.flushDefers()
 
 	if t.functionName(fn) == "main" &&
-		fn.SemaReturnType.IsComplete() &&
+		fn.SemaReturnType.IsUseable() &&
 		emitType(fn.SemaReturnType) == "void" {
 
 		t.indentLine()
@@ -40,7 +40,7 @@ func (t *Transpiler) emitFunctionSignature(
 ) {
 	name := t.functionName(fn)
 
-	if !fn.SemaReturnType.IsComplete() {
+	if !fn.SemaReturnType.IsUseable() {
 		t.printf("void %s(", name)
 		t.write("void")
 		t.write(") /* incomplete return type */")
@@ -72,7 +72,7 @@ func (t *Transpiler) emitFunctionSignature(
 				t.write(", ")
 			}
 
-			if !param.SemaType.IsComplete() {
+			if !param.SemaType.IsUseable() {
 				t.printf("void %s /* incomplete type */", param.Name.Value)
 				continue
 			}

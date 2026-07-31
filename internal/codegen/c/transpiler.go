@@ -81,7 +81,7 @@ func (t *Transpiler) analyze(program *ast.Program) error {
 
 			var deps []string
 			for _, f := range s.Fields {
-				if f.SemaType.IsComplete() {
+				if f.SemaType.IsUseable() {
 					deps = append(deps, f.SemaType.Name)
 				}
 			}
