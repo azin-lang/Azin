@@ -6,7 +6,7 @@ echo "  Azin Compiler Test Suite"
 echo "============================================"
 echo ""
 
-go test -v -count=1 -cover ./tests/... 2>&1
+go test -v -count=1 -cover ./... 2>&1
 
 echo ""
 echo "============================================"
