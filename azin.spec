@@ -11,6 +11,7 @@ URL:            https://azin-lang.org/
 Source0:        https://github.com/azin-lang/Azin/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  golang >= 1.22
+BuildRequires:  ca-certificates
 Requires:       gcc
 Recommends:     clang
 
