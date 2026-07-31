@@ -20,12 +20,8 @@ Source0:        %{name}-%{version}.tar.gz
 # Source1 generated via OBS `obs-service-go_modules` or `go mod vendor`
 Source1:        vendor.tar.gz
 
-# Supported architectures for Go compiler (ARM 64-bit aarch64, ARM 32-bit arm, x86_64, etc.)
-%if 0%{?fedora} || 0%{?rhel}
-ExclusiveArch:  %{go_arches}
-%else
-ExclusiveArch:  aarch64 %{arm} x86_64 ppc64le s390x riscv64
-%endif
+# Explicitly list architectures to prevent OBS unexpanded macro exclusion
+ExclusiveArch:  x86_64 aarch64 %{arm} ppc64le s390x riscv64
 
 BuildRequires:  golang >= 1.22
 
@@ -74,4 +70,4 @@ go test ./...
 
 %changelog
 * Fri Jul 31 2026 Azin Packaging Team <packaging@azin-lang.org> - 0.2.2-1
-- Initial RPM package spec for Open Build Service (OBS) with ARM (aarch64/armv7hl) support
+- Fix ExclusiveArch macro expansion issue on OBS for Fedora/RHEL targets
