@@ -44,6 +44,8 @@ func (o *Optimizer) optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 		return o.optimizeIf(n)
 	case *ast.LoopStmt:
 		return o.optimizeLoop(n)
+	case *ast.WhileStmt:
+		return o.optimizeWhile(n)
 	case *ast.ExpressionStmt:
 		return o.optimizeExpressionStmt(n)
 	case *ast.FuncStmt:
@@ -56,6 +58,32 @@ func (o *Optimizer) optimizeStatement(stmt ast.Stmt) []ast.Stmt {
 		o.optimizeAssignment(n)
 	}
 	return []ast.Stmt{stmt}
+}
+
+func (o *Optimizer) optimizeWhile(n *ast.WhileStmt) []ast.Stmt {
+	// Optimization for while loops can be implemented here, but for now, we will just optimize the body of the loop.
+	if len(n.Body) == 0 {
+		return nil
+	}
+
+	o.currentScope.ClearAll()
+
+	o.Enter()
+	n.Body = o.optimizeStatements(n.Body)
+	o.Leave()
+
+	if !canUnwrapLoop(n.Body) {
+		return []ast.Stmt{n}
+	}
+
+	last := n.Body[len(n.Body)-1]
+	switch last.(type) {
+	case *ast.ReturnStmt:
+		return n.Body
+	case *ast.StopStmt:
+		return n.Body[:len(n.Body)-1]
+	}
+	return []ast.Stmt{n}
 }
 
 func (o *Optimizer) optimizeLoop(n *ast.LoopStmt) []ast.Stmt {

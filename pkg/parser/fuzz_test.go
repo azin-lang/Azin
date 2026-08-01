@@ -16,6 +16,7 @@ func FuzzParser(f *testing.F) {
 		"if true then return 1; end",
 		"if true then return 1; else return 2; end",
 		"loop return 0; end",
+		"while true do return 0; end",
 		"struct Point is x: int; y: int; end",
 		"importc \"stdio.h\"",
 		"x = 42;",

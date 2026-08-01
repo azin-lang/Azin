@@ -33,7 +33,7 @@ func joinKinds(tokens []token2.Token) string {
 }
 
 func TestLexerKeywords(t *testing.T) {
-	input := "fn do var mut return end char int bool unit string float if then else struct is import importc loop null"
+	input := "fn do var mut return end char int bool unit string float if then else struct is import importc loop while null"
 	tokens, diag := lex(input)
 
 	if diag.HasErrors() {
@@ -41,7 +41,7 @@ func TestLexerKeywords(t *testing.T) {
 	}
 
 	got := joinKinds(tokens)
-	want := "kw_fn kw_do kw_var kw_mut kw_return kw_end kw_char kw_int kw_bool kw_unit kw_string kw_float kw_if kw_then kw_else kw_struct kw_is kw_import kw_importc kw_loop kw_null eof"
+	want := "kw_fn kw_do kw_var kw_mut kw_return kw_end kw_char kw_int kw_bool kw_unit kw_string kw_float kw_if kw_then kw_else kw_struct kw_is kw_import kw_importc kw_loop kw_while kw_null eof"
 
 	if got != want {
 		t.Errorf("keywords\ngot:  %s\nwant: %s", got, want)

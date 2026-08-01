@@ -275,6 +275,21 @@ end
 				"for (;;)",
 			},
 		},
+		{
+			name: "while",
+			input: `
+fn main: int do
+	var mut x: int = 0
+	while x < 10 loop
+		x = x + 1
+	end
+	return x
+end
+`,
+			contains: []string{
+				"while (x < 10)",
+			},
+		},
 	}
 
 	for _, tt := range tests {

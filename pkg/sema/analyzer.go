@@ -655,6 +655,22 @@ func (a *Analyzer) visitStatement(stmt ast.Stmt) {
 
 		a.popScope()
 
+	case *ast.WhileStmt:
+		a.loopDepth++
+		defer func() { a.loopDepth-- }()
+
+		a.pushScope()
+		defer a.popScope()
+
+		cond := a.inferExprType(n.Condition)
+		if !types2.IsAssignable(cond, types2.BoolType()) {
+			a.errorf(n.Condition, "while condition must be bool, got %s", cond.Name)
+		}
+
+		for _, stmt := range n.Body {
+			a.visitStatement(stmt)
+		}
+
 	case *ast.LoopStmt:
 		a.loopDepth++
 		defer func() { a.loopDepth-- }()

@@ -97,6 +97,18 @@ func TestIfStmt(t *testing.T) {
 	}
 }
 
+func TestWhileStmt(t *testing.T) {
+	s := &ast.WhileStmt{
+		Token:     tok(token.KwWhile, 0, 5),
+		Condition: ident("true"),
+		Body:      []ast.Stmt{},
+	}
+
+	if s.Label() != "while" {
+		t.Errorf("Label = %q", s.Label())
+	}
+}
+
 func TestLoopStmt(t *testing.T) {
 	s := &ast.LoopStmt{
 		Token: tok(token.KwLoop, 0, 4),

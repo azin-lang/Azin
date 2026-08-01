@@ -21,7 +21,7 @@ func FuzzLexer(f *testing.F) {
 		"+ - * / % = == ! !=",
 		"< <= > >= += ++ -= -- -> && ||",
 		"( ) { } [ ] , ; : .",
-		"fn do var mut return end char int bool unit string float if then else struct is importc loop null",
+		"fn do var mut return end char int bool unit string float if then else struct is importc loop while null",
 		"@",
 		"'\n'",
 		"",

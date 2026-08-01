@@ -147,6 +147,20 @@ func TestParserIfElse(t *testing.T) {
 	}
 }
 
+func TestParserWhile(t *testing.T) {
+	program, diag := parseProgram(t, `
+		while true loop
+			return 1
+		end
+	`)
+	if diag.HasErrors() {
+		t.Fatalf("unexpected errors: %v", diag.Err())
+	}
+	if _, ok := program.Statements[0].(*ast2.WhileStmt); !ok {
+		t.Fatalf("expected WhileStmt, got %T", program.Statements[0])
+	}
+}
+
 func TestParserLoop(t *testing.T) {
 	program, diag := parseProgram(t, "loop\n    return 1;\nend\n")
 	if diag.HasErrors() {

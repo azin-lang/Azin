@@ -30,6 +30,7 @@ func TestKindDisplayName(t *testing.T) {
 		{tok.KwIs, "'is'"},
 		{tok.KwImportC, "'importC'"},
 		{tok.KwImport, "'import'"},
+		{tok.KwWhile, "'while'"},
 		{tok.KwChar, "'char'"},
 		{tok.KwInt, "'int'"},
 		{tok.KwBool, "'bool'"},
