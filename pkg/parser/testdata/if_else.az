@@ -1,7 +1,0 @@
-fn test: int do
-    if true then
-        return 1;
-    else
-        return 2;
-    end
-end

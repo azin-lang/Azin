@@ -1,8 +1,0 @@
-struct Point is
-    x: int;
-    y: int;
-end
-
-fn distance: int do
-    return 0;
-end

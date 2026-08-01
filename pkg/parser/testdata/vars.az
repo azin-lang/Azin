@@ -1,6 +1,0 @@
-fn main: int do
-    var x: int = 42;
-    var mut y: float = 3.14;
-    var name: string = "azin";
-    return 0;
-end

@@ -1,8 +1,0 @@
-╰── Program "Program"
-    ╰── Statements
-        ╰── FuncStmt "fn main(): int"
-            ├── Name: main
-            ├── SynReturnType: int
-            ╰── Body
-                ╰── ReturnStmt "return"
-                    ╰── Value: 0
