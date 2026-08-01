@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
-files=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.go$' || true)
+set -Eeuo pipefail
 
-[ -z "$files" ] && exit 0
+command -v gofmt >/dev/null || exit 1
 
-echo "Formatting Go files..."
-
-echo "$files" | xargs gofmt -w
-echo "$files" | xargs git add
+while IFS= read -r -d '' file; do
+  gofmt -w "$file"
+  git add "$file"
+done < <(
+  git diff --cached \
+    --name-only \
+    --diff-filter=ACMR \
+    -- '*.go' \
+    -z
+)
