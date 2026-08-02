@@ -3,33 +3,52 @@ package syntax
 type SyntaxKind uint16
 
 const (
+	// Unknown or special
+
 	Unknown SyntaxKind = iota
-	EndOfFile
-	Error
+	EndOfFileToken
+	BadToken
+
+	// Trivia
 
 	WhitespaceTrivia
 	EndOfLineTrivia
 	SingleLineCommentTrivia
 
+	// Nodes
+
 	CompilationUnit
+
 	FunctionDeclaration
 	Parameter
+
 	BlockStatement
+	ExpressionStatement
+	ReturnStatement
 	StopStatement
 	IfStatement
 	WhileStatement
+	ForStatement
 
 	LiteralExpression
-	BinaryExpression
+	NameExpression
 	UnaryExpression
-	IdentifierExpression
+	BinaryExpression
+	ParenthesizedExpression
+	AssignmentExpression
+	CallExpression
+
+	// Tokens
 
 	IdentifierToken
+
 	IntegerLiteralToken
 	FloatLiteralToken
 	CharacterLiteralToken
 	BooleanLiteralToken
 	StringLiteralToken
+
+	// Keywords
 
 	KeywordDefer
 	KeywordDo
@@ -52,24 +71,52 @@ const (
 	KeywordVar
 	KeywordWhile
 
+	// Operators
+
 	PlusToken
 	PlusEqualsToken
+
 	MinusToken
 	MinusEqualsToken
-	EqualsToken
-	EqualsEqualsToken
+
 	StarToken
 	StarEqualsToken
 
+	SlashToken
+	SlashEqualsToken
+
+	EqualsToken
+	EqualsEqualsToken
+
+	LessToken
+	LessEqualsToken
+
+	GreaterToken
+	GreaterEqualsToken
+
+	AmpersandToken
+	AmpersandAmpersandToken
+
+	PipeToken
+	PipePipeToken
+
+	CaretToken
+
+	// Punctuation
+
 	OpenParenToken
 	CloseParenToken
+
 	OpenBracketToken
 	CloseBracketToken
+
 	OpenBraceToken
 	CloseBraceToken
+
 	CommaToken
-	SemicolonToken
 	ColonToken
+	SemicolonToken
 	DotToken
+
 	NewlineToken
 )
