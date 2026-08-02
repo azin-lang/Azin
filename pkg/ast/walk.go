@@ -14,7 +14,9 @@ func adjustStmt(stmt Stmt, delta uint32) {
 	case *VarStmt:
 		s.Token.Position.Offset += delta
 		adjustExpr(s.Name, delta)
-		adjustExpr(s.SynType, delta)
+		if s.SynType != nil {
+			adjustExpr(s.SynType, delta)
+		}
 		adjustExpr(s.Value, delta)
 	case *AssignmentStmt:
 		s.Token.Position.Offset += delta
@@ -25,7 +27,9 @@ func adjustStmt(stmt Stmt, delta uint32) {
 		adjustExpr(s.Name, delta)
 		for _, f := range s.Fields {
 			adjustExpr(f.Name, delta)
-			adjustExpr(f.SynType, delta)
+			if f.SynType != nil {
+				adjustExpr(f.SynType, delta)
+			}
 		}
 	case *EnumStmt:
 		s.Token.Position.Offset += delta
@@ -38,9 +42,13 @@ func adjustStmt(stmt Stmt, delta uint32) {
 		adjustExpr(s.Name, delta)
 		for _, p := range s.Params {
 			adjustExpr(p.Name, delta)
-			adjustExpr(p.SynType, delta)
+			if p.SynType != nil {
+				adjustExpr(p.SynType, delta)
+			}
 		}
-		adjustExpr(s.SynReturnType, delta)
+		if s.SynReturnType != nil {
+			adjustExpr(s.SynReturnType, delta)
+		}
 		for _, bodyStmt := range s.Body {
 			adjustStmt(bodyStmt, delta)
 		}
