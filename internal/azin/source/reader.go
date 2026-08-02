@@ -5,14 +5,14 @@ import "unicode/utf8"
 // Reader provides a highly optimized, forward-moving rune iterator.
 // It is designed specifically to feed characters into the compiler's lexer.
 type Reader struct {
-	file       *File
+	file       *SourceText
 	text       []byte
 	offset     uint32
 	prevOffset uint32
 }
 
 // NewReader initializes a character reader bound to the given file.
-func NewReader(file *File) *Reader {
+func NewReader(file *SourceText) *Reader {
 	return &Reader{
 		file: file,
 		text: file.text,

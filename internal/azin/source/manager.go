@@ -11,23 +11,23 @@ import (
 // for concurrent access by Language Server background routines.
 type Manager struct {
 	mu    sync.RWMutex
-	files map[string]*File
+	files map[string]*SourceText
 }
 
 // NewManager creates and initializes a new thread-safe file manager.
 func NewManager() *Manager {
 	return &Manager{
-		files: make(map[string]*File),
+		files: make(map[string]*SourceText),
 	}
 }
 
 // Update registers a new file or overwrites an existing one with new contents.
 // It clones the text buffer to safely isolate it from external shared memory (e.g. LSP buffers).
-func (m *Manager) Update(path string, version int32, text []byte) *File {
+func (m *Manager) Update(path string, version int32, text []byte) *SourceText {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	file := New(path, version, slices.Clone(text))
+	file := NewSourceText(path, version, slices.Clone(text))
 	m.files[path] = file
 	return file
 }
@@ -40,9 +40,9 @@ func (m *Manager) Delete(path string) {
 	delete(m.files, path)
 }
 
-// File safely retrieves a tracked file by its absolute or relative path.
+// SourceText safely retrieves a tracked file by its absolute or relative path.
 // The boolean return value indicates whether the file was successfully found.
-func (m *Manager) File(path string) (*File, bool) {
+func (m *Manager) File(path string) (*SourceText, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	f, ok := m.files[path]
@@ -50,7 +50,7 @@ func (m *Manager) File(path string) (*File, bool) {
 }
 
 // Open reads a file directly from the filesystem, tracks it, and returns the instance.
-func (m *Manager) Open(path string) (*File, error) {
+func (m *Manager) Open(path string) (*SourceText, error) {
 	text, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (m *Manager) Open(path string) (*File, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	file := New(path, 0, text)
+	file := NewSourceText(path, 0, text)
 	m.files[path] = file
 	return file, nil
 }

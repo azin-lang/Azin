@@ -9,19 +9,19 @@ import (
 	"unicode/utf8"
 )
 
-// File represents a single source code file tracked by the compiler.
+// SourceText represents a single source code file tracked by the compiler.
 // It caches the raw byte contents and pre-computes line offsets for fast
 // O(log N) line and column lookups during tokenization and parsing.
-type File struct {
+type SourceText struct {
 	path        string
 	version     int32
 	text        []byte
 	lineOffsets []uint32
 }
 
-// New initializes a new File instance, cloning the provided text buffer
+// NewSourceText initializes a new SourceText instance, cloning the provided text buffer
 // and pre-calculating all newline boundaries for fast positional lookups.
-func New(path string, version int32, text []byte) *File {
+func NewSourceText(path string, version int32, text []byte) *SourceText {
 	text = slices.Clone(text)
 
 	lineCount := bytes.Count(text, []byte{'\n'})
@@ -38,7 +38,7 @@ func New(path string, version int32, text []byte) *File {
 		lineOffsets = append(lineOffsets, uint32(offset))
 	}
 
-	return &File{
+	return &SourceText{
 		path:        path,
 		version:     version,
 		text:        text,
@@ -49,44 +49,44 @@ func New(path string, version int32, text []byte) *File {
 // Metadata
 
 // Path returns the absolute or relative file path.
-func (f *File) Path() string { return f.path }
+func (f *SourceText) Path() string { return f.path }
 
 // Version returns the current version of the file, typically used by an LSP.
-func (f *File) Version() int32 { return f.version }
+func (f *SourceText) Version() int32 { return f.version }
 
 // Base returns just the file name (e.g., "main.az").
-func (f *File) Base() string { return filepath.Base(f.path) }
+func (f *SourceText) Base() string { return filepath.Base(f.path) }
 
 // Dir returns the directory containing the file.
-func (f *File) Dir() string { return filepath.Dir(f.path) }
+func (f *SourceText) Dir() string { return filepath.Dir(f.path) }
 
 // Ext returns the file extension (e.g., ".az").
-func (f *File) Ext() string { return filepath.Ext(f.path) }
+func (f *SourceText) Ext() string { return filepath.Ext(f.path) }
 
 // Contents
 
 // String returns the complete file contents as a string.
-func (f *File) String() string { return string(f.text) }
+func (f *SourceText) String() string { return string(f.text) }
 
 // Bytes returns a safe clone of the underlying byte slice.
-func (f *File) Bytes() []byte { return slices.Clone(f.text) }
+func (f *SourceText) Bytes() []byte { return slices.Clone(f.text) }
 
 // Len returns the total length of the file in bytes.
-func (f *File) Len() uint32 { return uint32(len(f.text)) }
+func (f *SourceText) Len() uint32 { return uint32(len(f.text)) }
 
 // Empty reports whether the file has a length of zero.
-func (f *File) Empty() bool { return len(f.text) == 0 }
+func (f *SourceText) Empty() bool { return len(f.text) == 0 }
 
 // Offsets
 
 // Valid reports whether the given offset is within the file bounds.
-func (f *File) Valid(offset uint32) bool { return offset <= f.Len() }
+func (f *SourceText) Valid(offset uint32) bool { return offset <= f.Len() }
 
 // EOF reports whether the offset is at or beyond the end of the file.
-func (f *File) EOF(offset uint32) bool { return offset >= f.Len() }
+func (f *SourceText) EOF(offset uint32) bool { return offset >= f.Len() }
 
 // Clamp constrains the given offset to be at most the file's maximum length.
-func (f *File) Clamp(offset uint32) uint32 {
+func (f *SourceText) Clamp(offset uint32) uint32 {
 	if offset > f.Len() {
 		return f.Len()
 	}
@@ -96,11 +96,11 @@ func (f *File) Clamp(offset uint32) uint32 {
 // Lines
 
 // LineCount returns the total number of lines in the file.
-func (f *File) LineCount() uint32 { return uint32(len(f.lineOffsets)) }
+func (f *SourceText) LineCount() uint32 { return uint32(len(f.lineOffsets)) }
 
 // Line retrieves the physical line information for a 1-based line number.
 // It excludes the terminating \r or \n characters.
-func (f *File) Line(number uint32) Line {
+func (f *SourceText) Line(number uint32) Line {
 	if number == 0 || number > f.LineCount() {
 		return Line{}
 	}
@@ -130,7 +130,7 @@ done:
 
 // LineText returns the raw bytes for the specified 1-based line number,
 // excluding the trailing newline characters.
-func (f *File) LineText(number uint32) []byte {
+func (f *SourceText) LineText(number uint32) []byte {
 	line := f.Line(number)
 	if line.Empty() {
 		return nil
@@ -140,7 +140,7 @@ func (f *File) LineText(number uint32) []byte {
 
 // searchLineIndex performs a fast O(log N) binary search to find the 0-based
 // index of the line containing the given byte offset.
-func (f *File) searchLineIndex(offset uint32) int {
+func (f *SourceText) searchLineIndex(offset uint32) int {
 	offset = f.Clamp(offset)
 
 	low, high := 0, len(f.lineOffsets)
@@ -160,7 +160,7 @@ func (f *File) searchLineIndex(offset uint32) int {
 }
 
 // LineAt returns the physical line information enclosing the given byte offset.
-func (f *File) LineAt(offset uint32) Line {
+func (f *SourceText) LineAt(offset uint32) Line {
 	return f.Line(uint32(f.searchLineIndex(offset) + 1))
 }
 
@@ -168,7 +168,7 @@ func (f *File) LineAt(offset uint32) Line {
 
 // Position translates a flat byte offset into a structural Position
 // containing the 1-based line, byte column, and LSP-compliant column.
-func (f *File) Position(offset uint32) Position {
+func (f *SourceText) Position(offset uint32) Position {
 	offset = f.Clamp(offset)
 	lineIdx := f.searchLineIndex(offset)
 
@@ -196,7 +196,7 @@ func (f *File) Position(offset uint32) Position {
 }
 
 // Offset converts a 1-based line and 1-based column into a flat byte offset.
-func (f *File) Offset(line, column uint32) uint32 {
+func (f *SourceText) Offset(line, column uint32) uint32 {
 	l := f.Line(line)
 	if l.Number == 0 {
 		return f.Len()
@@ -213,7 +213,7 @@ func (f *File) Offset(line, column uint32) uint32 {
 // Spans
 
 // BytesOf returns a slice of the file's text bounded by the given Span.
-func (f *File) BytesOf(span Span) []byte {
+func (f *SourceText) BytesOf(span Span) []byte {
 	start := f.Clamp(span.Start)
 	end := f.Clamp(span.End)
 	if end < start {
@@ -222,13 +222,13 @@ func (f *File) BytesOf(span Span) []byte {
 	return f.text[start:end]
 }
 
-// Text returns the string representation of the text bounded by the given Span.
-func (f *File) Text(span Span) string {
+// SourceText returns the string representation of the text bounded by the given Span.
+func (f *SourceText) Text(span Span) string {
 	return string(f.BytesOf(span))
 }
 
 // LineSpan returns a Span covering the entirety of the specified 1-based line.
-func (f *File) LineSpan(number uint32) Span {
+func (f *SourceText) LineSpan(number uint32) Span {
 	line := f.Line(number)
 	return NewSpan(line.Start, line.End)
 }
@@ -236,7 +236,7 @@ func (f *File) LineSpan(number uint32) Span {
 // UTF-8
 
 // Rune decodes and returns the rune at the given offset, along with its size in bytes.
-func (f *File) Rune(offset uint32) (rune, uint32) {
+func (f *SourceText) Rune(offset uint32) (rune, uint32) {
 	offset = f.Clamp(offset)
 	if offset >= f.Len() {
 		return utf8.RuneError, 0
@@ -246,7 +246,7 @@ func (f *File) Rune(offset uint32) (rune, uint32) {
 }
 
 // RuneBefore decodes and returns the rune immediately preceding the given offset.
-func (f *File) RuneBefore(offset uint32) (rune, uint32) {
+func (f *SourceText) RuneBefore(offset uint32) (rune, uint32) {
 	offset = f.Clamp(offset)
 	if offset == 0 {
 		return utf8.RuneError, 0

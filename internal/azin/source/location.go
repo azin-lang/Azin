@@ -5,7 +5,7 @@ import "fmt"
 // Location combines a physical file pointer with a specific byte span.
 // It is embedded in every AST node to attach syntax trees to their origin text.
 type Location struct {
-	File *File
+	File *SourceText
 	Span Span
 }
 
