@@ -23,26 +23,42 @@ var keywords = map[string]SyntaxKind{
 	"while":   KeywordWhile,
 }
 
-// LookupKeyword checks if the given identifier text is a reserved keyword.
-// It returns IdentifierToken if no match is found.
 func LookupKeyword(text string) SyntaxKind {
 	if kind, ok := keywords[text]; ok {
 		return kind
 	}
+
 	return IdentifierToken
 }
 
-// IsKeyword reports whether the kind represents a reserved keyword.
+func (k SyntaxKind) IsTrivia() bool {
+	return k >= WhitespaceTrivia && k <= SingleLineCommentTrivia
+}
+
+func (k SyntaxKind) IsNode() bool {
+	return k >= CompilationUnit && k <= CallExpression
+}
+
+func (k SyntaxKind) IsToken() bool {
+	return k >= IdentifierToken && k <= NewlineToken
+}
+
 func (k SyntaxKind) IsKeyword() bool {
 	return k >= KeywordDefer && k <= KeywordWhile
 }
 
-// IsLiteral reports whether the kind represents a literal value.
 func (k SyntaxKind) IsLiteral() bool {
 	return k >= IntegerLiteralToken && k <= StringLiteralToken
 }
 
-// IsOperator reports whether the kind represents an operator.
 func (k SyntaxKind) IsOperator() bool {
-	return k >= PlusToken && k <= StarEqualsToken
+	return k >= PlusToken && k <= CaretToken
+}
+
+func (k SyntaxKind) IsStatement() bool {
+	return k >= BlockStatement && k <= ForStatement
+}
+
+func (k SyntaxKind) IsExpression() bool {
+	return k >= LiteralExpression && k <= CallExpression
 }
