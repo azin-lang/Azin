@@ -10,6 +10,7 @@ import (
 
 	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/fatih/color"
+	"golang.org/x/term"
 )
 
 // Collector thread-safely gathers diagnostics throughout compilation passes.
@@ -134,51 +135,57 @@ func (c *Collector) PrintAll() string {
 		color.NoColor = true
 	}
 
-	redBold := color.New(color.FgRed, color.Bold).SprintFunc()
-	yellowBold := color.New(color.FgYellow, color.Bold).SprintFunc()
-	cyanBold := color.New(color.FgCyan, color.Bold).SprintFunc()
+	red := color.New(color.FgRed).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	cyan := color.New(color.FgCyan).SprintFunc()
 	bold := color.New(color.Bold).SprintFunc()
+	dim := color.New(color.Faint).SprintFunc()
 
-	for _, d := range c.List() {
-		sevStr := d.Severity.String()
-		styleColor := redBold
-		pipeColor := cyanBold
+	for i, d := range c.List() {
+		if i > 0 {
+			out.WriteString("\n\n") // Space between multiple errors
+		}
+
+		styleColor := red
+		pipeColor := dim
 
 		switch d.Severity {
 		case SeverityError:
-			sevStr = redBold("error")
-			styleColor = redBold
-			pipeColor = cyanBold
+			styleColor = red
 		case SeverityWarning:
-			sevStr = yellowBold("warning")
-			styleColor = yellowBold
-			pipeColor = yellowBold
+			styleColor = yellow
 		case SeverityInfo:
-			sevStr = cyanBold("info")
-			styleColor = cyanBold
-			pipeColor = cyanBold
+			styleColor = cyan
 		}
 
-		codeStr := ""
-		if d.Code != "" {
-			codeStr = bold(fmt.Sprintf("[%s]", d.Code))
+		title := strings.ToUpper(d.Message)
+
+		termWidth := 80
+		if width, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
+			termWidth = width
 		}
 
-		locStr := bold(d.Location.String())
-
-		// Header
-		if codeStr != "" {
-			out.WriteString(fmt.Sprintf("%s: %s %s: %s\n", locStr, sevStr, codeStr, d.Message))
-		} else {
-			out.WriteString(fmt.Sprintf("%s: %s: %s\n", locStr, sevStr, d.Message))
+		maxWidth := 100
+		if termWidth > maxWidth {
+			termWidth = maxWidth
 		}
 
-		// Render snippet with semantic colors
+		dashCount := termWidth - len(title) - 4
+		if dashCount < 2 {
+			dashCount = 2
+		}
+
+		banner := fmt.Sprintf("%s %s %s", styleColor("──"), styleColor(title), styleColor(strings.Repeat("─", dashCount)))
+		out.WriteString(banner + "\n\n")
+
 		if d.Location.File != nil && d.Location.Span.IsValidAndNonEmpty() {
-			renderedLoc := source.PrintColoredDiagnostic(d.Location, d.Label, d.Note, d.Help, pipeColor, styleColor)
+			renderedLoc := source.PrintColoredDiagnostic(
+				d.Location, d.Label, d.Note, d.Help,
+				termWidth,
+				pipeColor, styleColor, bold,
+			)
 			out.WriteString(renderedLoc)
 		}
-		out.WriteString("\n")
 	}
 
 	return out.String()
