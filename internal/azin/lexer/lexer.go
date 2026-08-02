@@ -1,6 +1,8 @@
 package lexer
 
 import (
+	"fmt"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -74,25 +76,35 @@ func (l *Lexer) NextToken() syntax.Token {
 	default:
 		for !l.reader.EOF() {
 			c, _ := l.reader.Peek()
-			if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' ||
-				(c >= '0' && c <= '9') ||
-				c == '=' || c == '+' || c == '(' || c == ')' || c == ';' ||
-				c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '/' ||
-				(c >= utf8.RuneSelf && unicode.IsLetter(c)) {
+			if c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == ';' || c == '(' || c == ')' || c == '=' || c == '+' {
 				break
 			}
 			l.reader.Next()
 		}
-		span := source.NewSpan(start, l.reader.Offset())
 
-		l.collector.ErrorWithNoteAndHelp(
-			source.Location{File: l.file, Span: span},
-			"AZ0001",
-			"unexpected curly braces",
-			"try replacing with 'end'",
-			"Azin uses 'end' to close blocks, not curly braces.",
-			"unexpected token sequence",
-		)
+		span := source.NewSpan(start, l.reader.Offset())
+		text := l.file.Text(span)
+
+		if strings.ContainsAny(text, "{}") {
+			l.collector.ErrorWithNoteAndHelp(
+				source.Location{File: l.file, Span: span},
+				"AZ0001",
+				"",
+				"Azin uses 'end' to close blocks, not curly braces. I got confused because I was looking for the end of your block.",
+				fmt.Sprintf("Try replacing this `%s` with `end`.", text),
+				"unexpected curly braces",
+			)
+		} else {
+			l.collector.ErrorWithNoteAndHelp(
+				source.Location{File: l.file, Span: span},
+				"AZ0002",
+				"",
+				"I ran into a sequence of characters I don't recognize. This usually happens from a typo, a missing space, or unsupported symbols.",
+				fmt.Sprintf("Try removing or fixing `%s`.", text),
+				"unexpected characters",
+			)
+		}
+
 		tokenKind = syntax.Error
 	}
 
