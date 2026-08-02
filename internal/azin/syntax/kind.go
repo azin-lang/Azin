@@ -3,40 +3,70 @@ package syntax
 type SyntaxKind uint16
 
 const (
-	// Unknown or special
+
+	// Special
 
 	Unknown SyntaxKind = iota
-	EndOfFileToken
+
 	BadToken
+	EndOfFileToken
+	MissingToken
 
 	// Trivia
 
 	WhitespaceTrivia
 	EndOfLineTrivia
-	SingleLineCommentTrivia
 
-	// Nodes
+	SingleLineCommentTrivia
+	MultiLineCommentTrivia
+
+	SkippedTextTrivia
+
+	// Root
 
 	CompilationUnit
 
+	// Declarations
+
 	FunctionDeclaration
+	StructDeclaration
+	EnumDeclaration
+	TypeDeclaration
+	VariableDeclaration
 	Parameter
 
+	// Statements
+
 	BlockStatement
+	EmptyStatement
+
 	ExpressionStatement
+
 	ReturnStatement
 	StopStatement
+	DeferStatement
+
 	IfStatement
 	WhileStatement
 	ForStatement
 
+	BreakStatement
+	ContinueStatement
+
+	// Expressions
+
 	LiteralExpression
 	NameExpression
+
+	ParenthesizedExpression
+
 	UnaryExpression
 	BinaryExpression
-	ParenthesizedExpression
 	AssignmentExpression
+
 	CallExpression
+	MemberAccessExpression
+	IndexExpression
 
 	// Tokens
 
@@ -85,14 +115,21 @@ const (
 	SlashToken
 	SlashEqualsToken
 
+	PercentToken
+	PercentEqualsToken
+
 	EqualsToken
+
 	EqualsEqualsToken
+	BangEqualsToken
 
 	LessToken
 	LessEqualsToken
 
 	GreaterToken
 	GreaterEqualsToken
+
+	BangToken
 
 	AmpersandToken
 	AmpersandAmpersandToken
@@ -102,7 +139,7 @@ const (
 
 	CaretToken
 
-	// Punctuation
+	// Delimiters
 
 	OpenParenToken
 	CloseParenToken
