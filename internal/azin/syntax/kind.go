@@ -1,9 +1,10 @@
 package syntax
 
+//go:generate stringer -type=SyntaxKind
+
 type SyntaxKind uint16
 
 const (
-
 	// Special
 
 	Unknown SyntaxKind = iota
@@ -25,15 +26,20 @@ const (
 	// Root
 
 	CompilationUnit
+	SyntaxList
+	SeparatedSyntaxList
 
 	// Declarations
 
+	ImportDeclaration
 	FunctionDeclaration
 	StructDeclaration
 	EnumDeclaration
 	TypeDeclaration
-	VariableDeclaration
+
 	Parameter
+	VariableDeclaration
+	FieldDeclaration
 
 	// Statements
 
@@ -50,9 +56,6 @@ const (
 	WhileStatement
 	ForStatement
 
-	BreakStatement
-	ContinueStatement
-
 	// Expressions
 
 	LiteralExpression
@@ -67,6 +70,11 @@ const (
 	CallExpression
 	MemberAccessExpression
 	IndexExpression
+
+	// Future
+
+	TupleExpression
+	CastExpression
 
 	// Tokens
 
@@ -115,9 +123,6 @@ const (
 	SlashToken
 	SlashEqualsToken
 
-	PercentToken
-	PercentEqualsToken
-
 	EqualsToken
 
 	EqualsEqualsToken
@@ -139,7 +144,9 @@ const (
 
 	CaretToken
 
-	// Delimiters
+	QuestionToken
+
+	// Punctuation
 
 	OpenParenToken
 	CloseParenToken
