@@ -26,20 +26,25 @@ func NewCollector() *Collector {
 
 // Error records a new compilation error with an optional error code.
 func (c *Collector) Error(loc source.Location, code, format string, args ...any) {
-	c.add(loc, code, fmt.Sprintf(format, args...), SeverityError)
+	c.add(loc, code, fmt.Sprintf(format, args...), SeverityError, "", "")
+}
+
+// ErrorWithHelp records a compilation error accompanied by an inline label and an actionable help hint.
+func (c *Collector) ErrorWithHelp(loc source.Location, code, label, help, format string, args ...any) {
+	c.add(loc, code, fmt.Sprintf(format, args...), SeverityError, label, help)
 }
 
 // Warn records a new compilation warning with an optional error code.
 func (c *Collector) Warn(loc source.Location, code, format string, args ...any) {
-	c.add(loc, code, fmt.Sprintf(format, args...), SeverityWarning)
+	c.add(loc, code, fmt.Sprintf(format, args...), SeverityWarning, "", "")
 }
 
 // Info records a new compilation information message with an optional code.
 func (c *Collector) Info(loc source.Location, code, format string, args ...any) {
-	c.add(loc, code, fmt.Sprintf(format, args...), SeverityInfo)
+	c.add(loc, code, fmt.Sprintf(format, args...), SeverityInfo, "", "")
 }
 
-func (c *Collector) add(loc source.Location, code, msg string, sev Severity) {
+func (c *Collector) add(loc source.Location, code, msg string, sev Severity, label, help string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -52,6 +57,8 @@ func (c *Collector) add(loc source.Location, code, msg string, sev Severity) {
 		Location: loc,
 		Message:  msg,
 		Severity: sev,
+		Label:    label,
+		Help:     help,
 	})
 }
 
@@ -71,7 +78,6 @@ func (c *Collector) Clear() {
 }
 
 // List returns a sorted, cloned copy of all collected diagnostics.
-// Diagnostics are sorted first by file path, then by starting byte offset.
 func (c *Collector) List() []Diagnostic {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -96,16 +102,38 @@ func (c *Collector) List() []Diagnostic {
 	return list
 }
 
-// PrintAll renders all diagnostics with terminal styling, error codes, and source snippets.
+// ErrorWithNoteAndHelp records an error with an inline label, an actionable note, and a help hint.
+func (c *Collector) ErrorWithNoteAndHelp(loc source.Location, code, label, note, help, format string, args ...any) {
+	c.addFull(loc, code, fmt.Sprintf(format, args...), SeverityError, label, note, help)
+}
+
+func (c *Collector) addFull(loc source.Location, code, msg string, sev Severity, label, note, help string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if sev == SeverityError {
+		c.hasErrors = true
+	}
+
+	c.diagnostics = append(c.diagnostics, Diagnostic{
+		Code:     code,
+		Location: loc,
+		Message:  msg,
+		Severity: sev,
+		Label:    label,
+		Note:     note,
+		Help:     help,
+	})
+}
+
+// PrintAll renders all diagnostics with fully color-coordinated terminal styling.
 func (c *Collector) PrintAll() string {
 	var out strings.Builder
 
-	// Respect NO_COLOR environment variable globally via package configuration
 	if _, present := os.LookupEnv("NO_COLOR"); present {
 		color.NoColor = true
 	}
 
-	// Define semantic styles using fatih/color
 	redBold := color.New(color.FgRed, color.Bold).SprintFunc()
 	yellowBold := color.New(color.FgYellow, color.Bold).SprintFunc()
 	cyanBold := color.New(color.FgCyan, color.Bold).SprintFunc()
@@ -113,13 +141,22 @@ func (c *Collector) PrintAll() string {
 
 	for _, d := range c.List() {
 		sevStr := d.Severity.String()
+		styleColor := redBold
+		pipeColor := cyanBold
+
 		switch d.Severity {
 		case SeverityError:
 			sevStr = redBold("error")
+			styleColor = redBold
+			pipeColor = cyanBold
 		case SeverityWarning:
 			sevStr = yellowBold("warning")
+			styleColor = yellowBold
+			pipeColor = yellowBold
 		case SeverityInfo:
 			sevStr = cyanBold("info")
+			styleColor = cyanBold
+			pipeColor = cyanBold
 		}
 
 		codeStr := ""
@@ -129,16 +166,16 @@ func (c *Collector) PrintAll() string {
 
 		locStr := bold(d.Location.String())
 
-		// Format header: file:line:col: error [AZ0001]: message
+		// Header
 		if codeStr != "" {
 			out.WriteString(fmt.Sprintf("%s: %s %s: %s\n", locStr, sevStr, codeStr, d.Message))
 		} else {
 			out.WriteString(fmt.Sprintf("%s: %s: %s\n", locStr, sevStr, d.Message))
 		}
 
-		// Render source snippet with squiggly lines via source package
+		// Render snippet with semantic colors
 		if d.Location.File != nil && d.Location.Span.IsValidAndNonEmpty() {
-			renderedLoc := source.PrintDiagnostic(d.Location)
+			renderedLoc := source.PrintColoredDiagnostic(d.Location, d.Label, d.Note, d.Help, pipeColor, styleColor)
 			out.WriteString(renderedLoc)
 		}
 		out.WriteString("\n")

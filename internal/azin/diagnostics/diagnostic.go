@@ -6,15 +6,11 @@ import (
 
 // Diagnostic represents a single compiler error, warning, or notice.
 type Diagnostic struct {
-	// Code is an optional unique identifier for the diagnostic (e.g. "AZ0001").
-	Code string
-
-	// Location points to the exact file and span where the diagnostic applies.
+	Code     string
 	Location source.Location
-
-	// Message is the descriptive explanation of the error or warning.
-	Message string
-
-	// Severity indicates whether the diagnostic is an error, warning, or info notice.
+	Message  string
 	Severity Severity
+	Label    string // Inline annotation next to the underline
+	Note     string // Actionable suggestion (e.g. "try replacing with 'end'")
+	Help     string // Explanatory guidance
 }
