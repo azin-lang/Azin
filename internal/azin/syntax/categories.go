@@ -1,7 +1,7 @@
 package syntax
 
 func (k SyntaxKind) IsTrivia() bool {
-	return false
+	return k >= firstTrivia && k <= lastTrivia
 }
 
 func (k SyntaxKind) IsNode() bool {
@@ -9,15 +9,15 @@ func (k SyntaxKind) IsNode() bool {
 }
 
 func (k SyntaxKind) IsToken() bool {
-	return false
+	return k >= firstToken && k <= lastToken
 }
 
 func (k SyntaxKind) IsKeyword() bool {
-	return false
+	return k >= firstKeyword && k <= lastKeyword
 }
 
 func (k SyntaxKind) IsLiteral() bool {
-	return false
+	return k >= firstLiteral && k <= lastLiteral
 }
 
 func (k SyntaxKind) IsExpression() bool {
