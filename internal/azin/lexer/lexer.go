@@ -23,6 +23,11 @@ func New(file *source.SourceText, diags *diagnostics.Collector) *Lexer {
 	}
 }
 
+// File returns the underlying source text buffer.
+func (l *Lexer) File() *source.SourceText {
+	return l.file
+}
+
 // NextToken is the main entry point called by the Parser.
 func (l *Lexer) NextToken() *green.Token {
 	leadingTrivia := l.scanTrivia(false)
