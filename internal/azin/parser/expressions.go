@@ -67,22 +67,24 @@ func (p *Parser) parseCallExpression(callee green.Node) green.Node {
 	openParen := p.match(syntax.OpenParenToken)
 
 	var args []green.Node
-	if p.current.Kind() != syntax.CloseParenToken && p.current.Kind() != syntax.EndOfFileToken {
+	if !p.atAny(syntax.CloseParenToken, syntax.EndOfFileToken) {
 		for {
 			args = append(args, p.ParseExpression())
 
-			if p.current.Kind() == syntax.CommaToken {
-				p.advance()
-			} else if p.current.Kind() == syntax.CloseParenToken || p.current.Kind() == syntax.EndOfFileToken {
+			if p.eat(syntax.CommaToken) {
+				// Allow optional trailing comma: foo(a, b,)
+				if p.at(syntax.CloseParenToken) {
+					break
+				}
+			} else if p.atAny(syntax.CloseParenToken, syntax.EndOfFileToken) {
 				break
+			} else if p.isAtExpressionStart() {
+				// Recover from a missing comma between arguments: foo(a b)
+				p.match(syntax.CommaToken)
 			} else {
-				// We encountered unexpected tokens instead of ',' or ')'
-				// Synchronize to the next comma or closing parenthesis
+				// Unexpected tokens inside arguments list; synchronize to next comma or ')'
 				p.syncTo(syntax.CommaToken, syntax.CloseParenToken)
-
-				if p.current.Kind() == syntax.CommaToken {
-					p.advance()
-				} else {
+				if !p.eat(syntax.CommaToken) {
 					break
 				}
 			}
@@ -118,7 +120,8 @@ func (p *Parser) parsePrimaryExpression() green.Node {
 			syntax.Display(p.current.Kind()),
 		)
 
-		if p.current.Kind() != syntax.EndOfFileToken {
+		// Skip unexpected token only if it is not a structural delimiter/boundary token
+		if !p.isDelimiterOrEOF() {
 			p.advance()
 		}
 

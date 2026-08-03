@@ -36,13 +36,56 @@ func (p *Parser) advance() *green.Token {
 	return previous
 }
 
+// at reports whether the current token matches the given kind.
+func (p *Parser) at(kind syntax.SyntaxKind) bool {
+	return p.current.Kind() == kind
+}
+
+// atAny reports whether the current token matches any of the given kinds.
+func (p *Parser) atAny(kinds ...syntax.SyntaxKind) bool {
+	for _, k := range kinds {
+		if p.current.Kind() == k {
+			return true
+		}
+	}
+	return false
+}
+
+// eat advances the parser if the current token matches kind and reports true.
+func (p *Parser) eat(kind syntax.SyntaxKind) bool {
+	if p.at(kind) {
+		p.advance()
+		return true
+	}
+	return false
+}
+
+// isAtExpressionStart reports whether the current token can begin an expression.
+func (p *Parser) isAtExpressionStart() bool {
+	switch p.current.Kind() {
+	case syntax.IntegerLiteralToken,
+		syntax.FloatLiteralToken,
+		syntax.StringLiteralToken,
+		syntax.KeywordTrue,
+		syntax.KeywordFalse,
+		syntax.IdentifierToken,
+		syntax.OpenParenToken:
+		return true
+	default:
+		return syntax.UnaryPrecedence(p.current.Kind()) != 0
+	}
+}
+
+// isDelimiterOrEOF reports whether the current token is a structural boundary or EOF.
+func (p *Parser) isDelimiterOrEOF() bool {
+	return p.atAny(syntax.CloseParenToken, syntax.CommaToken, syntax.EndOfFileToken)
+}
+
 // syncTo skips tokens until p.current matches one of the target boundary kinds or EOF.
 func (p *Parser) syncTo(kinds ...syntax.SyntaxKind) {
-	for p.current.Kind() != syntax.EndOfFileToken {
-		for _, k := range kinds {
-			if p.current.Kind() == k {
-				return
-			}
+	for !p.at(syntax.EndOfFileToken) {
+		if p.atAny(kinds...) {
+			return
 		}
 		p.advance()
 	}
@@ -66,7 +109,7 @@ func (p *Parser) currentLocation() source.Location {
 // match consumes and returns the current token if it matches the expected kind.
 // If it mismatches, it logs a diagnostic with location and returns a MissingToken.
 func (p *Parser) match(kind syntax.SyntaxKind) *green.Token {
-	if p.current.Kind() == kind {
+	if p.at(kind) {
 		return p.advance()
 	}
 
