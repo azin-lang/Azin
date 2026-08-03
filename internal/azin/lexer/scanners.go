@@ -75,6 +75,17 @@ func (l *Lexer) scanSyntaxToken(startOffset uint32) syntax.SyntaxKind {
 			return syntax.GreaterEqualsToken
 		}
 		return syntax.GreaterToken
+	case '&':
+		if l.match('&') {
+			return syntax.AmpersandAmpersandToken
+		}
+		return syntax.AmpersandToken
+
+	case '|':
+		if l.match('|') {
+			return syntax.PipePipeToken
+		}
+		return syntax.PipeToken
 	}
 
 	if unicode.IsLetter(ch) || ch == '_' {
