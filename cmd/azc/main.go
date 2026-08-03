@@ -2,70 +2,28 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
 	"github.com/azin-lang/Azin/internal/azin/lexer"
+	"github.com/azin-lang/Azin/internal/azin/parser"
 	"github.com/azin-lang/Azin/internal/azin/source"
-	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/syntax/red"
 )
 
 func main() {
-	code := []byte(`importc "stdio.h"
+	code := []byte(`(10 + 2 * max(a, @b == 42) && !isReady)`)
 
-enum Types is
-   Teacher
-   Doctor
-   None
-end
-
-struct Human is
-   mut age: int
-   mut name: string
-   mut type: Types
-   @  // E001: Unexpected character ('@')
-end
-`)
-
-	file := source.NewSourceText("test.az", 1, code)
+	file := source.NewSourceText("showcase.az", 1, code)
 	diags := diagnostics.NewCollector()
+
 	lex := lexer.New(file, diags)
+	p := parser.New(lex, diags)
 
-	tokenIndex := 0
-	for {
-		tok := lex.NextToken()
+	root := red.NewRoot(p.ParseExpression())
 
-		leadingText := ""
-		if tok.LeadingTrivia() != nil {
-			// Type-assert to extract text safely from the green.Node interface
-			if tr, ok := tok.LeadingTrivia().(*green.Trivia); ok {
-				leadingText = tr.Text()
-			}
-		}
-
-		trailingText := ""
-		if tok.TrailingTrivia() != nil {
-			if tr, ok := tok.TrailingTrivia().(*green.Trivia); ok {
-				trailingText = tr.Text()
-			}
-		}
-
-		fmt.Printf("[%03d] %v\n", tokenIndex, tok.Kind())
-
-		fmt.Printf("      ├── Leading trivia:  %s\n", formatMultiLineTrivia(leadingText))
-		fmt.Printf("      ├── Token text:      %q\n", tok.Text())
-		fmt.Printf("      └── Trailing trivia: %s\n", formatMultiLineTrivia(trailingText))
-		fmt.Println()
-
-		if tok.Kind() == syntax.EndOfFileToken {
-			break
-		}
-		tokenIndex++
-	}
-
-	fmt.Println(strings.Repeat("═", 66))
-
+	printTree(root, "", true)
+	fmt.Println()
 	if diags.HasErrors() {
 		fmt.Println(diags.PrintAll())
 	} else {
@@ -73,12 +31,52 @@ end
 	}
 }
 
-// formatMultiLineTrivia formats newlines neatly when displayed in an indented tree format.
-func formatMultiLineTrivia(s string) string {
-	if s == "" {
-		return "∅"
+// printTree recursively pretty-prints the red.Node AST.
+func printTree(node *red.Node, indent string, isLast bool) {
+	if node == nil {
+		return
 	}
-	// If the trivia has newlines, format them cleanly with proper indentation
-	replacer := strings.NewReplacer("\r\n", "\\n", "\n", "\\n", "\r", "\\r", "\t", "\\t")
-	return fmt.Sprintf("%q", replacer.Replace(s))
+
+	marker := "├── "
+	if isLast {
+		marker = "└── "
+	}
+
+	greenNode := node.Green()
+	kind := greenNode.Kind()
+
+	// Extract the literal text if the underlying green node is a Token
+	text := ""
+	if tok, ok := greenNode.(*green.Token); ok {
+		text = fmt.Sprintf(" %q", tok.Text())
+	}
+
+	fmt.Printf("%s%s%v%s\n", indent, marker, kind, text)
+
+	childIndent := indent
+	if isLast {
+		childIndent += "    "
+	} else {
+		childIndent += "│   "
+	}
+
+	// Dynamically find children using the Green tree's slot count.
+	// This works for any node type without needing manual casting.
+	type slotter interface {
+		SlotCount() int
+	}
+
+	var children []*red.Node
+	if s, ok := greenNode.(slotter); ok {
+		count := s.SlotCount()
+		for i := range count {
+			if child := node.Child(i); child != nil {
+				children = append(children, child)
+			}
+		}
+	}
+
+	for i, child := range children {
+		printTree(child, childIndent, i == len(children)-1)
+	}
 }
