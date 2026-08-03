@@ -7,7 +7,28 @@ import (
 	"github.com/azin-lang/Azin/internal/azin/lexer"
 	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
+	"github.com/azin-lang/Azin/internal/azin/syntax/green"
 )
+
+// Helper function to lex an entire input string into green tokens
+func lexAll(t *testing.T, input string) ([]*green.Token, *diagnostics.Collector) {
+	t.Helper()
+
+	file := source.NewSourceText("test.az", 0, []byte(input))
+	diags := diagnostics.NewCollector()
+	lex := lexer.New(file, diags)
+
+	var tokens []*green.Token
+	for {
+		tok := lex.NextToken()
+		tokens = append(tokens, tok)
+		if tok.Kind() == syntax.EndOfFileToken {
+			break
+		}
+	}
+
+	return tokens, diags
+}
 
 func TestLexer_Tokens(t *testing.T) {
 	tests := []struct {
@@ -28,10 +49,10 @@ func TestLexer_Tokens(t *testing.T) {
 			},
 		},
 		{
-			name:  "Floats and scientific notation",
+			name:  "Floats and Scientific Notation",
 			input: "3.14 + 1e-5",
 			expectedTokens: []syntax.SyntaxKind{
-				syntax.FloatLiteralToken, // Ensure this exists in your syntax package
+				syntax.FloatLiteralToken,
 				syntax.PlusToken,
 				syntax.FloatLiteralToken,
 				syntax.EndOfFileToken,
@@ -45,32 +66,171 @@ func TestLexer_Tokens(t *testing.T) {
 				syntax.EndOfFileToken,
 			},
 		},
+		{
+			name:  "Delimiters and Grouping",
+			input: "(a, b) { c; }",
+			expectedTokens: []syntax.SyntaxKind{
+				syntax.OpenParenToken,
+				syntax.IdentifierToken,
+				syntax.CommaToken,
+				syntax.IdentifierToken,
+				syntax.CloseParenToken,
+				syntax.OpenBraceToken,
+				syntax.IdentifierToken,
+				syntax.SemicolonToken,
+				syntax.CloseBraceToken,
+				syntax.EndOfFileToken,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			file := source.NewSourceText("test.az", 0, []byte(tt.input))
-			diags := diagnostics.NewCollector()
-			lex := lexer.New(file, diags)
-
-			var tokens []syntax.SyntaxKind
-			for {
-				tok := lex.NextToken()
-				tokens = append(tokens, tok.Kind())
-				if tok.Kind() == syntax.EndOfFileToken {
-					break
-				}
-			}
+			tokens, _ := lexAll(t, tt.input)
 
 			if len(tokens) != len(tt.expectedTokens) {
 				t.Fatalf("expected %d tokens, got %d", len(tt.expectedTokens), len(tokens))
 			}
 
 			for i, expected := range tt.expectedTokens {
-				if tokens[i] != expected {
-					t.Errorf("token %d: expected %v, got %v", i, expected, tokens[i])
+				if tokens[i].Kind() != expected {
+					t.Errorf("token %d: expected %v, got %v", i, expected, tokens[i].Kind())
 				}
 			}
 		})
+	}
+}
+
+func TestLexer_TokenText(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedText []string
+	}{
+		{
+			input:        "var score = 100",
+			expectedText: []string{"var", "score", "=", "100", ""},
+		},
+		{
+			input:        `"hello world"`,
+			expectedText: []string{`"hello world"`, ""},
+		},
+	}
+
+	for _, tt := range tests {
+		tokens, _ := lexAll(t, tt.input)
+
+		if len(tokens) != len(tt.expectedText) {
+			t.Fatalf("expected %d tokens, got %d", len(tt.expectedText), len(tokens))
+		}
+
+		for i, expected := range tt.expectedText {
+			if tokens[i].Text() != expected {
+				t.Errorf("token %d: expected text %q, got %q", i, expected, tokens[i].Text())
+			}
+		}
+	}
+}
+
+func TestLexer_MultiCharacterOperators(t *testing.T) {
+	input := "== != <= >= && || += -="
+	expected := []syntax.SyntaxKind{
+		syntax.EqualsEqualsToken,
+		syntax.BangEqualsToken,
+		syntax.LessEqualsToken,
+		syntax.GreaterEqualsToken,
+		syntax.AmpersandAmpersandToken,
+		syntax.PipePipeToken,
+		syntax.PlusEqualsToken,
+		syntax.MinusEqualsToken,
+		syntax.EndOfFileToken,
+	}
+
+	tokens, diags := lexAll(t, input)
+	if diags.HasErrors() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	if len(tokens) != len(expected) {
+		t.Fatalf("expected %d tokens, got %d", len(expected), len(tokens))
+	}
+
+	for i, exp := range expected {
+		if tokens[i].Kind() != exp {
+			t.Errorf("token %d: expected %v, got %v", i, exp, tokens[i].Kind())
+		}
+	}
+}
+
+func TestLexer_KeywordsVsIdentifiers(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected syntax.SyntaxKind
+	}{
+		{"var", syntax.KeywordVar},
+		{"fn", syntax.KeywordFn},
+		{"if", syntax.KeywordIf},
+		{"else", syntax.KeywordElse},
+		{"return", syntax.KeywordReturn},
+		{"true", syntax.IdentifierToken},
+		{"false", syntax.IdentifierToken},
+		{"letter", syntax.IdentifierToken},
+		{"fnName", syntax.IdentifierToken},
+		{"_private", syntax.IdentifierToken},
+		{"var123", syntax.IdentifierToken},
+	}
+
+	for _, tt := range tests {
+		tokens, _ := lexAll(t, tt.input)
+		if tokens[0].Kind() != tt.expected {
+			t.Errorf("for input %q: expected %v, got %v", tt.input, tt.expected, tokens[0].Kind())
+		}
+	}
+}
+
+func TestLexer_TriviaPreservation(t *testing.T) {
+	// Leading spaces attached to '10', trailing comment attached to EOF or '20'
+	input := "  10 + /* inline */ 20 // line comment"
+	tokens, _ := lexAll(t, input)
+
+	// First token '10' should have leading trivia (2 spaces)
+	tok10 := tokens[0]
+	if tok10.Text() != "10" {
+		t.Fatalf("expected '10', got %q", tok10.Text())
+	}
+
+	if tok10.LeadingTrivia() == nil {
+		t.Fatal("expected leading trivia for token '10'")
+	}
+
+	// Total full width should match raw input string length
+	var totalWidth uint32
+	for _, tok := range tokens {
+		totalWidth += tok.FullWidth()
+	}
+
+	if totalWidth != uint32(len(input)) {
+		t.Fatalf("expected full width %d, got %d", len(input), totalWidth)
+	}
+}
+
+func TestLexer_UnclosedStringDiagnostic(t *testing.T) {
+	input := `"unclosed string literal`
+	tokens, diags := lexAll(t, input)
+
+	if !diags.HasErrors() {
+		t.Fatal("expected diagnostic error for unclosed string")
+	}
+
+	if len(tokens) == 0 {
+		t.Fatal("lexer should return at least BadToken or StringLiteralToken")
+	}
+}
+
+func TestLexer_InvalidCharacterDiagnostic(t *testing.T) {
+	input := `@`
+	_, diags := lexAll(t, input)
+
+	if !diags.HasErrors() {
+		t.Fatal("expected diagnostic error for invalid character '@'")
 	}
 }
