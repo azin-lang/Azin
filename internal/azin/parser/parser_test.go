@@ -304,13 +304,11 @@ func TestParenthesesOverridePrecedence(t *testing.T) {
 		t.Fatal("expected top level '*'")
 	}
 
-	// First, cast the left child to a ParenthesizedExpression
 	paren := red.AsParenthesizedExpression(mul.Left())
 	if paren == nil {
 		t.Fatal("expected parenthesized expression on the left")
 	}
 
-	// Then, extract the inner expression from the parentheses
 	add := red.AsBinaryExpression(paren.Expression())
 	if add == nil || add.Operator().Kind() != syntax.PlusToken {
 		t.Fatal("expected '+' inside parentheses on the left")
@@ -321,7 +319,6 @@ func TestDeeplyNestedParentheses(t *testing.T) {
 	root, diags := parse(t, "(((42)))")
 	assertNoDiagnostics(t, diags)
 
-	// Unwrap all layers of parentheses until we hit the inner expression
 	curr := root
 	for {
 		if paren := red.AsParenthesizedExpression(curr); paren != nil {
@@ -379,8 +376,35 @@ func TestParseCallExpressionWithArgs(t *testing.T) {
 	}
 }
 
+func TestCallExpressionTrailingComma(t *testing.T) {
+	root, diags := parse(t, "foo(x, y,)")
+	assertNoDiagnostics(t, diags)
+
+	call := red.AsCallExpression(root)
+	if call == nil {
+		t.Fatal("expected call expression")
+	}
+
+	if red.AsNameExpression(call.Child(2)) == nil || red.AsNameExpression(call.Child(3)) == nil {
+		t.Fatal("expected arguments x and y to be parsed successfully")
+	}
+}
+
+func TestCallExpressionMissingCommaRecovery(t *testing.T) {
+	root, diags := parse(t, "foo(x y)")
+	assertHasDiagnostics(t, diags)
+
+	call := red.AsCallExpression(root)
+	if call == nil {
+		t.Fatal("expected call expression to be recovered")
+	}
+
+	if red.AsNameExpression(call.Child(2)) == nil || red.AsNameExpression(call.Child(3)) == nil {
+		t.Fatal("expected both arguments 'x' and 'y' to be preserved in the syntax tree")
+	}
+}
+
 func TestHigherOrderFunctionCall(t *testing.T) {
-	// (getHandler())(event)
 	root, diags := parse(t, "getHandler()(event)")
 	assertNoDiagnostics(t, diags)
 
@@ -396,7 +420,7 @@ func TestHigherOrderFunctionCall(t *testing.T) {
 }
 
 func TestParentPointersAndPositions(t *testing.T) {
-	text := "  10   +   20  "
+	text := "   10   +   20  "
 	root, diags := parse(t, text)
 	assertNoDiagnostics(t, diags)
 
@@ -405,7 +429,6 @@ func TestParentPointersAndPositions(t *testing.T) {
 		t.Fatal("expected binary expression")
 	}
 
-	// Verify tree parent references
 	if bin.Left().Parent() != bin.Node {
 		t.Error("incorrect left child parent pointer")
 	}
@@ -416,7 +439,6 @@ func TestParentPointersAndPositions(t *testing.T) {
 		t.Error("incorrect right child parent pointer")
 	}
 
-	// Verify exact positions & full width preservation
 	if bin.Position() != 0 {
 		t.Errorf("expected root position 0, got %d", bin.Position())
 	}
