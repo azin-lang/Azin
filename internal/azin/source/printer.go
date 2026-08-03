@@ -18,14 +18,7 @@ type diagnosticLayout struct {
 }
 
 // PrintColoredDiagnostic renders a colored diagnostic.
-func PrintColoredDiagnostic(
-	loc Location,
-	label, note, help string,
-	width int,
-	pipe,
-	style,
-	bold func(...any) string,
-) string {
+func PrintColoredDiagnostic(loc Location, label, note, help string, width int, pipe, style, bold func(...any) string) string {
 	if loc.File == nil || !loc.Span.IsValidAndNonEmpty() {
 		return "<invalid location>\n"
 	}
@@ -35,7 +28,7 @@ func PrintColoredDiagnostic(
 	var buf bytes.Buffer
 
 	writeDiagnosticHeader(&buf, layout, pipe)
-	writeDiagnosticSource(&buf, layout, label, pipe, style)
+	writeDiagnosticSource(&buf, layout, label, width, pipe, style)
 	writeDiagnosticFooter(&buf, note, help, width, bold)
 
 	return buf.String()
@@ -59,11 +52,7 @@ func makeDiagnosticLayout(loc Location) diagnosticLayout {
 	}
 }
 
-func writeDiagnosticHeader(
-	buf *bytes.Buffer,
-	layout diagnosticLayout,
-	pipe func(...any) string,
-) {
+func writeDiagnosticHeader(buf *bytes.Buffer, layout diagnosticLayout, pipe func(...any) string) {
 	fmt.Fprintf(buf, "   %s %s\n", pipe("┌─"), pipe(layout.Location))
 	fmt.Fprintf(buf, "   %s\n", pipe("│"))
 }
@@ -72,6 +61,7 @@ func writeDiagnosticSource(
 	buf *bytes.Buffer,
 	layout diagnosticLayout,
 	label string,
+	width int,
 	pipe func(...any) string,
 	style func(...any) string,
 ) {
@@ -90,23 +80,56 @@ func writeDiagnosticSource(
 	)
 
 	if label != "" {
-		fmt.Fprintf(buf, "   %s %s%s\n",
-			pipe("│"),
-			layout.PointerIndent,
-			style(label),
+		const (
+			prefixWidth     = 5 // "   │ "
+			minPointerSpace = 20
+			fallbackIndent  = 4
 		)
+
+		indent := layout.PointerIndent
+		indentWidth := calculateDisplayWidth(indent)
+
+		available := width - prefixWidth - indentWidth
+
+		// If the pointer is too close to the right edge, stop trying to align
+		// the label underneath it. Instead, print it with a fixed indent.
+		if width > 0 && available < minPointerSpace {
+			indent = strings.Repeat(" ", fallbackIndent)
+			available = width - prefixWidth - fallbackIndent
+		}
+
+		if available < 1 {
+			available = 1
+		}
+
+		label = wrapText(label, available)
+
+		for line := range strings.SplitSeq(label, "\n") {
+			fmt.Fprintf(buf, "   %s %s%s\n",
+				pipe("│"),
+				indent,
+				style(line),
+			)
+		}
 	}
 
 	fmt.Fprintf(buf, "   %s\n\n", pipe("└"))
 }
 
-func writeDiagnosticFooter(
-	buf *bytes.Buffer,
-	note,
-	help string,
-	width int,
-	bold func(...any) string,
-) {
+// calculateDisplayWidth counts tabs as 4 spaces for terminal width calculations.
+func calculateDisplayWidth(s string) int {
+	w := 0
+	for _, r := range s {
+		if r == '\t' {
+			w += 4
+		} else {
+			w++
+		}
+	}
+	return w
+}
+
+func writeDiagnosticFooter(buf *bytes.Buffer, note, help string, width int, bold func(...any) string) {
 	if note != "" {
 		buf.WriteString(wrapText(note, width))
 		buf.WriteByte('\n')
@@ -120,33 +143,18 @@ func writeDiagnosticFooter(
 		buf.WriteByte('\n')
 	}
 
-	for _, line := range strings.Split(wrapText(help, width), "\n") {
+	for line := range strings.SplitSeq(wrapText(help, width), "\n") {
 		buf.WriteString(bold(line))
 		buf.WriteByte('\n')
 	}
 }
 
-func formatLocation(
-	loc Location,
-	pos Position,
-	endColumn uint32,
-) string {
+func formatLocation(loc Location, pos Position, endColumn uint32) string {
 	if pos.ByteColumn == endColumn {
-		return fmt.Sprintf(
-			"%s:%d:%d",
-			loc.File.Path(),
-			pos.Line,
-			pos.ByteColumn,
-		)
+		return fmt.Sprintf("%s:%d:%d", loc.File.Path(), pos.Line, pos.ByteColumn)
 	}
 
-	return fmt.Sprintf(
-		"%s:%d:%d-%d",
-		loc.File.Path(),
-		pos.Line,
-		pos.ByteColumn,
-		endColumn,
-	)
+	return fmt.Sprintf("%s:%d:%d-%d", loc.File.Path(), pos.Line, pos.ByteColumn, endColumn)
 }
 
 func clampColumn(column uint32, lineLength int) int {
@@ -219,7 +227,7 @@ func wrapText(text string, width int) string {
 
 		column := 0
 
-		for _, word := range strings.Fields(paragraph) {
+		for word := range strings.FieldsSeq(paragraph) {
 			length := utf8.RuneCountInString(word)
 
 			if column != 0 && column+1+length > width {
