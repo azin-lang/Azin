@@ -2,6 +2,8 @@ package syntax
 
 func Display(kind SyntaxKind) string {
 	switch kind {
+	case BadToken:
+		return "unexpected token"
 
 	case IdentifierToken:
 		return "identifier"
@@ -29,6 +31,6 @@ func Display(kind SyntaxKind) string {
 			return "'" + text + "'"
 		}
 
-		return "" // TODO: implement kind.String()
+		return kind.String()
 	}
 }
