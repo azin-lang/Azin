@@ -5,7 +5,7 @@ func (k SyntaxKind) IsTrivia() bool {
 }
 
 func (k SyntaxKind) IsNode() bool {
-	return false
+	return k >= CompilationUnit && k <= CastExpression
 }
 
 func (k SyntaxKind) IsToken() bool {
@@ -21,29 +21,39 @@ func (k SyntaxKind) IsLiteral() bool {
 }
 
 func (k SyntaxKind) IsExpression() bool {
-	return false
+	return k >= LiteralExpression && k <= CastExpression
 }
 
 func (k SyntaxKind) IsStatement() bool {
-	return false
+	return k >= BlockStatement && k <= ForStatement
 }
 
 func (k SyntaxKind) IsDeclaration() bool {
-	return false
+	return k >= ImportDeclaration && k <= FieldDeclaration
 }
 
 func (k SyntaxKind) IsPrimaryExpression() bool {
-	return false
+	return k == LiteralExpression || k == NameExpression || k == ParenthesizedExpression
 }
 
 func (k SyntaxKind) StartsExpression() bool {
-	return false
+	return k.IsLiteral() || k == IdentifierToken || k == OpenParenToken || k.IsPrefixOperator()
 }
 
 func (k SyntaxKind) StartsStatement() bool {
-	return false
+	switch k {
+	case OpenBraceToken, KeywordIf, KeywordWhile, KeywordFor, KeywordLoop, KeywordDefer, KeywordStop, KeywordReturn, SemicolonToken:
+		return true
+	default:
+		return k.StartsExpression()
+	}
 }
 
 func (k SyntaxKind) StartsDeclaration() bool {
-	return false
+	switch k {
+	case KeywordImport, KeywordImportC, KeywordFn, KeywordStruct, KeywordEnum, KeywordType, KeywordVar:
+		return true
+	default:
+		return false
+	}
 }
