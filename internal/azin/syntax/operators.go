@@ -10,10 +10,12 @@ const (
 func BinaryPrecedence(kind SyntaxKind) int {
 	switch kind {
 	case StarToken, SlashToken, AmpersandToken:
-		return 5
+		return 6
 	case PlusToken, MinusToken, PipeToken, CaretToken:
+		return 5
+	case LessToken, LessEqualsToken, GreaterToken, GreaterEqualsToken:
 		return 4
-	case EqualsEqualsToken, BangEqualsToken, LessToken, LessEqualsToken, GreaterToken, GreaterEqualsToken:
+	case EqualsEqualsToken, BangEqualsToken:
 		return 3
 	case AmpersandAmpersandToken:
 		return 2
@@ -27,7 +29,7 @@ func BinaryPrecedence(kind SyntaxKind) int {
 func UnaryPrecedence(kind SyntaxKind) int {
 	switch kind {
 	case PlusToken, MinusToken, BangToken, CaretToken, AmpersandToken, StarToken:
-		return 6
+		return 7
 	default:
 		return 0
 	}
