@@ -77,6 +77,7 @@ const (
 	KeywordElse
 	KeywordEnd
 	KeywordEnum
+	KeywordFalse
 	KeywordFn
 	KeywordFor
 	KeywordIf
@@ -89,6 +90,7 @@ const (
 	KeywordStop
 	KeywordStruct
 	KeywordThen
+	KeywordTrue
 	KeywordType
 	KeywordVar
 	KeywordWhile
