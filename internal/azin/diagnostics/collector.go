@@ -137,7 +137,7 @@ func (c *Collector) PrintAll() string {
 
 	red := color.New(color.FgRed).SprintFunc()
 	yellow := color.New(color.FgYellow).SprintFunc()
-	cyan := color.New(color.FgCyan).SprintFunc()
+	cyan := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
 	bold := color.New(color.Bold).SprintFunc()
 	dim := color.New(color.Faint).SprintFunc()
 
@@ -146,7 +146,7 @@ func (c *Collector) PrintAll() string {
 			out.WriteString("\n\n") // Space between multiple errors
 		}
 
-		styleColor := red
+		styleColor := cyan
 		pipeColor := dim
 
 		switch d.Severity {
@@ -170,12 +170,9 @@ func (c *Collector) PrintAll() string {
 			termWidth = maxWidth
 		}
 
-		dashCount := termWidth - len(title) - 4
-		if dashCount < 2 {
-			dashCount = 2
-		}
+		dashCount := max(termWidth-len(title)-4, 2)
 
-		banner := fmt.Sprintf("%s %s %s", styleColor("──"), styleColor(title), styleColor(strings.Repeat("─", dashCount)))
+		banner := fmt.Sprintf("%s %s %s", cyan("──"), cyan(title), cyan(strings.Repeat("─", dashCount)))
 		out.WriteString(banner + "\n\n")
 
 		if d.Location.File != nil && d.Location.Span.IsValidAndNonEmpty() {
