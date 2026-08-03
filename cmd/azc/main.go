@@ -4,53 +4,81 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/azin-lang/Azin/internal/azin/diagnostics"
+	"github.com/azin-lang/Azin/internal/azin/lexer"
+	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
-	"github.com/azin-lang/Azin/internal/azin/syntax/red"
 )
 
 func main() {
-	fmt.Println("Source code: \"2020 + 1024\"")
-	fmt.Println(strings.Repeat("-", 54))
+	code := []byte(`importc "stdio.h"
 
-	space := green.NewTrivia(syntax.WhitespaceTrivia, " ")
+enum Types is
+   Teacher
+   Doctor
+   None
+end
 
-	t1 := green.NewToken(syntax.IntegerLiteralToken, "2020", nil, space)
-	tPlus := green.NewToken(syntax.PlusToken, "+", nil, space)
-	t2 := green.NewToken(syntax.IntegerLiteralToken, "1024", nil, nil)
+struct Human is
+   mut age: int
+   mut name: string
+   mut type: Types
+   @  // E001: Unexpected character ('@')
+end
+`)
 
-	greenRoot := green.NewBinaryExpression(t1, tPlus, t2)
+	file := source.NewSourceText("test.az", 1, code)
+	diags := diagnostics.NewCollector()
+	lex := lexer.New(file, diags)
 
-	redRoot := red.NewRoot(greenRoot)
-	expr := red.AsBinaryExpression(redRoot)
+	tokenIndex := 0
+	for {
+		tok := lex.NextToken()
 
-	fmt.Printf("%-30s | %-8s | %-10s\n", "NODE KIND", "POS", "WIDTH")
-	fmt.Println(strings.Repeat("-", 54))
+		leadingText := ""
+		if tok.LeadingTrivia() != nil {
+			// Type-assert to extract text safely from the green.Node interface
+			if tr, ok := tok.LeadingTrivia().(*green.Trivia); ok {
+				leadingText = tr.Text()
+			}
+		}
 
-	fmt.Printf("%-30s | %-8d | %-10d\n",
-		expr.Kind().String(),
-		expr.Position(),
-		expr.FullWidth(),
-	)
+		trailingText := ""
+		if tok.TrailingTrivia() != nil {
+			if tr, ok := tok.TrailingTrivia().(*green.Trivia); ok {
+				trailingText = tr.Text()
+			}
+		}
 
-	left := expr.Left()
-	fmt.Printf("  ├── %-24s | %-8d | %-10d\n",
-		left.Kind().String(),
-		left.Position(),
-		left.FullWidth(),
-	)
+		fmt.Printf("[%03d] %v\n", tokenIndex, tok.Kind())
 
-	op := expr.Operator()
-	fmt.Printf("  ├── %-24s | %-8d | %-10d\n",
-		op.Kind().String(),
-		op.Position(),
-		op.FullWidth(),
-	)
+		fmt.Printf("      ├── Leading trivia:  %s\n", formatMultiLineTrivia(leadingText))
+		fmt.Printf("      ├── Token text:      %q\n", tok.Text())
+		fmt.Printf("      └── Trailing trivia: %s\n", formatMultiLineTrivia(trailingText))
+		fmt.Println()
 
-	right := expr.Right()
-	fmt.Printf("  └── %-24s | %-8d | %-10d\n",
-		right.Kind().String(),
-		right.Position(),
-		right.FullWidth(),
-	)
+		if tok.Kind() == syntax.EndOfFileToken {
+			break
+		}
+		tokenIndex++
+	}
+
+	fmt.Println(strings.Repeat("═", 66))
+
+	if diags.HasErrors() {
+		fmt.Println(diags.PrintAll())
+	} else {
+		fmt.Println("Compilation successful with zero errors.")
+	}
+}
+
+// formatMultiLineTrivia formats newlines neatly when displayed in an indented tree format.
+func formatMultiLineTrivia(s string) string {
+	if s == "" {
+		return "∅"
+	}
+	// If the trivia has newlines, format them cleanly with proper indentation
+	replacer := strings.NewReplacer("\r\n", "\\n", "\n", "\\n", "\r", "\\r", "\t", "\\t")
+	return fmt.Sprintf("%q", replacer.Replace(s))
 }
