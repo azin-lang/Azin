@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	code := []byte(`(10 + 2 * max(a, @b == 42) && !isReady)`)
+	code := []byte(`(10 + 2 * max(a, @b == 42) && isReady.not)`)
 
 	file := source.NewSourceText("showcase.az", 1, code)
 	diags := diagnostics.NewCollector()

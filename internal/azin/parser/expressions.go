@@ -48,7 +48,7 @@ func (p *Parser) parseUnaryExpression() green.Node {
 	return p.parsePostfixExpression()
 }
 
-// parsePostfixExpression handles high-precedence postfix operators like function calls.
+// parsePostfixExpression handles high-precedence postfix operators like calls and member access.
 func (p *Parser) parsePostfixExpression() green.Node {
 	expr := p.parsePrimaryExpression()
 
@@ -56,6 +56,10 @@ func (p *Parser) parsePostfixExpression() green.Node {
 		switch p.current.Kind() {
 		case syntax.OpenParenToken:
 			expr = p.parseCallExpression(expr)
+		case syntax.DotToken:
+			dot := p.advance()
+			member := p.match(syntax.IdentifierToken)
+			expr = green.NewMemberAccessExpression(expr, dot, member)
 		default:
 			return expr
 		}
