@@ -215,10 +215,7 @@ func (f *SourceText) Offset(line, column uint32) uint32 {
 // BytesOf returns a slice of the file's text bounded by the given Span.
 func (f *SourceText) BytesOf(span Span) []byte {
 	start := f.Clamp(span.Start)
-	end := f.Clamp(span.End)
-	if end < start {
-		end = start
-	}
+	end := max(f.Clamp(span.End), start)
 	return f.text[start:end]
 }
 
