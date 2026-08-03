@@ -1,8 +1,5 @@
 package syntax
 
-// TODO: Think about how I'll support "unary" expressions, like x.not, since I do not want to implement actual unary
-//       operators.
-
 type Associativity uint8
 
 const (
@@ -28,39 +25,72 @@ func BinaryPrecedence(kind SyntaxKind) int {
 }
 
 func UnaryPrecedence(kind SyntaxKind) int {
-	return 0
+	switch kind {
+	case PlusToken, MinusToken, BangToken, CaretToken, AmpersandToken, StarToken:
+		return 6
+	default:
+		return 0
+	}
 }
 
 func AssociativityOf(kind SyntaxKind) Associativity {
+	if kind.IsAssignmentOperator() {
+		return Right
+	}
 	return Left
 }
 
 func (k SyntaxKind) IsOperator() bool {
-	return false
+	return k.IsArithmeticOperator() || k.IsAssignmentOperator() || k.IsComparisonOperator() || k.IsLogicalOperator() || k.IsBitwiseOperator()
 }
 
 func (k SyntaxKind) IsArithmeticOperator() bool {
-	return false
+	switch k {
+	case PlusToken, MinusToken, StarToken, SlashToken:
+		return true
+	default:
+		return false
+	}
 }
 
 func (k SyntaxKind) IsAssignmentOperator() bool {
-	return false
+	switch k {
+	case EqualsToken, PlusEqualsToken, MinusEqualsToken, StarEqualsToken, SlashEqualsToken:
+		return true
+	default:
+		return false
+	}
 }
 
 func (k SyntaxKind) IsComparisonOperator() bool {
-	return false
+	switch k {
+	case EqualsEqualsToken, BangEqualsToken, LessToken, LessEqualsToken, GreaterToken, GreaterEqualsToken:
+		return true
+	default:
+		return false
+	}
 }
 
 func (k SyntaxKind) IsLogicalOperator() bool {
-	return false
+	switch k {
+	case AmpersandAmpersandToken, PipePipeToken, BangToken:
+		return true
+	default:
+		return false
+	}
 }
 
 func (k SyntaxKind) IsBitwiseOperator() bool {
-	return false
+	switch k {
+	case AmpersandToken, PipeToken, CaretToken:
+		return true
+	default:
+		return false
+	}
 }
 
 func (k SyntaxKind) IsPrefixOperator() bool {
-	return false
+	return UnaryPrecedence(k) > 0
 }
 
 func (k SyntaxKind) IsPostfixOperator() bool {
