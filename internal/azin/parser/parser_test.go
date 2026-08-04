@@ -8,7 +8,6 @@ import (
 	"github.com/azin-lang/Azin/internal/azin/parser"
 	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
-	"github.com/azin-lang/Azin/internal/azin/syntax/green"
 	"github.com/azin-lang/Azin/internal/azin/syntax/red"
 )
 
@@ -87,17 +86,17 @@ func TestParseLiterals(t *testing.T) {
 				t.Fatalf("expected literal expression for input %q", tt.input)
 			}
 
-			token, ok := lit.Token().Green().(*green.Token)
-			if !ok {
-				t.Fatal("expected green token")
+			tok := lit.Token()
+			if tok.IsZero() {
+				t.Fatal("expected non-zero token")
 			}
 
-			if token.Kind() != tt.expectedKind {
-				t.Errorf("expected kind %v, got %v", tt.expectedKind, token.Kind())
+			if tok.Kind() != tt.expectedKind {
+				t.Errorf("expected kind %v, got %v", tt.expectedKind, tok.Kind())
 			}
 
-			if token.Text() != tt.expectedText {
-				t.Errorf("expected text %q, got %q", tt.expectedText, token.Text())
+			if tok.Text() != tt.expectedText {
+				t.Errorf("expected text %q, got %q", tt.expectedText, tok.Text())
 			}
 		})
 	}
@@ -112,13 +111,13 @@ func TestParseNameExpression(t *testing.T) {
 		t.Fatal("expected name expression")
 	}
 
-	if name.Identifier() == nil {
-		t.Fatal("expected identifier token node")
+	tok := name.Identifier()
+	if tok.IsZero() {
+		t.Fatal("expected identifier token")
 	}
 
-	tok, ok := name.Identifier().Green().(*green.Token)
-	if !ok || tok.Kind() != syntax.IdentifierToken {
-		t.Fatalf("expected IdentifierToken, got %v", name.Identifier().Kind())
+	if tok.Kind() != syntax.IdentifierToken {
+		t.Fatalf("expected IdentifierToken, got %v", tok.Kind())
 	}
 
 	if tok.Text() != "variableName" {
@@ -257,7 +256,6 @@ func TestBinaryOperatorPrecedence(t *testing.T) {
 				t.Errorf("expected top operator %v, got %v", tt.topOperator, top.Operator().Kind())
 			}
 
-			// Check left child operator only if explicitly defined in test struct
 			if tt.leftOperator != 0 {
 				left := red.AsBinaryExpression(top.Left())
 				if left == nil || left.Operator().Kind() != tt.leftOperator {
@@ -265,7 +263,6 @@ func TestBinaryOperatorPrecedence(t *testing.T) {
 				}
 			}
 
-			// Check right child operator only if explicitly defined in test struct
 			if tt.rightOperator != 0 {
 				right := red.AsBinaryExpression(top.Right())
 				if right == nil || right.Operator().Kind() != tt.rightOperator {
@@ -347,11 +344,11 @@ func TestParseCallExpressionNoArgs(t *testing.T) {
 		t.Fatal("expected function name expression")
 	}
 
-	if call.OpenParen() == nil || call.OpenParen().Kind() != syntax.OpenParenToken {
+	if call.OpenParen().IsZero() || call.OpenParen().Kind() != syntax.OpenParenToken {
 		t.Fatal("expected '(' token")
 	}
 
-	if call.CloseParen() == nil || call.CloseParen().Kind() != syntax.CloseParenToken {
+	if call.CloseParen().IsZero() || call.CloseParen().Kind() != syntax.CloseParenToken {
 		t.Fatal("expected ')' token")
 	}
 }
@@ -365,12 +362,17 @@ func TestParseCallExpressionWithArgs(t *testing.T) {
 		t.Fatal("expected call expression")
 	}
 
-	arg0 := red.AsNameExpression(call.Child(2))
+	args := call.Arguments()
+	if args == nil || args.Count() < 2 {
+		t.Fatal("expected at least 2 arguments")
+	}
+
+	arg0 := red.AsNameExpression(args.Item(0))
 	if arg0 == nil {
 		t.Fatal("expected first argument to be name expression 'x'")
 	}
 
-	arg1 := red.AsBinaryExpression(call.Child(3))
+	arg1 := red.AsBinaryExpression(args.Item(1))
 	if arg1 == nil {
 		t.Fatal("expected second argument to be binary expression '10 + y'")
 	}
@@ -385,7 +387,12 @@ func TestCallExpressionTrailingComma(t *testing.T) {
 		t.Fatal("expected call expression")
 	}
 
-	if red.AsNameExpression(call.Child(2)) == nil || red.AsNameExpression(call.Child(3)) == nil {
+	args := call.Arguments()
+	if args == nil || args.Count() < 2 {
+		t.Fatal("expected at least 2 arguments")
+	}
+
+	if red.AsNameExpression(args.Item(0)) == nil || red.AsNameExpression(args.Item(1)) == nil {
 		t.Fatal("expected arguments x and y to be parsed successfully")
 	}
 }
@@ -399,7 +406,12 @@ func TestCallExpressionMissingCommaRecovery(t *testing.T) {
 		t.Fatal("expected call expression to be recovered")
 	}
 
-	if red.AsNameExpression(call.Child(2)) == nil || red.AsNameExpression(call.Child(3)) == nil {
+	args := call.Arguments()
+	if args == nil || args.Count() < 2 {
+		t.Fatal("expected at least 2 arguments in syntax tree")
+	}
+
+	if red.AsNameExpression(args.Item(0)) == nil || red.AsNameExpression(args.Item(1)) == nil {
 		t.Fatal("expected both arguments 'x' and 'y' to be preserved in the syntax tree")
 	}
 }

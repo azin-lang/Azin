@@ -27,6 +27,16 @@ func New(lex *lexer.Lexer, diags *diagnostics.Collector) *Parser {
 	return p
 }
 
+// ParseCompilationUnit parses an entire source file as a sequence of statements until EOF.
+func (p *Parser) ParseCompilationUnit() green.Node {
+	var stmts []green.Node
+	for !p.at(syntax.EndOfFileToken) {
+		stmts = append(stmts, p.ParseStatement())
+	}
+	p.advance()
+	return green.NewSyntaxList(stmts)
+}
+
 func (p *Parser) advance() *green.Token {
 	previous := p.current
 	if p.current != nil {
@@ -72,7 +82,7 @@ func (p *Parser) isAtExpressionStart() bool {
 		syntax.OpenParenToken:
 		return true
 	default:
-		return syntax.UnaryPrecedence(p.current.Kind()) != 0
+		return p.current.Kind().UnaryPrecedence() != 0
 	}
 }
 
@@ -117,8 +127,8 @@ func (p *Parser) match(kind syntax.SyntaxKind) *green.Token {
 		p.currentLocation(),
 		"E010",
 		"Expected %s but got %s",
-		syntax.Display(kind),
-		syntax.Display(p.current.Kind()),
+		kind.String(),
+		p.current.Kind().String(),
 	)
 
 	return green.NewToken(syntax.MissingToken, "", nil, nil)

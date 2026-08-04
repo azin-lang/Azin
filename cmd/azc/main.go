@@ -12,7 +12,10 @@ import (
 )
 
 func main() {
-	code := []byte(`(10 + 2 * max(a, @b == 42) && isReady.not)`)
+	code := []byte(`
+var x: int = (10 + 2 * max(a, @b == 42) && isReady.not)
+var y = 10
+`)
 
 	file := source.NewSourceText("showcase.az", 1, code)
 	diags := diagnostics.NewCollector()
@@ -20,7 +23,7 @@ func main() {
 	lex := lexer.New(file, diags)
 	p := parser.New(lex, diags)
 
-	root := red.NewRoot(p.ParseExpression())
+	root := red.NewRoot(p.ParseCompilationUnit())
 
 	printTree(root, "", true)
 	fmt.Println()

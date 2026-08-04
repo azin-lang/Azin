@@ -15,7 +15,7 @@ func (p *Parser) parseBinaryExpression(parentPrecedence int) green.Node {
 	left := p.parseUnaryExpression()
 
 	for {
-		binaryPrec := syntax.BinaryPrecedence(p.current.Kind())
+		binaryPrec := p.current.Kind().BinaryPrecedence()
 		if binaryPrec == 0 || binaryPrec < parentPrecedence {
 			break
 		}
@@ -24,7 +24,7 @@ func (p *Parser) parseBinaryExpression(parentPrecedence int) green.Node {
 		p.advance()
 
 		nextPrec := binaryPrec
-		if syntax.AssociativityOf(opToken.Kind()) == syntax.Left {
+		if opToken.Kind().Associativity() == syntax.Left {
 			nextPrec++
 		}
 
@@ -37,7 +37,7 @@ func (p *Parser) parseBinaryExpression(parentPrecedence int) green.Node {
 
 // parseUnaryExpression handles prefix unary operators (!, -, +, etc.).
 func (p *Parser) parseUnaryExpression() green.Node {
-	unaryPrec := syntax.UnaryPrecedence(p.current.Kind())
+	unaryPrec := p.current.Kind().UnaryPrecedence()
 	if unaryPrec != 0 {
 		opToken := p.current
 		p.advance()
@@ -96,7 +96,11 @@ func (p *Parser) parseCallExpression(callee green.Node) green.Node {
 	}
 
 	closeParen := p.match(syntax.CloseParenToken)
-	return green.NewCallExpression(callee, openParen, args, closeParen)
+
+	// Wrap the slice in a SyntaxList node so it implements green.Node
+	argsList := green.NewSyntaxList(args)
+
+	return green.NewCallExpression(callee, openParen, argsList, closeParen)
 }
 
 // parsePrimaryExpression parses atomic elements (literals, identifiers, parenthesized expressions).
@@ -121,7 +125,7 @@ func (p *Parser) parsePrimaryExpression() green.Node {
 			p.currentLocation(),
 			"E011",
 			"Expected expression but got %s",
-			syntax.Display(p.current.Kind()),
+			p.current.Kind().String(),
 		)
 
 		// Skip unexpected token only if it is not a structural delimiter/boundary token
