@@ -12,26 +12,13 @@ type VariableDeclaration struct {
 	initializer    Node
 }
 
-func NewVariableDeclaration(
-	varKeyword *Token,
-	identifier *Token,
-	colon *Token,
-	typeAnnotation Node,
-	equals *Token,
-	initializer Node,
-) *VariableDeclaration {
-	var width uint32
-	nodes := []Node{varKeyword, identifier, colon, typeAnnotation, equals, initializer}
-	for _, n := range nodes {
-		if n != nil {
-			width += n.FullWidth()
-		}
-	}
-
+func NewVariableDeclaration(varKeyword *Token, identifier *Token, colon *Token, typeAnnotation Node, equals *Token, initializer Node) *VariableDeclaration {
+	width, flags := ComputeProperties6(varKeyword, identifier, colon, typeAnnotation, equals, initializer)
 	return &VariableDeclaration{
 		Base: Base{
 			kind:      syntax.VariableDeclaration,
 			fullWidth: width,
+			flags:     flags,
 		},
 		varKeyword:     varKeyword,
 		identifier:     identifier,
@@ -50,20 +37,37 @@ func (v *VariableDeclaration) Equals() *Token       { return v.equals }
 func (v *VariableDeclaration) Initializer() Node    { return v.initializer }
 
 func (v *VariableDeclaration) SlotCount() int { return 6 }
-
 func (v *VariableDeclaration) Slot(index int) Node {
 	switch index {
 	case 0:
+		if v.varKeyword == nil {
+			return nil
+		}
 		return v.varKeyword
 	case 1:
+		if v.identifier == nil {
+			return nil
+		}
 		return v.identifier
 	case 2:
+		if v.colon == nil {
+			return nil
+		}
 		return v.colon
 	case 3:
+		if v.typeAnnotation == nil {
+			return nil
+		}
 		return v.typeAnnotation
 	case 4:
+		if v.equals == nil {
+			return nil
+		}
 		return v.equals
 	case 5:
+		if v.initializer == nil {
+			return nil
+		}
 		return v.initializer
 	default:
 		return nil

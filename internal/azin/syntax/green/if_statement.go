@@ -1,6 +1,8 @@
 package green
 
-import "github.com/azin-lang/Azin/internal/azin/syntax"
+import (
+	"github.com/azin-lang/Azin/internal/azin/syntax"
+)
 
 type IfStatement struct {
 	Base
@@ -12,27 +14,12 @@ type IfStatement struct {
 }
 
 func NewIfStatement(ifKeyword *Token, condition Node, thenBranch Node, elseKeyword *Token, elseBranch Node) *IfStatement {
-	var width uint32
-	if ifKeyword != nil {
-		width += ifKeyword.FullWidth()
-	}
-	if condition != nil {
-		width += condition.FullWidth()
-	}
-	if thenBranch != nil {
-		width += thenBranch.FullWidth()
-	}
-	if elseKeyword != nil {
-		width += elseKeyword.FullWidth()
-	}
-	if elseBranch != nil {
-		width += elseBranch.FullWidth()
-	}
-
+	width, flags := ComputeProperties5(ifKeyword, condition, thenBranch, elseKeyword, elseBranch)
 	return &IfStatement{
 		Base: Base{
 			kind:      syntax.IfStatement,
 			fullWidth: width,
+			flags:     flags,
 		},
 		ifKeyword:   ifKeyword,
 		condition:   condition,
@@ -49,18 +36,32 @@ func (i *IfStatement) ElseKeyword() *Token { return i.elseKeyword }
 func (i *IfStatement) ElseBranch() Node    { return i.elseBranch }
 
 func (i *IfStatement) SlotCount() int { return 5 }
-
 func (i *IfStatement) Slot(index int) Node {
 	switch index {
 	case 0:
+		if i.ifKeyword == nil {
+			return nil
+		}
 		return i.ifKeyword
 	case 1:
+		if i.condition == nil {
+			return nil
+		}
 		return i.condition
 	case 2:
+		if i.thenBranch == nil {
+			return nil
+		}
 		return i.thenBranch
 	case 3:
+		if i.elseKeyword == nil {
+			return nil
+		}
 		return i.elseKeyword
 	case 4:
+		if i.elseBranch == nil {
+			return nil
+		}
 		return i.elseBranch
 	default:
 		return nil

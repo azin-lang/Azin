@@ -1,6 +1,8 @@
 package green
 
-import "github.com/azin-lang/Azin/internal/azin/syntax"
+import (
+	"github.com/azin-lang/Azin/internal/azin/syntax"
+)
 
 type NameExpression struct {
 	Base
@@ -8,15 +10,12 @@ type NameExpression struct {
 }
 
 func NewNameExpression(identifier *Token) *NameExpression {
-	var width uint32
-	if identifier != nil {
-		width = identifier.FullWidth()
-	}
-
+	width, flags := ComputeProperties1(identifier)
 	return &NameExpression{
 		Base: Base{
 			kind:      syntax.NameExpression,
 			fullWidth: width,
+			flags:     flags,
 		},
 		identifier: identifier,
 	}
@@ -25,7 +24,7 @@ func NewNameExpression(identifier *Token) *NameExpression {
 func (n *NameExpression) Identifier() *Token { return n.identifier }
 func (n *NameExpression) SlotCount() int     { return 1 }
 func (n *NameExpression) Slot(index int) Node {
-	if index == 0 {
+	if index == 0 && n.identifier != nil {
 		return n.identifier
 	}
 	return nil

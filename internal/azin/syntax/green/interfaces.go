@@ -5,11 +5,9 @@ import "github.com/azin-lang/Azin/internal/azin/syntax"
 type Node interface {
 	Kind() syntax.SyntaxKind
 	FullWidth() uint32
-	GetLeadingTriviaWidth() uint32
-	GetTrailingTriviaWidth() uint32
+	Flags() NodeFlags
 	SlotCount() int
-	Slot(int) Node
+	Slot(index int) Node
 	ContainsDiagnostics() bool
 	IsMissing() bool
-	IsNil() bool
 }
