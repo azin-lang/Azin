@@ -28,7 +28,7 @@ func (t SyntaxToken) IsZero() bool {
 	return t.green == nil
 }
 
-func (t SyntaxToken) Kind() syntax.SyntaxKind {
+func (t SyntaxToken) Kind() syntax.Kind {
 	if t.IsZero() {
 		return syntax.Unknown
 	}

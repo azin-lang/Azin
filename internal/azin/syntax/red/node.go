@@ -25,7 +25,7 @@ func NewRoot(greenRoot green.Node) *Node {
 	}
 }
 
-func (n *Node) Kind() syntax.SyntaxKind {
+func (n *Node) Kind() syntax.Kind {
 	if n == nil || n.greenNode == nil {
 		return syntax.Unknown
 	}

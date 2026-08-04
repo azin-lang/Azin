@@ -34,12 +34,12 @@ func TestLexer_Tokens(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          string
-		expectedTokens []syntax.SyntaxKind
+		expectedTokens []syntax.Kind
 	}{
 		{
 			name:  "Basic Arithmetic",
 			input: "10 + 20 * 5",
-			expectedTokens: []syntax.SyntaxKind{
+			expectedTokens: []syntax.Kind{
 				syntax.IntegerLiteralToken,
 				syntax.PlusToken,
 				syntax.IntegerLiteralToken,
@@ -51,7 +51,7 @@ func TestLexer_Tokens(t *testing.T) {
 		{
 			name:  "Floats and Scientific Notation",
 			input: "3.14 + 1e-5",
-			expectedTokens: []syntax.SyntaxKind{
+			expectedTokens: []syntax.Kind{
 				syntax.FloatLiteralToken,
 				syntax.PlusToken,
 				syntax.FloatLiteralToken,
@@ -61,7 +61,7 @@ func TestLexer_Tokens(t *testing.T) {
 		{
 			name:  "Strings and Comments",
 			input: `"hello" // say hi`,
-			expectedTokens: []syntax.SyntaxKind{
+			expectedTokens: []syntax.Kind{
 				syntax.StringLiteralToken,
 				syntax.EndOfFileToken,
 			},
@@ -69,7 +69,7 @@ func TestLexer_Tokens(t *testing.T) {
 		{
 			name:  "Delimiters and Grouping",
 			input: "(a, b) { c; }",
-			expectedTokens: []syntax.SyntaxKind{
+			expectedTokens: []syntax.Kind{
 				syntax.OpenParenToken,
 				syntax.IdentifierToken,
 				syntax.CommaToken,
@@ -133,7 +133,7 @@ func TestLexer_TokenText(t *testing.T) {
 
 func TestLexer_MultiCharacterOperators(t *testing.T) {
 	input := "== != <= >= && || += -="
-	expected := []syntax.SyntaxKind{
+	expected := []syntax.Kind{
 		syntax.EqualsEqualsToken,
 		syntax.BangEqualsToken,
 		syntax.LessEqualsToken,
@@ -164,7 +164,7 @@ func TestLexer_MultiCharacterOperators(t *testing.T) {
 func TestLexer_KeywordsVsIdentifiers(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected syntax.SyntaxKind
+		expected syntax.Kind
 	}{
 		{"var", syntax.KeywordVar},
 		{"fn", syntax.KeywordFn},

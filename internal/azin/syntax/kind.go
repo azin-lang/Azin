@@ -1,12 +1,12 @@
 package syntax
 
-//go:generate stringer -type=SyntaxKind
+//go:generate stringer -type=Kind
 
-type SyntaxKind uint16
+type Kind uint16
 
 const (
 	// Special
-	Unknown SyntaxKind = iota
+	Unknown Kind = iota
 	BadToken
 	EndOfFileToken
 	MissingToken
@@ -143,36 +143,36 @@ const (
 	lastLiteral  = StringLiteralToken
 )
 
-func (k SyntaxKind) IsTrivia() bool  { return k >= firstTrivia && k <= lastTrivia }
-func (k SyntaxKind) IsToken() bool   { return k >= firstToken && k <= lastToken }
-func (k SyntaxKind) IsKeyword() bool { return k >= firstKeyword && k <= lastKeyword }
-func (k SyntaxKind) IsLiteral() bool { return k >= firstLiteral && k <= lastLiteral }
+func (k Kind) IsTrivia() bool  { return k >= firstTrivia && k <= lastTrivia }
+func (k Kind) IsToken() bool   { return k >= firstToken && k <= lastToken }
+func (k Kind) IsKeyword() bool { return k >= firstKeyword && k <= lastKeyword }
+func (k Kind) IsLiteral() bool { return k >= firstLiteral && k <= lastLiteral }
 
-func (k SyntaxKind) IsNode() bool {
+func (k Kind) IsNode() bool {
 	return k >= CompilationUnit && k <= CastExpression
 }
 
-func (k SyntaxKind) IsExpression() bool {
+func (k Kind) IsExpression() bool {
 	return k >= LiteralExpression && k <= CastExpression
 }
 
-func (k SyntaxKind) IsStatement() bool {
+func (k Kind) IsStatement() bool {
 	return k >= BlockStatement && k <= ForStatement
 }
 
-func (k SyntaxKind) IsDeclaration() bool {
+func (k Kind) IsDeclaration() bool {
 	return k >= ImportDeclaration && k <= FieldDeclaration
 }
 
-func (k SyntaxKind) IsPrimaryExpression() bool {
+func (k Kind) IsPrimaryExpression() bool {
 	return k == LiteralExpression || k == NameExpression || k == ParenthesizedExpression
 }
 
-func (k SyntaxKind) StartsExpression() bool {
+func (k Kind) StartsExpression() bool {
 	return k.IsLiteral() || k == IdentifierToken || k == OpenParenToken || k.IsPrefixOperator()
 }
 
-func (k SyntaxKind) StartsStatement() bool {
+func (k Kind) StartsStatement() bool {
 	switch k {
 	case OpenBraceToken, KeywordIf, KeywordWhile, KeywordFor, KeywordLoop, KeywordDefer, KeywordStop, KeywordReturn, SemicolonToken:
 		return true
@@ -181,7 +181,7 @@ func (k SyntaxKind) StartsStatement() bool {
 	}
 }
 
-func (k SyntaxKind) StartsDeclaration() bool {
+func (k Kind) StartsDeclaration() bool {
 	switch k {
 	case KeywordImport, KeywordImportC, KeywordFn, KeywordStruct, KeywordEnum, KeywordType, KeywordVar:
 		return true

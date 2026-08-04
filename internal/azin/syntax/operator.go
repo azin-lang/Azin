@@ -7,7 +7,7 @@ const (
 	Right
 )
 
-func (k SyntaxKind) BinaryPrecedence() int {
+func (k Kind) BinaryPrecedence() int {
 	switch k {
 	case StarToken, SlashToken, AmpersandToken:
 		return 6
@@ -26,7 +26,7 @@ func (k SyntaxKind) BinaryPrecedence() int {
 	}
 }
 
-func (k SyntaxKind) UnaryPrecedence() int {
+func (k Kind) UnaryPrecedence() int {
 	switch k {
 	case PlusToken, MinusToken, BangToken, CaretToken, AmpersandToken, StarToken:
 		return 7
@@ -35,14 +35,14 @@ func (k SyntaxKind) UnaryPrecedence() int {
 	}
 }
 
-func (k SyntaxKind) Associativity() Associativity {
+func (k Kind) Associativity() Associativity {
 	if k.IsAssignmentOperator() {
 		return Right
 	}
 	return Left
 }
 
-func (k SyntaxKind) IsOperator() bool {
+func (k Kind) IsOperator() bool {
 	return k.IsArithmeticOperator() ||
 		k.IsAssignmentOperator() ||
 		k.IsComparisonOperator() ||
@@ -50,7 +50,7 @@ func (k SyntaxKind) IsOperator() bool {
 		k.IsBitwiseOperator()
 }
 
-func (k SyntaxKind) IsArithmeticOperator() bool {
+func (k Kind) IsArithmeticOperator() bool {
 	switch k {
 	case PlusToken, MinusToken, StarToken, SlashToken:
 		return true
@@ -59,7 +59,7 @@ func (k SyntaxKind) IsArithmeticOperator() bool {
 	}
 }
 
-func (k SyntaxKind) IsAssignmentOperator() bool {
+func (k Kind) IsAssignmentOperator() bool {
 	switch k {
 	case EqualsToken, PlusEqualsToken, MinusEqualsToken, StarEqualsToken, SlashEqualsToken:
 		return true
@@ -68,7 +68,7 @@ func (k SyntaxKind) IsAssignmentOperator() bool {
 	}
 }
 
-func (k SyntaxKind) IsComparisonOperator() bool {
+func (k Kind) IsComparisonOperator() bool {
 	switch k {
 	case EqualsEqualsToken, BangEqualsToken, LessToken, LessEqualsToken, GreaterToken, GreaterEqualsToken:
 		return true
@@ -77,7 +77,7 @@ func (k SyntaxKind) IsComparisonOperator() bool {
 	}
 }
 
-func (k SyntaxKind) IsLogicalOperator() bool {
+func (k Kind) IsLogicalOperator() bool {
 	switch k {
 	case AmpersandAmpersandToken, PipePipeToken, BangToken:
 		return true
@@ -86,7 +86,7 @@ func (k SyntaxKind) IsLogicalOperator() bool {
 	}
 }
 
-func (k SyntaxKind) IsBitwiseOperator() bool {
+func (k Kind) IsBitwiseOperator() bool {
 	switch k {
 	case AmpersandToken, PipeToken, CaretToken:
 		return true
@@ -95,10 +95,10 @@ func (k SyntaxKind) IsBitwiseOperator() bool {
 	}
 }
 
-func (k SyntaxKind) IsPrefixOperator() bool {
+func (k Kind) IsPrefixOperator() bool {
 	return k.UnaryPrecedence() > 0
 }
 
-func (k SyntaxKind) IsPostfixOperator() bool {
+func (k Kind) IsPostfixOperator() bool {
 	return false
 }

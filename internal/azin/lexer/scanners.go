@@ -8,7 +8,7 @@ import (
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 )
 
-func (l *Lexer) scanSyntaxToken(startOffset uint32) syntax.SyntaxKind {
+func (l *Lexer) scanSyntaxToken(startOffset uint32) syntax.Kind {
 	ch, _ := l.reader.Next()
 
 	switch ch {
@@ -129,13 +129,13 @@ func (l *Lexer) consumeDigits() {
 	}
 }
 
-func (l *Lexer) scanIdentifierOrKeyword(startOffset uint32) syntax.SyntaxKind {
+func (l *Lexer) scanIdentifierOrKeyword(startOffset uint32) syntax.Kind {
 	l.consumeAlphanumeric()
 	text := l.file.Text(source.NewSpan(startOffset, l.reader.Offset()))
 	return syntax.LookupKeyword(text)
 }
 
-func (l *Lexer) scanNumber(startOffset uint32) syntax.SyntaxKind {
+func (l *Lexer) scanNumber(startOffset uint32) syntax.Kind {
 	isFloat := false
 	l.consumeDigits()
 
@@ -203,7 +203,7 @@ func (l *Lexer) scanNumber(startOffset uint32) syntax.SyntaxKind {
 	return syntax.IntegerLiteralToken
 }
 
-func (l *Lexer) scanString(startOffset uint32) syntax.SyntaxKind {
+func (l *Lexer) scanString(startOffset uint32) syntax.Kind {
 	for !l.reader.EOF() {
 		ch, _ := l.reader.Next()
 

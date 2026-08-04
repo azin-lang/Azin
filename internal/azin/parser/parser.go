@@ -47,12 +47,12 @@ func (p *Parser) advance() *green.Token {
 }
 
 // at reports whether the current token matches the given kind.
-func (p *Parser) at(kind syntax.SyntaxKind) bool {
+func (p *Parser) at(kind syntax.Kind) bool {
 	return p.current.Kind() == kind
 }
 
 // atAny reports whether the current token matches any of the given kinds.
-func (p *Parser) atAny(kinds ...syntax.SyntaxKind) bool {
+func (p *Parser) atAny(kinds ...syntax.Kind) bool {
 	for _, k := range kinds {
 		if p.current.Kind() == k {
 			return true
@@ -62,7 +62,7 @@ func (p *Parser) atAny(kinds ...syntax.SyntaxKind) bool {
 }
 
 // eat advances the parser if the current token matches kind and reports true.
-func (p *Parser) eat(kind syntax.SyntaxKind) bool {
+func (p *Parser) eat(kind syntax.Kind) bool {
 	if p.at(kind) {
 		p.advance()
 		return true
@@ -92,7 +92,7 @@ func (p *Parser) isDelimiterOrEOF() bool {
 }
 
 // syncTo skips tokens until p.current matches one of the target boundary kinds or EOF.
-func (p *Parser) syncTo(kinds ...syntax.SyntaxKind) {
+func (p *Parser) syncTo(kinds ...syntax.Kind) {
 	for !p.at(syntax.EndOfFileToken) {
 		if p.atAny(kinds...) {
 			return
@@ -118,7 +118,7 @@ func (p *Parser) currentLocation() source.Location {
 
 // match consumes and returns the current token if it matches the expected kind.
 // If it mismatches, it logs a diagnostic with location and returns a MissingToken.
-func (p *Parser) match(kind syntax.SyntaxKind) *green.Token {
+func (p *Parser) match(kind syntax.Kind) *green.Token {
 	if p.at(kind) {
 		return p.advance()
 	}

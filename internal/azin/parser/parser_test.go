@@ -41,7 +41,7 @@ func TestParseLiterals(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        string
-		expectedKind syntax.SyntaxKind
+		expectedKind syntax.Kind
 		expectedText string
 	}{
 		{
@@ -129,7 +129,7 @@ func TestParseUnaryExpression(t *testing.T) {
 	tests := []struct {
 		name             string
 		input            string
-		expectedOperator syntax.SyntaxKind
+		expectedOperator syntax.Kind
 	}{
 		{
 			name:             "Unary Minus",
@@ -197,9 +197,9 @@ func TestBinaryOperatorPrecedence(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         string
-		topOperator   syntax.SyntaxKind
-		leftOperator  syntax.SyntaxKind
-		rightOperator syntax.SyntaxKind
+		topOperator   syntax.Kind
+		leftOperator  syntax.Kind
+		rightOperator syntax.Kind
 	}{
 		{
 			name:          "Multiplication over Addition",

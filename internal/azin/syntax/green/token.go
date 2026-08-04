@@ -17,7 +17,7 @@ type Token struct {
 }
 
 type tokenCacheKey struct {
-	kind syntax.SyntaxKind
+	kind syntax.Kind
 	text string
 }
 
@@ -39,14 +39,14 @@ func init() {
 	}
 }
 
-func getShard(kind syntax.SyntaxKind, text string) *cacheShard {
+func getShard(kind syntax.Kind, text string) *cacheShard {
 	h := maphash.String(hashSeed, text)
 	idx := (h ^ uint64(kind)) % numShards
 	return &shards[idx]
 }
 
 // NewToken constructs an immutable green token, safely interning zero-trivia tokens.
-func NewToken(kind syntax.SyntaxKind, text string, leading Node, trailing Node) *Token {
+func NewToken(kind syntax.Kind, text string, leading Node, trailing Node) *Token {
 	if IsNil(leading) && IsNil(trailing) {
 		key := tokenCacheKey{kind: kind, text: text}
 		shard := getShard(kind, text)

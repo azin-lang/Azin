@@ -8,7 +8,7 @@ type Trivia struct {
 	text string
 }
 
-func NewTrivia(kind syntax.SyntaxKind, text string) *Trivia {
+func NewTrivia(kind syntax.Kind, text string) *Trivia {
 	return &Trivia{
 		Base: Base{
 			kind:      kind,

@@ -60,11 +60,11 @@ var tokenText = [...]string{
 	NewlineToken:            "\n",
 }
 
-var keywords map[string]SyntaxKind
+var keywords map[string]Kind
 
 func init() {
 	// Dynamically build the keyword map from the array to prevent duplication
-	keywords = make(map[string]SyntaxKind, lastKeyword-firstKeyword+1)
+	keywords = make(map[string]Kind, lastKeyword-firstKeyword+1)
 	for i := firstKeyword; i <= lastKeyword; i++ {
 		if txt := tokenText[i]; txt != "" {
 			keywords[txt] = i
@@ -73,7 +73,7 @@ func init() {
 }
 
 // LookupKeyword checks if an identifier is a reserved keyword.
-func LookupKeyword(text string) SyntaxKind {
+func LookupKeyword(text string) Kind {
 	if kind, ok := keywords[text]; ok {
 		return kind
 	}
@@ -81,7 +81,7 @@ func LookupKeyword(text string) SyntaxKind {
 }
 
 // Text returns the static string representation of a token.
-func (k SyntaxKind) Text() string {
+func (k Kind) Text() string {
 	if int(k) < len(tokenText) {
 		return tokenText[k]
 	}
@@ -89,7 +89,7 @@ func (k SyntaxKind) Text() string {
 }
 
 // Display returns a human-readable representation for errors and diagnostics.
-func (k SyntaxKind) Display() string {
+func (k Kind) Display() string {
 	switch k {
 	case BadToken:
 		return "unexpected token"
