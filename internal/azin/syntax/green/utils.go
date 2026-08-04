@@ -1,15 +1,9 @@
 package green
 
-import "unsafe"
-
 // IsNil safely determines whether a green Node interface is nil or holds a typed nil pointer.
 // It avoids runtime panics caused by calling methods on typed nil interface values.
 func IsNil(n Node) bool {
-	if n == nil {
-		return true
-	}
-	// Direct inspection of the Go iface data pointer
-	return (*[2]unsafe.Pointer)(unsafe.Pointer(&n))[1] == nil
+	return n == nil || n.IsNil()
 }
 
 // getProps returns fullWidth and NodeFlags for a node, safely handling nil and typed-nil inputs.

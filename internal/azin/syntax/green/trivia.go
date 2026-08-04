@@ -19,6 +19,8 @@ func NewTrivia(kind syntax.Kind, text string) *Trivia {
 	}
 }
 
+func (t *Trivia) IsNil() bool { return t == nil }
+
 func (t *Trivia) Text() string {
 	return t.text
 }

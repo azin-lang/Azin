@@ -29,6 +29,8 @@ func (b *BlockStatement) StartToken() *Token { return b.startToken }
 func (b *BlockStatement) Statements() Node   { return b.statements }
 func (b *BlockStatement) EndToken() *Token   { return b.endToken }
 
+func (b *BlockStatement) IsNil() bool { return b == nil }
+
 func (b *BlockStatement) SlotCount() int { return 3 }
 func (b *BlockStatement) Slot(index int) Node {
 	switch index {
@@ -82,6 +84,8 @@ func (i *IfStatement) Condition() Node     { return i.condition }
 func (i *IfStatement) ThenBranch() Node    { return i.thenBranch }
 func (i *IfStatement) ElseKeyword() *Token { return i.elseKeyword }
 func (i *IfStatement) ElseBranch() Node    { return i.elseBranch }
+
+func (i *IfStatement) IsNil() bool { return i == nil }
 
 func (i *IfStatement) SlotCount() int { return 5 }
 func (i *IfStatement) Slot(index int) Node {
@@ -137,6 +141,8 @@ func NewReturnStatement(returnKeyword *Token, expression Node) *ReturnStatement 
 
 func (r *ReturnStatement) ReturnKeyword() *Token { return r.returnKeyword }
 func (r *ReturnStatement) Expression() Node      { return r.expression }
+
+func (r *ReturnStatement) IsNil() bool { return r == nil }
 
 func (r *ReturnStatement) SlotCount() int { return 2 }
 func (r *ReturnStatement) Slot(index int) Node {

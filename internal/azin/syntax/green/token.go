@@ -16,6 +16,8 @@ type Token struct {
 	trailingTrivia Node
 }
 
+func (t *Token) IsNil() bool { return t == nil }
+
 type tokenCacheKey struct {
 	kind syntax.Kind
 	text string

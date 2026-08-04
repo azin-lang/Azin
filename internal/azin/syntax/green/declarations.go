@@ -36,6 +36,8 @@ func (v *VariableDeclaration) TypeAnnotation() Node { return v.typeAnnotation }
 func (v *VariableDeclaration) Equals() *Token       { return v.equals }
 func (v *VariableDeclaration) Initializer() Node    { return v.initializer }
 
+func (v *VariableDeclaration) IsNil() bool { return v == nil }
+
 func (v *VariableDeclaration) SlotCount() int { return 6 }
 func (v *VariableDeclaration) Slot(index int) Node {
 	switch index {

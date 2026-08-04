@@ -10,4 +10,5 @@ type Node interface {
 	Slot(index int) Node
 	ContainsDiagnostics() bool
 	IsMissing() bool
+	IsNil() bool
 }

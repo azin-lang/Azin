@@ -27,6 +27,8 @@ func (b *BinaryExpression) Left() Node       { return b.left }
 func (b *BinaryExpression) Operator() *Token { return b.operator }
 func (b *BinaryExpression) Right() Node      { return b.right }
 
+func (b *BinaryExpression) IsNil() bool { return b == nil }
+
 func (b *BinaryExpression) SlotCount() int { return 3 }
 func (b *BinaryExpression) Slot(index int) Node {
 	switch index {
@@ -78,6 +80,8 @@ func (c *CallExpression) OpenParen() *Token  { return c.openParen }
 func (c *CallExpression) Arguments() Node    { return c.arguments }
 func (c *CallExpression) CloseParen() *Token { return c.closeParen }
 
+func (c *CallExpression) IsNil() bool { return c == nil }
+
 func (c *CallExpression) SlotCount() int { return 4 }
 func (c *CallExpression) Slot(index int) Node {
 	switch index {
@@ -123,6 +127,8 @@ func NewLiteralExpression(token *Token) *LiteralExpression {
 	}
 }
 
+func (l *LiteralExpression) IsNil() bool { return l == nil }
+
 func (l *LiteralExpression) Token() *Token  { return l.token }
 func (l *LiteralExpression) SlotCount() int { return 1 }
 func (l *LiteralExpression) Slot(index int) Node {
@@ -156,6 +162,8 @@ func NewMemberAccessExpression(expression Node, dot *Token, name *Token) *Member
 func (m *MemberAccessExpression) Expression() Node { return m.expression }
 func (m *MemberAccessExpression) Dot() *Token      { return m.dot }
 func (m *MemberAccessExpression) Name() *Token     { return m.name }
+
+func (m *MemberAccessExpression) IsNil() bool { return m == nil }
 
 func (m *MemberAccessExpression) SlotCount() int { return 3 }
 func (m *MemberAccessExpression) Slot(index int) Node {
@@ -197,6 +205,8 @@ func NewNameExpression(identifier *Token) *NameExpression {
 	}
 }
 
+func (n *NameExpression) IsNil() bool { return n == nil }
+
 func (n *NameExpression) Identifier() *Token { return n.identifier }
 func (n *NameExpression) SlotCount() int     { return 1 }
 func (n *NameExpression) Slot(index int) Node {
@@ -230,6 +240,8 @@ func NewParenthesizedExpression(openParen *Token, expression Node, closeParen *T
 func (p *ParenthesizedExpression) OpenParen() *Token  { return p.openParen }
 func (p *ParenthesizedExpression) Expression() Node   { return p.expression }
 func (p *ParenthesizedExpression) CloseParen() *Token { return p.closeParen }
+
+func (p *ParenthesizedExpression) IsNil() bool { return p == nil }
 
 func (p *ParenthesizedExpression) SlotCount() int { return 3 }
 func (p *ParenthesizedExpression) Slot(index int) Node {
@@ -275,6 +287,8 @@ func NewUnaryExpression(operator *Token, operand Node) *UnaryExpression {
 
 func (u *UnaryExpression) Operator() *Token { return u.operator }
 func (u *UnaryExpression) Operand() Node    { return u.operand }
+
+func (u *UnaryExpression) IsNil() bool { return u == nil }
 
 func (u *UnaryExpression) SlotCount() int { return 2 }
 func (u *UnaryExpression) Slot(index int) Node {

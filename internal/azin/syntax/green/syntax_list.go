@@ -18,6 +18,8 @@ type SyntaxList struct {
 	children []Node
 }
 
+func (s *SyntaxList) IsNil() bool { return s == nil }
+
 // NewSyntaxList ensures immutability by cloning the external slice,
 // then balances the tree using a zero-copy internal builder.
 func NewSyntaxList(children []Node) *SyntaxList {
