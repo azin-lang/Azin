@@ -42,35 +42,17 @@ func (v *VariableDeclaration) SlotCount() int { return 6 }
 func (v *VariableDeclaration) Slot(index int) Node {
 	switch index {
 	case 0:
-		if v.varKeyword == nil {
-			return nil
-		}
-		return v.varKeyword
+		return SafeNode(v.varKeyword)
 	case 1:
-		if v.identifier == nil {
-			return nil
-		}
-		return v.identifier
+		return SafeNode(v.identifier)
 	case 2:
-		if v.colon == nil {
-			return nil
-		}
-		return v.colon
+		return SafeNode(v.colon)
 	case 3:
-		if v.typeAnnotation == nil {
-			return nil
-		}
-		return v.typeAnnotation
+		return SafeNode(v.typeAnnotation)
 	case 4:
-		if v.equals == nil {
-			return nil
-		}
-		return v.equals
+		return SafeNode(v.equals)
 	case 5:
-		if v.initializer == nil {
-			return nil
-		}
-		return v.initializer
+		return SafeNode(v.initializer)
 	default:
 		return nil
 	}

@@ -35,20 +35,11 @@ func (b *BlockStatement) SlotCount() int { return 3 }
 func (b *BlockStatement) Slot(index int) Node {
 	switch index {
 	case 0:
-		if b.startToken == nil {
-			return nil
-		}
-		return b.startToken
+		return SafeNode(b.startToken)
 	case 1:
-		if b.statements == nil {
-			return nil
-		}
-		return b.statements
+		return SafeNode(b.statements)
 	case 2:
-		if b.endToken == nil {
-			return nil
-		}
-		return b.endToken
+		return SafeNode(b.endToken)
 	default:
 		return nil
 	}
@@ -91,30 +82,15 @@ func (i *IfStatement) SlotCount() int { return 5 }
 func (i *IfStatement) Slot(index int) Node {
 	switch index {
 	case 0:
-		if i.ifKeyword == nil {
-			return nil
-		}
-		return i.ifKeyword
+		return SafeNode(i.ifKeyword)
 	case 1:
-		if i.condition == nil {
-			return nil
-		}
-		return i.condition
+		return SafeNode(i.condition)
 	case 2:
-		if i.thenBranch == nil {
-			return nil
-		}
-		return i.thenBranch
+		return SafeNode(i.thenBranch)
 	case 3:
-		if i.elseKeyword == nil {
-			return nil
-		}
-		return i.elseKeyword
+		return SafeNode(i.elseKeyword)
 	case 4:
-		if i.elseBranch == nil {
-			return nil
-		}
-		return i.elseBranch
+		return SafeNode(i.elseBranch)
 	default:
 		return nil
 	}
@@ -148,15 +124,9 @@ func (r *ReturnStatement) SlotCount() int { return 2 }
 func (r *ReturnStatement) Slot(index int) Node {
 	switch index {
 	case 0:
-		if r.returnKeyword == nil {
-			return nil
-		}
-		return r.returnKeyword
+		return SafeNode(r.returnKeyword)
 	case 1:
-		if r.expression == nil {
-			return nil
-		}
-		return r.expression
+		return SafeNode(r.expression)
 	default:
 		return nil
 	}

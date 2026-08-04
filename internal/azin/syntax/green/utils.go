@@ -103,3 +103,11 @@ func GetTrailingTriviaWidth(n Node) uint32 {
 	}
 	return 0
 }
+
+// SafeNode ensures that typed nils are converted to true, untyped nils.
+func SafeNode(n Node) Node {
+	if IsNil(n) {
+		return nil
+	}
+	return n
+}

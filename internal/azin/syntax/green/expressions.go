@@ -33,20 +33,11 @@ func (b *BinaryExpression) SlotCount() int { return 3 }
 func (b *BinaryExpression) Slot(index int) Node {
 	switch index {
 	case 0:
-		if b.left == nil {
-			return nil
-		}
-		return b.left
+		return SafeNode(b.left)
 	case 1:
-		if b.operator == nil {
-			return nil
-		}
-		return b.operator
+		return SafeNode(b.operator)
 	case 2:
-		if b.right == nil {
-			return nil
-		}
-		return b.right
+		return SafeNode(b.right)
 	default:
 		return nil
 	}
@@ -86,25 +77,13 @@ func (c *CallExpression) SlotCount() int { return 4 }
 func (c *CallExpression) Slot(index int) Node {
 	switch index {
 	case 0:
-		if c.expression == nil {
-			return nil
-		}
-		return c.expression
+		return SafeNode(c.expression)
 	case 1:
-		if c.openParen == nil {
-			return nil
-		}
-		return c.openParen
+		return SafeNode(c.openParen)
 	case 2:
-		if c.arguments == nil {
-			return nil
-		}
-		return c.arguments
+		return SafeNode(c.arguments)
 	case 3:
-		if c.closeParen == nil {
-			return nil
-		}
-		return c.closeParen
+		return SafeNode(c.closeParen)
 	default:
 		return nil
 	}
@@ -132,8 +111,8 @@ func (l *LiteralExpression) IsNil() bool { return l == nil }
 func (l *LiteralExpression) Token() *Token  { return l.token }
 func (l *LiteralExpression) SlotCount() int { return 1 }
 func (l *LiteralExpression) Slot(index int) Node {
-	if index == 0 && l.token != nil {
-		return l.token
+	if index == 0 {
+		return SafeNode(l.token)
 	}
 	return nil
 }
@@ -169,20 +148,11 @@ func (m *MemberAccessExpression) SlotCount() int { return 3 }
 func (m *MemberAccessExpression) Slot(index int) Node {
 	switch index {
 	case 0:
-		if m.expression == nil {
-			return nil
-		}
-		return m.expression
+		return SafeNode(m.expression)
 	case 1:
-		if m.dot == nil {
-			return nil
-		}
-		return m.dot
+		return SafeNode(m.dot)
 	case 2:
-		if m.name == nil {
-			return nil
-		}
-		return m.name
+		return SafeNode(m.name)
 	default:
 		return nil
 	}
@@ -210,8 +180,8 @@ func (n *NameExpression) IsNil() bool { return n == nil }
 func (n *NameExpression) Identifier() *Token { return n.identifier }
 func (n *NameExpression) SlotCount() int     { return 1 }
 func (n *NameExpression) Slot(index int) Node {
-	if index == 0 && n.identifier != nil {
-		return n.identifier
+	if index == 0 {
+		return SafeNode(n.identifier)
 	}
 	return nil
 }
@@ -247,20 +217,11 @@ func (p *ParenthesizedExpression) SlotCount() int { return 3 }
 func (p *ParenthesizedExpression) Slot(index int) Node {
 	switch index {
 	case 0:
-		if p.openParen == nil {
-			return nil
-		}
-		return p.openParen
+		return SafeNode(p.openParen)
 	case 1:
-		if p.expression == nil {
-			return nil
-		}
-		return p.expression
+		return SafeNode(p.expression)
 	case 2:
-		if p.closeParen == nil {
-			return nil
-		}
-		return p.closeParen
+		return SafeNode(p.closeParen)
 	default:
 		return nil
 	}
@@ -294,15 +255,9 @@ func (u *UnaryExpression) SlotCount() int { return 2 }
 func (u *UnaryExpression) Slot(index int) Node {
 	switch index {
 	case 0:
-		if u.operator == nil {
-			return nil
-		}
-		return u.operator
+		return SafeNode(u.operator)
 	case 1:
-		if u.operand == nil {
-			return nil
-		}
-		return u.operand
+		return SafeNode(u.operand)
 	default:
 		return nil
 	}
