@@ -13,5 +13,5 @@ func AsReturnStatement(n *Node) *ReturnStatement {
 	return &ReturnStatement{Node: n}
 }
 
-func (r *ReturnStatement) ReturnKeyword() *Node { return r.Child(0) }
-func (r *ReturnStatement) Expression() *Node    { return r.Child(1) }
+func (r *ReturnStatement) ReturnKeyword() SyntaxToken { return r.ChildToken(0) }
+func (r *ReturnStatement) Expression() *Node          { return r.Child(1) }

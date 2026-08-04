@@ -13,9 +13,9 @@ func AsVariableDeclaration(n *Node) *VariableDeclaration {
 	return &VariableDeclaration{Node: n}
 }
 
-func (v *VariableDeclaration) VarKeyword() *Node     { return v.Child(0) }
-func (v *VariableDeclaration) Identifier() *Node     { return v.Child(1) }
-func (v *VariableDeclaration) Colon() *Node          { return v.Child(2) }
-func (v *VariableDeclaration) TypeAnnotation() *Node { return v.Child(3) }
-func (v *VariableDeclaration) Equals() *Node         { return v.Child(4) }
-func (v *VariableDeclaration) Initializer() *Node    { return v.Child(5) }
+func (v *VariableDeclaration) VarKeyword() SyntaxToken { return v.ChildToken(0) }
+func (v *VariableDeclaration) Identifier() SyntaxToken { return v.ChildToken(1) }
+func (v *VariableDeclaration) Colon() SyntaxToken      { return v.ChildToken(2) }
+func (v *VariableDeclaration) TypeAnnotation() *Node   { return v.Child(3) }
+func (v *VariableDeclaration) Equals() SyntaxToken     { return v.ChildToken(4) }
+func (v *VariableDeclaration) Initializer() *Node      { return v.Child(5) }

@@ -14,5 +14,5 @@ func AsMemberAccessExpression(n *Node) *MemberAccessExpression {
 }
 
 func (m *MemberAccessExpression) Expression() *Node { return m.Child(0) }
-func (m *MemberAccessExpression) Dot() *Node        { return m.Child(1) }
-func (m *MemberAccessExpression) Name() *Node       { return m.Child(2) }
+func (m *MemberAccessExpression) Dot() SyntaxToken  { return m.ChildToken(1) }
+func (m *MemberAccessExpression) Name() SyntaxToken { return m.ChildToken(2) }

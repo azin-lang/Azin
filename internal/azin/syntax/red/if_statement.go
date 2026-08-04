@@ -13,8 +13,8 @@ func AsIfStatement(n *Node) *IfStatement {
 	return &IfStatement{Node: n}
 }
 
-func (i *IfStatement) IfKeyword() *Node   { return i.Child(0) }
-func (i *IfStatement) Condition() *Node   { return i.Child(1) }
-func (i *IfStatement) ThenBranch() *Node  { return i.Child(2) }
-func (i *IfStatement) ElseKeyword() *Node { return i.Child(3) }
-func (i *IfStatement) ElseBranch() *Node  { return i.Child(4) }
+func (i *IfStatement) IfKeyword() SyntaxToken   { return i.ChildToken(0) }
+func (i *IfStatement) Condition() *Node         { return i.Child(1) }
+func (i *IfStatement) ThenBranch() *Node        { return i.Child(2) }
+func (i *IfStatement) ElseKeyword() SyntaxToken { return i.ChildToken(3) }
+func (i *IfStatement) ElseBranch() *Node        { return i.Child(4) }

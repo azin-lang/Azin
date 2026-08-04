@@ -13,8 +13,8 @@ func AsUnaryExpression(n *Node) *UnaryExpression {
 	return &UnaryExpression{Node: n}
 }
 
-func (u *UnaryExpression) Operator() *Node {
-	return u.Child(0)
+func (u *UnaryExpression) Operator() SyntaxToken {
+	return u.ChildToken(0)
 }
 
 func (u *UnaryExpression) Operand() *Node {

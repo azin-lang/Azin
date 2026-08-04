@@ -13,6 +13,6 @@ func AsBlockStatement(n *Node) *BlockStatement {
 	return &BlockStatement{Node: n}
 }
 
-func (b *BlockStatement) OpenBrace() *Node  { return b.Child(0) }
-func (b *BlockStatement) Statements() *Node { return b.Child(1) }
-func (b *BlockStatement) CloseBrace() *Node { return b.Child(2) }
+func (b *BlockStatement) OpenBrace() SyntaxToken  { return b.ChildToken(0) }
+func (b *BlockStatement) Statements() *SyntaxList { return AsSyntaxList(b.Child(1)) }
+func (b *BlockStatement) CloseBrace() SyntaxToken { return b.ChildToken(2) }

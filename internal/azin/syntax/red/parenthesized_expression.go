@@ -13,14 +13,14 @@ func AsParenthesizedExpression(n *Node) *ParenthesizedExpression {
 	return &ParenthesizedExpression{Node: n}
 }
 
-func (p *ParenthesizedExpression) OpenParen() *Node {
-	return p.Child(0)
+func (p *ParenthesizedExpression) OpenParen() SyntaxToken {
+	return p.ChildToken(0)
 }
 
 func (p *ParenthesizedExpression) Expression() *Node {
 	return p.Child(1)
 }
 
-func (p *ParenthesizedExpression) CloseParen() *Node {
-	return p.Child(2)
+func (p *ParenthesizedExpression) CloseParen() SyntaxToken {
+	return p.ChildToken(2)
 }

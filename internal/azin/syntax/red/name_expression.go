@@ -13,6 +13,6 @@ func AsNameExpression(n *Node) *NameExpression {
 	return &NameExpression{Node: n}
 }
 
-func (n *NameExpression) Identifier() *Node {
-	return n.Child(0)
+func (n *NameExpression) Identifier() SyntaxToken {
+	return n.ChildToken(0)
 }

@@ -3,13 +3,14 @@ package red
 import (
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/syntax/text"
 )
 
 // Node is the user-facing syntax node. It knows its parent and absolute position.
 type Node struct {
 	greenNode green.Node
 	parent    *Node
-	position  uint32 // Absolute position in the source file
+	position  uint32
 }
 
 // NewRoot creates the root of the red tree from a green root node.
@@ -83,4 +84,49 @@ func (n *Node) Child(index int) *Node {
 		parent:    n,
 		position:  childPos,
 	}
+}
+
+func (n *Node) FullSpan() text.TextSpan {
+	if n == nil || green.IsNil(n.greenNode) {
+		return text.TextSpan{}
+	}
+	return text.NewTextSpan(n.position, n.greenNode.FullWidth())
+}
+
+func (n *Node) Span() text.TextSpan {
+	if n == nil || green.IsNil(n.greenNode) {
+		return text.TextSpan{}
+	}
+
+	leading := green.GetLeadingTriviaWidth(n.greenNode)
+	trailing := green.GetTrailingTriviaWidth(n.greenNode)
+
+	start := n.position + leading
+	length := n.greenNode.FullWidth() - leading - trailing
+	return text.NewTextSpan(start, length)
+}
+
+func (n *Node) ChildToken(index int) SyntaxToken {
+	if n == nil || green.IsNil(n.greenNode) || index < 0 || index >= n.greenNode.SlotCount() {
+		return SyntaxToken{}
+	}
+
+	greenChild := n.greenNode.Slot(index)
+	if green.IsNil(greenChild) {
+		return SyntaxToken{}
+	}
+
+	greenTok, ok := greenChild.(*green.Token)
+	if !ok {
+		return SyntaxToken{}
+	}
+
+	childPos := n.position
+	for i := 0; i < index; i++ {
+		if sibling := n.greenNode.Slot(i); !green.IsNil(sibling) {
+			childPos += sibling.FullWidth()
+		}
+	}
+
+	return NewSyntaxToken(n, greenTok, childPos, index)
 }

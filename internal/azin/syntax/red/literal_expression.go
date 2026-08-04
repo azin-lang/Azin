@@ -13,6 +13,6 @@ func AsLiteralExpression(n *Node) *LiteralExpression {
 	return &LiteralExpression{Node: n}
 }
 
-func (l *LiteralExpression) Token() *Node {
-	return l.Child(0)
+func (l *LiteralExpression) Token() SyntaxToken {
+	return l.ChildToken(0)
 }
