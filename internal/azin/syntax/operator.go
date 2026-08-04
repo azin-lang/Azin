@@ -7,8 +7,8 @@ const (
 	Right
 )
 
-func BinaryPrecedence(kind SyntaxKind) int {
-	switch kind {
+func (k SyntaxKind) BinaryPrecedence() int {
+	switch k {
 	case StarToken, SlashToken, AmpersandToken:
 		return 6
 	case PlusToken, MinusToken, PipeToken, CaretToken:
@@ -26,8 +26,8 @@ func BinaryPrecedence(kind SyntaxKind) int {
 	}
 }
 
-func UnaryPrecedence(kind SyntaxKind) int {
-	switch kind {
+func (k SyntaxKind) UnaryPrecedence() int {
+	switch k {
 	case PlusToken, MinusToken, BangToken, CaretToken, AmpersandToken, StarToken:
 		return 7
 	default:
@@ -35,15 +35,19 @@ func UnaryPrecedence(kind SyntaxKind) int {
 	}
 }
 
-func AssociativityOf(kind SyntaxKind) Associativity {
-	if kind.IsAssignmentOperator() {
+func (k SyntaxKind) Associativity() Associativity {
+	if k.IsAssignmentOperator() {
 		return Right
 	}
 	return Left
 }
 
 func (k SyntaxKind) IsOperator() bool {
-	return k.IsArithmeticOperator() || k.IsAssignmentOperator() || k.IsComparisonOperator() || k.IsLogicalOperator() || k.IsBitwiseOperator()
+	return k.IsArithmeticOperator() ||
+		k.IsAssignmentOperator() ||
+		k.IsComparisonOperator() ||
+		k.IsLogicalOperator() ||
+		k.IsBitwiseOperator()
 }
 
 func (k SyntaxKind) IsArithmeticOperator() bool {
@@ -92,7 +96,7 @@ func (k SyntaxKind) IsBitwiseOperator() bool {
 }
 
 func (k SyntaxKind) IsPrefixOperator() bool {
-	return UnaryPrecedence(k) > 0
+	return k.UnaryPrecedence() > 0
 }
 
 func (k SyntaxKind) IsPostfixOperator() bool {
