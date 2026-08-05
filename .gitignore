@@ -81,3 +81,4 @@ docs/
 test.txt
 tests/azin/output/
 !go.sum
+*.cuda-proj*
