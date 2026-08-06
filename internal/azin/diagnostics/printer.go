@@ -21,7 +21,7 @@ type diagnosticLayout struct {
 
 // PrintColoredDiagnostic renders a colored diagnostic.
 func PrintColoredDiagnostic(loc text.Location, label, note, help string, width int, pipe, style, bold func(...any) string) string {
-	if loc.File == nil || !loc.Span.IsValidAndNonEmpty() {
+	if loc.File == nil || loc.Span.IsEmpty() {
 		return "<invalid location>\n"
 	}
 
@@ -39,18 +39,18 @@ func PrintColoredDiagnostic(loc text.Location, label, note, help string, width i
 func makeDiagnosticLayout(loc text.Location) diagnosticLayout {
 	pos := loc.Position()
 	line := loc.File.Line(pos.Line)
-	text := loc.File.BytesOf(text.NewSpan(line.Start, line.End))
+	textBytes := loc.File.BytesOf(line.Span)
 
-	column := clampColumn(pos.ByteColumn, len(text))
+	column := clampColumn(pos.ByteColumn, len(textBytes))
 
-	endColumn := pos.ByteColumn + uint32(max(pointerWidth(loc, text, column)-1, 0))
+	endColumn := pos.ByteColumn + uint32(max(pointerWidth(loc, textBytes, column)-1, 0))
 
 	return diagnosticLayout{
 		Location:      formatLocation(loc, pos, endColumn),
 		LineNumber:    pos.Line,
-		LineText:      text,
-		PointerIndent: pointerIndent(text[:column]),
-		PointerWidth:  pointerWidth(loc, text, column),
+		LineText:      textBytes,
+		PointerIndent: pointerIndent(textBytes[:column]),
+		PointerWidth:  pointerWidth(loc, textBytes, column),
 	}
 }
 

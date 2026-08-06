@@ -97,7 +97,10 @@ func (c *Collector) List() []Diagnostic {
 		if pathA != pathB {
 			return cmp.Compare(pathA, pathB)
 		}
-		return cmp.Compare(a.Location.Span.Start, b.Location.Span.Start)
+
+		startA, _ := a.Location.Span.AsTuple()
+		startB, _ := b.Location.Span.AsTuple()
+		return cmp.Compare(startA, startB)
 	})
 
 	return list
@@ -176,7 +179,7 @@ func (c *Collector) PrintAll() string {
 		out.WriteString(banner)
 		out.WriteString("\n\n")
 
-		if d.Location.File != nil && d.Location.Span.IsValidAndNonEmpty() {
+		if d.Location.File != nil && !d.Location.Span.IsEmpty() {
 			renderedLoc := PrintColoredDiagnostic(
 				d.Location, d.Label, d.Note, d.Help,
 				termWidth,

@@ -3,7 +3,7 @@ package red
 import (
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
-	"github.com/azin-lang/Azin/internal/azin/syntax/text"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 // SyntaxToken is a stack-allocated value type (struct, not pointer).
@@ -62,17 +62,17 @@ func (t SyntaxToken) FullWidth() uint32 {
 }
 
 // FullSpan includes whitespace and comments.
-func (t SyntaxToken) FullSpan() text.TextSpan {
+func (t SyntaxToken) FullSpan() text.Span {
 	if t.IsZero() {
-		return text.TextSpan{}
+		return text.Span{}
 	}
-	return text.NewTextSpan(t.position, t.green.FullWidth())
+	return text.NewSpan(t.position, t.green.FullWidth())
 }
 
 // Span excludes leading and trailing trivia.
-func (t SyntaxToken) Span() text.TextSpan {
+func (t SyntaxToken) Span() text.Span {
 	if t.IsZero() {
-		return text.TextSpan{}
+		return text.Span{}
 	}
 
 	leadingW := green.GetLeadingTriviaWidth(t.green)
@@ -81,5 +81,5 @@ func (t SyntaxToken) Span() text.TextSpan {
 	start := t.position + leadingW
 	length := t.green.FullWidth() - leadingW - trailingW
 
-	return text.NewTextSpan(start, length)
+	return text.NewSpan(start, length)
 }

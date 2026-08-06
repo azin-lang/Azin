@@ -123,8 +123,7 @@ func (f *SourceText) Line(number uint32) Line {
 done:
 	return Line{
 		Number: number,
-		Start:  start,
-		End:    end,
+		Span:   SpanFromBounds(start, end),
 	}
 }
 
@@ -135,7 +134,7 @@ func (f *SourceText) LineText(number uint32) []byte {
 	if line.Empty() {
 		return nil
 	}
-	return f.text[line.Start:line.End]
+	return f.BytesOf(line.Span)
 }
 
 // searchLineIndex performs a fast O(log N) binary search to find the 0-based
@@ -202,20 +201,20 @@ func (f *SourceText) Offset(line, column uint32) uint32 {
 		return f.Len()
 	}
 
-	offset := l.Start + column - 1
-	if offset > l.End {
-		return l.End
+	if column == 0 {
+		return l.Span.Start()
 	}
 
-	return offset
+	return l.Span.Clamp(l.Span.Start() + column - 1)
 }
 
 // Spans
 
 // BytesOf returns a slice of the file's text bounded by the given Span.
 func (f *SourceText) BytesOf(span Span) []byte {
-	start := f.Clamp(span.Start)
-	end := max(f.Clamp(span.End), start)
+	sStart, sEnd := span.AsTuple()
+	start := f.Clamp(sStart)
+	end := max(f.Clamp(sEnd), start)
 	return f.text[start:end]
 }
 
@@ -226,8 +225,7 @@ func (f *SourceText) Text(span Span) string {
 
 // LineSpan returns a Span covering the entirety of the specified 1-based line.
 func (f *SourceText) LineSpan(number uint32) Span {
-	line := f.Line(number)
-	return NewSpan(line.Start, line.End)
+	return f.Line(number).Span
 }
 
 // UTF-8

@@ -40,7 +40,7 @@ func (l *Lexer) NextToken() *green.Token {
 	kind := l.scanSyntaxToken(startOffset)
 	endOffset := l.reader.Offset()
 
-	text := l.file.Text(text.NewSpan(startOffset, endOffset))
+	text := l.file.Text(text.SpanFromBounds(startOffset, endOffset))
 	trailingTrivia := l.scanTrivia(true)
 
 	return green.NewToken(kind, text, leadingTrivia, trailingTrivia)
@@ -63,6 +63,6 @@ func (l *Lexer) match(expected rune) bool {
 func (l *Lexer) loc(startOffset, endOffset uint32) text.Location {
 	return text.Location{
 		File: l.file,
-		Span: text.NewSpan(startOffset, endOffset),
+		Span: text.SpanFromBounds(startOffset, endOffset),
 	}
 }

@@ -58,7 +58,7 @@ func (l *Lexer) scanTrivia(isTrailing bool) green.Node {
 		return nil
 	}
 
-	triviaText := l.file.Text(text.NewSpan(startOffset, endOffset))
+	triviaText := l.file.Text(text.SpanFromBounds(startOffset, endOffset))
 	return green.NewTrivia(syntax.WhitespaceTrivia, triviaText)
 }
 

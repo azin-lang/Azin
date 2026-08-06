@@ -135,7 +135,7 @@ func (l *Lexer) consumeDigits() {
 
 func (l *Lexer) scanIdentifierOrKeyword(startOffset uint32) syntax.Kind {
 	l.consumeAlphanumeric()
-	text := l.file.Text(text.NewSpan(startOffset, l.reader.Offset()))
+	text := l.file.Text(text.SpanFromBounds(startOffset, l.reader.Offset()))
 	return syntax.LookupKeyword(text)
 }
 

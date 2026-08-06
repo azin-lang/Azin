@@ -108,11 +108,9 @@ func (p *Parser) currentLocation() text.Location {
 		width = p.current.FullWidth()
 	}
 
-	span := text.NewSpan(p.pos, p.pos+width)
-
 	return text.Location{
 		File: p.lex.File(),
-		Span: span,
+		Span: text.NewSpan(p.pos, width),
 	}
 }
 

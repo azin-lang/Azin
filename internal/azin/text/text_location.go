@@ -15,7 +15,7 @@ func (l Location) Position() Position {
 		return Position{}
 	}
 
-	return l.File.Position(l.Span.Start)
+	return l.File.Position(l.Span.Start())
 }
 
 // String returns a formatted identifier denoting the file and exact coordinates

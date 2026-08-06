@@ -3,7 +3,7 @@ package red
 import (
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
-	"github.com/azin-lang/Azin/internal/azin/syntax/text"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 // Node is the user-facing syntax node. It knows its parent and absolute position.
@@ -86,16 +86,16 @@ func (n *Node) Child(index int) *Node {
 	}
 }
 
-func (n *Node) FullSpan() text.TextSpan {
+func (n *Node) FullSpan() text.Span {
 	if n == nil || green.IsNil(n.greenNode) {
-		return text.TextSpan{}
+		return text.Span{}
 	}
-	return text.NewTextSpan(n.position, n.greenNode.FullWidth())
+	return text.NewSpan(n.position, n.greenNode.FullWidth())
 }
 
-func (n *Node) Span() text.TextSpan {
+func (n *Node) Span() text.Span {
 	if n == nil || green.IsNil(n.greenNode) {
-		return text.TextSpan{}
+		return text.Span{}
 	}
 
 	leading := green.GetLeadingTriviaWidth(n.greenNode)
@@ -103,7 +103,7 @@ func (n *Node) Span() text.TextSpan {
 
 	start := n.position + leading
 	length := n.greenNode.FullWidth() - leading - trailing
-	return text.NewTextSpan(start, length)
+	return text.NewSpan(start, length)
 }
 
 func (n *Node) ChildToken(index int) SyntaxToken {
