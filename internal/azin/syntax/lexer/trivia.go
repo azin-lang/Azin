@@ -24,24 +24,32 @@ func (l *Lexer) scanTrivia(isTrailing bool) green.Node {
 		}
 
 		if ch == '/' {
+			// Save our position before consuming the slash
+			slashCheckpoint := l.reader.Checkpoint()
 			l.reader.Next()
+
 			nextCh, _ := l.reader.Peek()
 
 			if nextCh == '/' {
-				l.reader.Next()
+				l.reader.Next() // Consume second '/'
 				l.scanSingleLineComment()
 				continue
 			}
 
 			if nextCh == '*' {
-				l.reader.Next()
-				l.scanMultiLineComment(l.reader.Offset() - 2)
+				l.reader.Next() // Consume '*'
+				// Pass the checkpoint as the exact start of the "/*"
+				l.scanMultiLineComment(slashCheckpoint)
 				continue
 			}
 
-			l.reader.Backup()
+			// False alarm: it's a division operator, not a comment.
+			// Undo the slash consumption and stop scanning trivia.
+			l.reader.Restore(slashCheckpoint)
 			break
 		}
+
+		// If it's neither whitespace nor a comment, we are done with trivia.
 		break
 	}
 
@@ -50,8 +58,8 @@ func (l *Lexer) scanTrivia(isTrailing bool) green.Node {
 		return nil
 	}
 
-	text := l.file.Text(text.NewSpan(startOffset, endOffset))
-	return green.NewTrivia(syntax.WhitespaceTrivia, text)
+	triviaText := l.file.Text(text.NewSpan(startOffset, endOffset))
+	return green.NewTrivia(syntax.WhitespaceTrivia, triviaText)
 }
 
 func (l *Lexer) scanSingleLineComment() {
@@ -70,7 +78,7 @@ func (l *Lexer) scanMultiLineComment(startOffset uint32) {
 		if ch == '*' {
 			nextCh, _ := l.reader.Peek()
 			if nextCh == '/' {
-				l.reader.Next()
+				l.reader.Next() // Consume the closing '/'
 				return
 			}
 		}
