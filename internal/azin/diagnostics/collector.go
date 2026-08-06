@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/azin-lang/Azin/internal/azin/source"
+	"github.com/azin-lang/Azin/internal/azin/text"
 	"github.com/fatih/color"
 	"golang.org/x/term"
 )
@@ -26,26 +26,26 @@ func NewCollector() *Collector {
 }
 
 // Error records a new compilation error with an optional error code.
-func (c *Collector) Error(loc source.Location, code, format string, args ...any) {
+func (c *Collector) Error(loc text.Location, code, format string, args ...any) {
 	c.add(loc, code, fmt.Sprintf(format, args...), SeverityError, "", "")
 }
 
 // ErrorWithHelp records a compilation error accompanied by an inline label and an actionable help hint.
-func (c *Collector) ErrorWithHelp(loc source.Location, code, label, help, format string, args ...any) {
+func (c *Collector) ErrorWithHelp(loc text.Location, code, label, help, format string, args ...any) {
 	c.add(loc, code, fmt.Sprintf(format, args...), SeverityError, label, help)
 }
 
 // Warn records a new compilation warning with an optional error code.
-func (c *Collector) Warn(loc source.Location, code, format string, args ...any) {
+func (c *Collector) Warn(loc text.Location, code, format string, args ...any) {
 	c.add(loc, code, fmt.Sprintf(format, args...), SeverityWarning, "", "")
 }
 
 // Info records a new compilation information message with an optional code.
-func (c *Collector) Info(loc source.Location, code, format string, args ...any) {
+func (c *Collector) Info(loc text.Location, code, format string, args ...any) {
 	c.add(loc, code, fmt.Sprintf(format, args...), SeverityInfo, "", "")
 }
 
-func (c *Collector) add(loc source.Location, code, msg string, sev Severity, label, help string) {
+func (c *Collector) add(loc text.Location, code, msg string, sev Severity, label, help string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -104,11 +104,11 @@ func (c *Collector) List() []Diagnostic {
 }
 
 // ErrorWithNoteAndHelp records an error with an inline label, an actionable note, and a help hint.
-func (c *Collector) ErrorWithNoteAndHelp(loc source.Location, code, label, note, help, format string, args ...any) {
+func (c *Collector) ErrorWithNoteAndHelp(loc text.Location, code, label, note, help, format string, args ...any) {
 	c.addFull(loc, code, fmt.Sprintf(format, args...), SeverityError, label, note, help)
 }
 
-func (c *Collector) addFull(loc source.Location, code, msg string, sev Severity, label, note, help string) {
+func (c *Collector) addFull(loc text.Location, code, msg string, sev Severity, label, note, help string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -176,7 +176,7 @@ func (c *Collector) PrintAll() string {
 		out.WriteString(banner + "\n\n")
 
 		if d.Location.File != nil && d.Location.Span.IsValidAndNonEmpty() {
-			renderedLoc := source.PrintColoredDiagnostic(
+			renderedLoc := text.PrintColoredDiagnostic(
 				d.Location, d.Label, d.Note, d.Help,
 				termWidth,
 				pipeColor, styleColor, bold,

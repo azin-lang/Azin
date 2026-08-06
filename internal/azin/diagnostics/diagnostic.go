@@ -1,13 +1,13 @@
 package diagnostics
 
 import (
-	"github.com/azin-lang/Azin/internal/azin/source"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 // Diagnostic represents a single compiler error, warning, or notice.
 type Diagnostic struct {
 	Code     string
-	Location source.Location
+	Location text.Location
 	Message  string
 	Severity Severity
 	Label    string // Inline annotation next to the underline

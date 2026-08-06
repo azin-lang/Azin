@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 func (l *Lexer) scanSyntaxToken(startOffset uint32) syntax.Kind {
@@ -131,7 +131,7 @@ func (l *Lexer) consumeDigits() {
 
 func (l *Lexer) scanIdentifierOrKeyword(startOffset uint32) syntax.Kind {
 	l.consumeAlphanumeric()
-	text := l.file.Text(source.NewSpan(startOffset, l.reader.Offset()))
+	text := l.file.Text(text.NewSpan(startOffset, l.reader.Offset()))
 	return syntax.LookupKeyword(text)
 }
 

@@ -3,9 +3,9 @@ package lexer
 import (
 	"unicode"
 
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 func (l *Lexer) scanTrivia(isTrailing bool) green.Node {
@@ -50,7 +50,7 @@ func (l *Lexer) scanTrivia(isTrailing bool) green.Node {
 		return nil
 	}
 
-	text := l.file.Text(source.NewSpan(startOffset, endOffset))
+	text := l.file.Text(text.NewSpan(startOffset, endOffset))
 	return green.NewTrivia(syntax.WhitespaceTrivia, text)
 }
 

@@ -1,4 +1,4 @@
-package source
+package text
 
 // Line represents the boundaries of a single, physical line of text in a file.
 // The bounds cover only the visible characters, expressly excluding \r or \n.

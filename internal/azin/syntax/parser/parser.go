@@ -2,10 +2,10 @@ package parser
 
 import (
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
-	"github.com/azin-lang/Azin/internal/azin/lexer"
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/syntax/lexer"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 // Parser consumes green tokens and builds a green syntax tree.
@@ -102,15 +102,15 @@ func (p *Parser) syncTo(kinds ...syntax.Kind) {
 }
 
 // currentLocation returns the source location of the current token.
-func (p *Parser) currentLocation() source.Location {
+func (p *Parser) currentLocation() text.Location {
 	width := uint32(0)
 	if p.current != nil {
 		width = p.current.FullWidth()
 	}
 
-	span := source.NewSpan(p.pos, p.pos+width)
+	span := text.NewSpan(p.pos, p.pos+width)
 
-	return source.Location{
+	return text.Location{
 		File: p.lex.File(),
 		Span: span,
 	}

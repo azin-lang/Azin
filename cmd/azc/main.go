@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
-	"github.com/azin-lang/Azin/internal/azin/lexer"
-	"github.com/azin-lang/Azin/internal/azin/parser"
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/syntax/lexer"
+	"github.com/azin-lang/Azin/internal/azin/syntax/parser"
 	"github.com/azin-lang/Azin/internal/azin/syntax/red"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 func main() {
@@ -17,7 +17,7 @@ var x: int = (10 + 2 * max(a, @b == 42) && isReady.not)
 var y = 10
 `)
 
-	file := source.NewSourceText("showcase.az", 1, code)
+	file := text.NewSourceText("showcase.az", 1, code)
 	diags := diagnostics.NewCollector()
 
 	lex := lexer.New(file, diags)

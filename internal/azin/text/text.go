@@ -1,6 +1,6 @@
 // Package source provides the foundational data structures for tracking and
 // managing source code text, locations, and diagnostics in the compiler.
-package source
+package text
 
 import (
 	"bytes"

@@ -2,29 +2,29 @@ package lexer
 
 import (
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 // Lexer breaks down source code into syntax tokens.
 type Lexer struct {
-	file        *source.SourceText
-	reader      *source.Reader
+	file        *text.SourceText
+	reader      *text.Reader
 	diagnostics *diagnostics.Collector
 }
 
 // New creates and initializes a new Lexer.
-func New(file *source.SourceText, diags *diagnostics.Collector) *Lexer {
+func New(file *text.SourceText, diags *diagnostics.Collector) *Lexer {
 	return &Lexer{
 		file:        file,
-		reader:      source.NewReader(file),
+		reader:      text.NewReader(file),
 		diagnostics: diags,
 	}
 }
 
 // File returns the underlying source text buffer.
-func (l *Lexer) File() *source.SourceText {
+func (l *Lexer) File() *text.SourceText {
 	return l.file
 }
 
@@ -40,7 +40,7 @@ func (l *Lexer) NextToken() *green.Token {
 	kind := l.scanSyntaxToken(startOffset)
 	endOffset := l.reader.Offset()
 
-	text := l.file.Text(source.NewSpan(startOffset, endOffset))
+	text := l.file.Text(text.NewSpan(startOffset, endOffset))
 	trailingTrivia := l.scanTrivia(true)
 
 	return green.NewToken(kind, text, leadingTrivia, trailingTrivia)
@@ -60,9 +60,9 @@ func (l *Lexer) match(expected rune) bool {
 }
 
 // loc is a helper to clean up span/location boilerplate.
-func (l *Lexer) loc(startOffset, endOffset uint32) source.Location {
-	return source.Location{
+func (l *Lexer) loc(startOffset, endOffset uint32) text.Location {
+	return text.Location{
 		File: l.file,
-		Span: source.NewSpan(startOffset, endOffset),
+		Span: text.NewSpan(startOffset, endOffset),
 	}
 }

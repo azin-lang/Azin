@@ -4,17 +4,17 @@ import (
 	"testing"
 
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
-	"github.com/azin-lang/Azin/internal/azin/lexer"
-	"github.com/azin-lang/Azin/internal/azin/parser"
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
+	"github.com/azin-lang/Azin/internal/azin/syntax/lexer"
+	"github.com/azin-lang/Azin/internal/azin/syntax/parser"
 	"github.com/azin-lang/Azin/internal/azin/syntax/red"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
-func parse(t *testing.T, text string) (*red.Node, *diagnostics.Collector) {
+func parse(t *testing.T, sourceText string) (*red.Node, *diagnostics.Collector) {
 	t.Helper()
 
-	file := source.NewSourceText("test.az", 0, []byte(text))
+	file := text.NewSourceText("test.az", 0, []byte(sourceText))
 	diags := diagnostics.NewCollector()
 
 	lex := lexer.New(file, diags)

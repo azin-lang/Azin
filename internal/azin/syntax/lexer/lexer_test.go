@@ -4,17 +4,17 @@ import (
 	"testing"
 
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
-	"github.com/azin-lang/Azin/internal/azin/lexer"
-	"github.com/azin-lang/Azin/internal/azin/source"
 	"github.com/azin-lang/Azin/internal/azin/syntax"
 	"github.com/azin-lang/Azin/internal/azin/syntax/green"
+	"github.com/azin-lang/Azin/internal/azin/syntax/lexer"
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 // Helper function to lex an entire input string into green tokens
 func lexAll(t *testing.T, input string) ([]*green.Token, *diagnostics.Collector) {
 	t.Helper()
 
-	file := source.NewSourceText("test.az", 0, []byte(input))
+	file := text.NewSourceText("test.az", 0, []byte(input))
 	diags := diagnostics.NewCollector()
 	lex := lexer.New(file, diags)
 
