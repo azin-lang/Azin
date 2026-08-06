@@ -3,8 +3,6 @@ package text
 import "fmt"
 
 // Span represents a half-open byte range [Start, End) within a file.
-// Start is inclusive, pointing to the first byte of the range.
-// End is exclusive, pointing to the byte immediately following the range.
 type Span struct {
 	Start uint32
 	End   uint32
@@ -29,6 +27,22 @@ func (s Span) Empty() bool { return s.Start == s.End }
 
 // Len returns the number of bytes enclosed by the span.
 func (s Span) Len() uint32 { return s.End - s.Start }
+
+// Contains reports whether the given offset falls strictly within the span.
+// Essential for LSP hover, go-to-definition, and signature help requests.
+func (s Span) Contains(offset uint32) bool {
+	return offset >= s.Start && offset < s.End
+}
+
+// ContainsSpan reports whether the other span is completely enclosed by this span.
+func (s Span) ContainsSpan(other Span) bool {
+	return s.Start <= other.Start && s.End >= other.End
+}
+
+// Overlaps reports whether this span shares any bytes with another span.
+func (s Span) Overlaps(other Span) bool {
+	return s.Start < other.End && other.Start < s.End
+}
 
 // Intersection calculates the overlapping span between this span and another.
 // It returns an empty span at the nearest boundary if no overlap exists.
