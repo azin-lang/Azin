@@ -122,7 +122,7 @@ func (n *Node) ChildToken(index int) SyntaxToken {
 	}
 
 	childPos := n.position
-	for i := 0; i < index; i++ {
+	for i := range index {
 		if sibling := n.greenNode.Slot(i); !green.IsNil(sibling) {
 			childPos += sibling.FullWidth()
 		}
