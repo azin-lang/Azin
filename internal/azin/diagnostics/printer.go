@@ -1,10 +1,12 @@
-package text
+package diagnostics
 
 import (
 	"bytes"
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
 type diagnosticLayout struct {
@@ -18,7 +20,7 @@ type diagnosticLayout struct {
 }
 
 // PrintColoredDiagnostic renders a colored diagnostic.
-func PrintColoredDiagnostic(loc Location, label, note, help string, width int, pipe, style, bold func(...any) string) string {
+func PrintColoredDiagnostic(loc text.Location, label, note, help string, width int, pipe, style, bold func(...any) string) string {
 	if loc.File == nil || !loc.Span.IsValidAndNonEmpty() {
 		return "<invalid location>\n"
 	}
@@ -34,10 +36,10 @@ func PrintColoredDiagnostic(loc Location, label, note, help string, width int, p
 	return buf.String()
 }
 
-func makeDiagnosticLayout(loc Location) diagnosticLayout {
+func makeDiagnosticLayout(loc text.Location) diagnosticLayout {
 	pos := loc.Position()
 	line := loc.File.Line(pos.Line)
-	text := loc.File.BytesOf(NewSpan(line.Start, line.End))
+	text := loc.File.BytesOf(text.NewSpan(line.Start, line.End))
 
 	column := clampColumn(pos.ByteColumn, len(text))
 
@@ -149,7 +151,7 @@ func writeDiagnosticFooter(buf *bytes.Buffer, note, help string, width int, bold
 	}
 }
 
-func formatLocation(loc Location, pos Position, endColumn uint32) string {
+func formatLocation(loc text.Location, pos text.Position, endColumn uint32) string {
 	if pos.ByteColumn == endColumn {
 		return fmt.Sprintf("%s:%d:%d", loc.File.Path(), pos.Line, pos.ByteColumn)
 	}
@@ -167,7 +169,7 @@ func clampColumn(column uint32, lineLength int) int {
 	return max(int(column), 0)
 }
 
-func pointerWidth(loc Location, line []byte, column int) int {
+func pointerWidth(loc text.Location, line []byte, column int) int {
 	width := utf8.RuneCount(loc.File.BytesOf(loc.Span))
 
 	if width <= 1 {

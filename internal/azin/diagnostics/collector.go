@@ -173,10 +173,11 @@ func (c *Collector) PrintAll() string {
 		dashCount := max(termWidth-len(title)-4, 2)
 
 		banner := fmt.Sprintf("%s %s %s", cyan("──"), cyan(title), cyan(strings.Repeat("─", dashCount)))
-		out.WriteString(banner + "\n\n")
+		out.WriteString(banner)
+		out.WriteString("\n\n")
 
 		if d.Location.File != nil && d.Location.Span.IsValidAndNonEmpty() {
-			renderedLoc := text.PrintColoredDiagnostic(
+			renderedLoc := PrintColoredDiagnostic(
 				d.Location, d.Label, d.Note, d.Help,
 				termWidth,
 				pipeColor, styleColor, bold,
