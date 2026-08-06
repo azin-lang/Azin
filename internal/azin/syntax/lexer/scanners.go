@@ -89,10 +89,14 @@ func (l *Lexer) scanSyntaxToken(startOffset uint32) syntax.Kind {
 	}
 
 	if unicode.IsLetter(ch) || ch == '_' {
+		// The first character is already consumed; this will consume the rest.
 		return l.scanIdentifierOrKeyword(startOffset)
 	}
+
 	if unicode.IsDigit(ch) {
-		l.reader.Backup() // Let scanNumber consume the first digit
+		// We already consumed the first digit, but scanNumber expects to read it.
+		// Teleport back to exactly where this token started.
+		l.reader.Restore(startOffset)
 		return l.scanNumber(startOffset)
 	}
 
@@ -141,24 +145,33 @@ func (l *Lexer) scanNumber(startOffset uint32) syntax.Kind {
 
 	ch, _ := l.reader.Peek()
 	if ch == '.' {
+		// Checkpoint before eating the dot
+		dotCheckpoint := l.reader.Checkpoint()
+
 		l.reader.Next()
 		nextCh, _ := l.reader.Peek()
+
 		if unicode.IsDigit(nextCh) {
 			isFloat = true
 			l.consumeDigits()
 		} else {
-			l.reader.Backup()
+			// False alarm (e.g. `1.method()`). Undo consuming the dot.
+			l.reader.Restore(dotCheckpoint)
 		}
 	}
 
 	ch, _ = l.reader.Peek()
 	if ch == 'e' || ch == 'E' {
-		l.reader.Next()
+		// Checkpoint before eating 'e', because we might also eat a '+' or '-'
+		// and still fail to find digits.
+		expCheckpoint := l.reader.Checkpoint()
+
+		l.reader.Next() // Consume 'e'
 
 		hasSign := false
 		signCh, _ := l.reader.Peek()
 		if signCh == '+' || signCh == '-' {
-			l.reader.Next()
+			l.reader.Next() // Consume sign
 			hasSign = true
 		}
 
@@ -179,7 +192,9 @@ func (l *Lexer) scanNumber(startOffset uint32) syntax.Kind {
 				)
 				return syntax.BadToken
 			}
-			l.reader.Backup()
+			// It was just an 'e' (or 'E') attached to a number, but not scientific notation.
+			// Restore the reader to exactly before we ate the 'e'.
+			l.reader.Restore(expCheckpoint)
 		}
 	}
 
