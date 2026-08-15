@@ -48,7 +48,7 @@ func getShard(kind syntax.Kind, text string) *cacheShard {
 }
 
 // NewToken constructs an immutable green token, safely interning zero-trivia tokens.
-func NewToken(kind syntax.Kind, text string, leading Node, trailing Node) *Token {
+func NewToken(kind syntax.Kind, text string, leading, trailing Node) *Token {
 	if IsNil(leading) && IsNil(trailing) {
 		key := tokenCacheKey{kind: kind, text: text}
 		shard := getShard(kind, text)
@@ -67,7 +67,7 @@ func NewToken(kind syntax.Kind, text string, leading Node, trailing Node) *Token
 		token := &Token{
 			Base: Base{
 				kind:      kind,
-				fullWidth: uint32(len(internedText)),
+				fullWidth: len(internedText),
 				flags:     FlagNone,
 			},
 			text: internedText,
@@ -90,7 +90,7 @@ func NewToken(kind syntax.Kind, text string, leading Node, trailing Node) *Token
 	return &Token{
 		Base: Base{
 			kind:      kind,
-			fullWidth: wL + wT + uint32(len(text)),
+			fullWidth: wL + wT + len(text),
 			flags:     fL | fT,
 		},
 		text:           text,

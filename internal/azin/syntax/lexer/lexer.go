@@ -40,10 +40,10 @@ func (l *Lexer) NextToken() *green.Token {
 	kind := l.scanSyntaxToken(startOffset)
 	endOffset := l.reader.Offset()
 
-	text := l.file.Text(text.SpanFromBounds(startOffset, endOffset))
+	source := l.file.Text(text.SpanFromBounds(startOffset, endOffset))
 	trailingTrivia := l.scanTrivia(true)
 
-	return green.NewToken(kind, text, leadingTrivia, trailingTrivia)
+	return green.NewToken(kind, source, leadingTrivia, trailingTrivia)
 }
 
 // match consumes the expected character if it matches the current peek.
@@ -60,7 +60,7 @@ func (l *Lexer) match(expected rune) bool {
 }
 
 // loc is a helper to clean up span/location boilerplate.
-func (l *Lexer) loc(startOffset, endOffset uint32) text.Location {
+func (l *Lexer) loc(startOffset, endOffset int) text.Location {
 	return text.Location{
 		File: l.file,
 		Span: text.SpanFromBounds(startOffset, endOffset),

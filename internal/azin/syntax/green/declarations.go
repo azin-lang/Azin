@@ -12,7 +12,7 @@ type VariableDeclaration struct {
 	initializer    Node
 }
 
-func NewVariableDeclaration(varKeyword *Token, identifier *Token, colon *Token, typeAnnotation Node, equals *Token, initializer Node) *VariableDeclaration {
+func NewVariableDeclaration(varKeyword, identifier, colon *Token, typeAnnotation Node, equals *Token, initializer Node) *VariableDeclaration {
 	width, flags := ComputeProperties6(varKeyword, identifier, colon, typeAnnotation, equals, initializer)
 	return &VariableDeclaration{
 		Base: Base{

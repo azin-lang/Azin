@@ -124,7 +124,7 @@ type MemberAccessExpression struct {
 	name       *Token
 }
 
-func NewMemberAccessExpression(expression Node, dot *Token, name *Token) *MemberAccessExpression {
+func NewMemberAccessExpression(expression Node, dot, name *Token) *MemberAccessExpression {
 	width, flags := ComputeProperties3(expression, dot, name)
 	return &MemberAccessExpression{
 		Base: Base{

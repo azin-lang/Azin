@@ -12,7 +12,7 @@ import (
 type diagnosticLayout struct {
 	Location string
 
-	LineNumber uint32
+	LineNumber int
 	LineText   []byte
 
 	PointerIndent string
@@ -43,7 +43,7 @@ func makeDiagnosticLayout(loc text.Location) diagnosticLayout {
 
 	column := clampColumn(pos.ByteColumn, len(textBytes))
 
-	endColumn := pos.ByteColumn + uint32(max(pointerWidth(loc, textBytes, column)-1, 0))
+	endColumn := pos.ByteColumn + max(pointerWidth(loc, textBytes, column)-1, 0)
 
 	return diagnosticLayout{
 		Location:      formatLocation(loc, pos, endColumn),
@@ -151,7 +151,7 @@ func writeDiagnosticFooter(buf *bytes.Buffer, note, help string, width int, bold
 	}
 }
 
-func formatLocation(loc text.Location, pos text.Position, endColumn uint32) string {
+func formatLocation(loc text.Location, pos text.Position, endColumn int) string {
 	if pos.ByteColumn == endColumn {
 		return fmt.Sprintf("%s:%d:%d", loc.File.Path(), pos.Line, pos.ByteColumn)
 	}
@@ -159,14 +159,14 @@ func formatLocation(loc text.Location, pos text.Position, endColumn uint32) stri
 	return fmt.Sprintf("%s:%d:%d-%d", loc.File.Path(), pos.Line, pos.ByteColumn, endColumn)
 }
 
-func clampColumn(column uint32, lineLength int) int {
+func clampColumn(column, lineLength int) int {
 	column--
 
-	if int(column) > lineLength {
+	if column > lineLength {
 		return lineLength
 	}
 
-	return max(int(column), 0)
+	return max(column, 0)
 }
 
 func pointerWidth(loc text.Location, line []byte, column int) int {
@@ -215,14 +215,14 @@ func pointerIndent(line []byte) string {
 	return b.String()
 }
 
-func wrapText(text string, width int) string {
+func wrapText(source string, width int) string {
 	if width <= 0 {
-		return text
+		return source
 	}
 
 	var b strings.Builder
 
-	for i, paragraph := range strings.Split(text, "\n") {
+	for i, paragraph := range strings.Split(source, "\n") {
 		if i > 0 {
 			b.WriteByte('\n')
 		}

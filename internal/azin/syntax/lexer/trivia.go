@@ -72,7 +72,7 @@ func (l *Lexer) scanSingleLineComment() {
 	}
 }
 
-func (l *Lexer) scanMultiLineComment(startOffset uint32) {
+func (l *Lexer) scanMultiLineComment(startOffset int) {
 	for !l.reader.EOF() {
 		ch, _ := l.reader.Next()
 		if ch == '*' {

@@ -1,6 +1,7 @@
 package parser_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/azin-lang/Azin/internal/azin/diagnostics"
@@ -11,9 +12,7 @@ import (
 	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
-func parse(t *testing.T, sourceText string) (*red.Node, *diagnostics.Collector) {
-	t.Helper()
-
+func parseSource(sourceText string) (*red.Node, *diagnostics.Collector) {
 	file := text.NewSourceText("test.az", 0, []byte(sourceText))
 	diags := diagnostics.NewCollector()
 
@@ -21,6 +20,11 @@ func parse(t *testing.T, sourceText string) (*red.Node, *diagnostics.Collector) 
 	p := parser.New(lex, diags)
 
 	return red.NewRoot(p.ParseExpression()), diags
+}
+
+func parse(t *testing.T, sourceText string) (*red.Node, *diagnostics.Collector) {
+	t.Helper()
+	return parseSource(sourceText)
 }
 
 func assertNoDiagnostics(t *testing.T, diags *diagnostics.Collector) {
@@ -432,8 +436,8 @@ func TestHigherOrderFunctionCall(t *testing.T) {
 }
 
 func TestParentPointersAndPositions(t *testing.T) {
-	text := "   10   +   20  "
-	root, diags := parse(t, text)
+	source := "   10   +   20  "
+	root, diags := parse(t, source)
 	assertNoDiagnostics(t, diags)
 
 	bin := red.AsBinaryExpression(root)
@@ -459,8 +463,9 @@ func TestParentPointersAndPositions(t *testing.T) {
 		t.Errorf("expected left operand position 0 (including leading whitespace), got %d", bin.Left().Position())
 	}
 
-	if root.FullWidth() != uint32(len(text)) {
-		t.Errorf("expected full width %d, got %d", len(text), root.FullWidth())
+	length := len(source)
+	if root.FullWidth() != length {
+		t.Errorf("expected full width %d, got %d", length, root.FullWidth())
 	}
 }
 
@@ -505,5 +510,119 @@ func TestCallMissingClosingParenthesisDiagnostic(t *testing.T) {
 	call := red.AsCallExpression(root)
 	if call == nil {
 		t.Fatal("expected parser to recover and create CallExpression node")
+	}
+}
+
+func BenchmarkParseExpression(b *testing.B) {
+	source := "foo(123, 456, 789) + bar(42) * 2"
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		parseSource(source)
+	}
+}
+
+func Test_parseSource(t *testing.T) {
+	type args struct {
+		sourceText string
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  *red.Node
+		want1 *diagnostics.Collector
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := parseSource(tt.args.sourceText)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseSource() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("parseSource() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func Test_parse(t *testing.T) {
+	type args struct {
+		t          *testing.T
+		sourceText string
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  *red.Node
+		want1 *diagnostics.Collector
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := parse(tt.args.t, tt.args.sourceText)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parse() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("parse() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func Test_assertNoDiagnostics(t *testing.T) {
+	type args struct {
+		t     *testing.T
+		diags *diagnostics.Collector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertNoDiagnostics(tt.args.t, tt.args.diags)
+		})
+	}
+}
+
+func Test_assertHasDiagnostics(t *testing.T) {
+	type args struct {
+		t     *testing.T
+		diags *diagnostics.Collector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertHasDiagnostics(tt.args.t, tt.args.diags)
+		})
+	}
+}
+
+func TestBenchmarkParseExpression(t *testing.T) {
+	type args struct {
+		b *testing.B
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			BenchmarkParseExpression(tt.args.b)
+		})
 	}
 }

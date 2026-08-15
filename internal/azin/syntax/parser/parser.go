@@ -13,7 +13,7 @@ type Parser struct {
 	lex     *lexer.Lexer
 	diags   *diagnostics.Collector
 	current *green.Token
-	pos     uint32
+	pos     int
 }
 
 func New(lex *lexer.Lexer, diags *diagnostics.Collector) *Parser {
@@ -103,7 +103,7 @@ func (p *Parser) syncTo(kinds ...syntax.Kind) {
 
 // currentLocation returns the source location of the current token.
 func (p *Parser) currentLocation() text.Location {
-	width := uint32(0)
+	width := 0
 	if p.current != nil {
 		width = p.current.FullWidth()
 	}

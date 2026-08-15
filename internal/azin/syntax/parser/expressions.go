@@ -71,33 +71,38 @@ func (p *Parser) parseCallExpression(callee green.Node) green.Node {
 	openParen := p.match(syntax.OpenParenToken)
 
 	var args []green.Node
-	if !p.atAny(syntax.CloseParenToken, syntax.EndOfFileToken) {
-		for {
-			args = append(args, p.ParseExpression())
 
-			if p.eat(syntax.CommaToken) {
-				// Allow optional trailing comma: foo(a, b,)
-				if p.at(syntax.CloseParenToken) {
-					break
-				}
-			} else if p.atAny(syntax.CloseParenToken, syntax.EndOfFileToken) {
-				break
-			} else if p.isAtExpressionStart() {
-				// Recover from a missing comma between arguments: foo(a b)
-				p.match(syntax.CommaToken)
-			} else {
-				// Unexpected tokens inside arguments list; synchronize to next comma or ')'
-				p.syncTo(syntax.CommaToken, syntax.CloseParenToken)
-				if !p.eat(syntax.CommaToken) {
-					break
-				}
+argumentLoop:
+	for !p.atAny(syntax.CloseParenToken, syntax.EndOfFileToken) {
+		args = append(args, p.ParseExpression())
+
+		switch {
+		case p.eat(syntax.CommaToken):
+			// Allow optional trailing comma: foo(a, b,)
+			if p.at(syntax.CloseParenToken) {
+				break argumentLoop
+			}
+
+		case p.atAny(syntax.CloseParenToken, syntax.EndOfFileToken):
+			break argumentLoop
+
+		case p.isAtExpressionStart():
+			// Recover from a missing comma between arguments: foo(a b)
+			p.match(syntax.CommaToken)
+
+		default:
+			// Unexpected tokens inside arguments list; synchronize to next comma or ')'
+			p.syncTo(syntax.CommaToken, syntax.CloseParenToken)
+
+			if !p.eat(syntax.CommaToken) {
+				break argumentLoop
 			}
 		}
 	}
 
 	closeParen := p.match(syntax.CloseParenToken)
 
-	// Wrap the slice in a SyntaxList node so it implements green.Node
+	// Wrap the slice in a SyntaxList node so it implements green.Node.
 	argsList := green.NewSyntaxList(args)
 
 	return green.NewCallExpression(callee, openParen, argsList, closeParen)

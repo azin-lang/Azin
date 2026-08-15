@@ -48,13 +48,13 @@ func printTree(node *red.Node, indent string, isLast bool) {
 	greenNode := node.Green()
 	kind := greenNode.Kind()
 
-	// Extract the literal text if the underlying green node is a Token
-	text := ""
+	// Extract the literal source if the underlying green node is a Token
+	source := ""
 	if tok, ok := greenNode.(*green.Token); ok {
-		text = fmt.Sprintf(" %q", tok.Text())
+		source = fmt.Sprintf(" %q", tok.Text())
 	}
 
-	fmt.Printf("%s%s%v%s\n", indent, marker, kind, text)
+	fmt.Printf("%s%s%v%s\n", indent, marker, kind, source)
 
 	childIndent := indent
 	if isLast {

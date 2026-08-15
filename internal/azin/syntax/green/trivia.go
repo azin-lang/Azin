@@ -12,7 +12,7 @@ func NewTrivia(kind syntax.Kind, text string) *Trivia {
 	return &Trivia{
 		Base: Base{
 			kind:      kind,
-			fullWidth: uint32(len(text)),
+			fullWidth: len(text),
 			flags:     FlagNone,
 		},
 		text: text,

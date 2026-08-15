@@ -7,38 +7,39 @@ import "fmt"
 // A Span identifies a contiguous region within a source file or buffer.
 // It owns no memory, is highly efficient to copy, and guarantees:
 //
-//	0 <= start <= end <= MaxUint32
+//	0 <= start <= end
 type Span struct {
-	start uint32
-	end   uint32
+	start int
+	end   int
 }
 
-const maxUint32 = ^uint32(0)
-
-func addClamp(a, b uint32) uint32 {
-	if maxUint32-a < b {
-		return maxUint32
+func addClamp(a, b int) int {
+	if b > 0 && a > maxInt-b {
+		return maxInt
 	}
 	return a + b
 }
 
-func subClamp(a, b uint32) uint32 {
+func subClamp(a, b int) int {
 	if a < b {
 		return 0
 	}
 	return a - b
 }
 
+const maxInt = int(^uint(0) >> 1)
+
 //
 // Constructors
 //
 
 // NewSpan constructs a span from a start offset and length.
-// Safely clamps to MaxUint32 to prevent overflow.
-func NewSpan(start, length uint32) Span {
+// Safely clamps to MaxInt to prevent overflow.
+func NewSpan(start, length int) Span {
 	if length == 0 {
 		return SpanAt(start)
 	}
+
 	return Span{
 		start: start,
 		end:   addClamp(start, length),
@@ -47,7 +48,7 @@ func NewSpan(start, length uint32) Span {
 
 // SpanFromBounds constructs a span from explicit start and end markers.
 // If end precedes start, it normalizes by collapsing to an empty span at start.
-func SpanFromBounds(start, end uint32) Span {
+func SpanFromBounds(start, end int) Span {
 	return Span{
 		start: start,
 		end:   max(start, end),
@@ -55,7 +56,7 @@ func SpanFromBounds(start, end uint32) Span {
 }
 
 // SpanAt constructs an empty span (a cursor) located exactly at offset.
-func SpanAt(offset uint32) Span {
+func SpanAt(offset int) Span {
 	return Span{
 		start: offset,
 		end:   offset,
@@ -67,17 +68,17 @@ func SpanAt(offset uint32) Span {
 //
 
 // Start returns the first byte offset.
-func (s Span) Start() uint32 {
+func (s Span) Start() int {
 	return s.start
 }
 
 // End returns the first byte immediately after the span.
-func (s Span) End() uint32 {
+func (s Span) End() int {
 	return s.end
 }
 
 // Len returns the span length in bytes.
-func (s Span) Len() uint32 {
+func (s Span) Len() int {
 	return s.end - s.start
 }
 
@@ -87,7 +88,7 @@ func (s Span) IsEmpty() bool {
 }
 
 // AsTuple returns both the start and end offsets as a raw pair.
-func (s Span) AsTuple() (start, end uint32) {
+func (s Span) AsTuple() (start, end int) {
 	return s.start, s.end
 }
 
@@ -102,7 +103,7 @@ func (s Span) Equals(other Span) bool {
 
 // ContainsOffset reports whether offset lies strictly inside the span.
 // Optimized with an early exit if the span is empty.
-func (s Span) ContainsOffset(offset uint32) bool {
+func (s Span) ContainsOffset(offset int) bool {
 	if s.IsEmpty() {
 		return false
 	}
@@ -130,7 +131,7 @@ func (s Span) Touches(other Span) bool {
 
 // Distance returns the gap in bytes between two non-overlapping spans.
 // Returns 0 if they touch, overlap, or enclose each other.
-func (s Span) Distance(other Span) uint32 {
+func (s Span) Distance(other Span) int {
 	if s.Overlaps(other) || s.Encloses(other) || other.Encloses(s) || s.Touches(other) {
 		return 0
 	}
@@ -192,7 +193,7 @@ func (s Span) Encompass(other Span) Span {
 
 // Expand grows the span outward by left and right bytes.
 // Safely clamps at boundaries. Early exit if arguments are zero.
-func (s Span) Expand(left, right uint32) Span {
+func (s Span) Expand(left, right int) Span {
 	if left == 0 && right == 0 {
 		return s
 	}
@@ -204,7 +205,7 @@ func (s Span) Expand(left, right uint32) Span {
 
 // Shrink removes bytes from each side.
 // If the requested shrink would invert the span, an empty span is returned.
-func (s Span) Shrink(left, right uint32) Span {
+func (s Span) Shrink(left, right int) Span {
 	if left == 0 && right == 0 {
 		return s
 	}
@@ -229,21 +230,22 @@ func (s Span) Translate(delta int64) Span {
 	}
 
 	if delta > 0 {
-		if delta >= int64(maxUint32) {
-			return Span{start: maxUint32, end: maxUint32}
+		if delta >= int64(maxInt) {
+			return Span{start: maxInt, end: maxInt}
 		}
-		d := uint32(delta)
+
+		d := int(delta)
 		return Span{
 			start: addClamp(s.start, d),
 			end:   addClamp(s.end, d),
 		}
 	}
 
-	if delta <= -int64(maxUint32) {
+	if delta <= -int64(maxInt) {
 		return Span{start: 0, end: 0}
 	}
 
-	d := uint32(-delta)
+	d := int(-delta)
 	return Span{
 		start: subClamp(s.start, d),
 		end:   subClamp(s.end, d),
@@ -252,7 +254,7 @@ func (s Span) Translate(delta int64) Span {
 
 // Clamp constrains an offset to lie within the boundaries of the span.
 // Optimized with fast-path bounds checks.
-func (s Span) Clamp(offset uint32) uint32 {
+func (s Span) Clamp(offset int) int {
 	if offset <= s.start {
 		return s.start
 	}
@@ -264,7 +266,7 @@ func (s Span) Clamp(offset uint32) uint32 {
 
 // SplitAt divides the span into two adjacent spans at the given offset.
 // Offsets outside the span are safely clamped.
-func (s Span) SplitAt(offset uint32) (Span, Span) {
+func (s Span) SplitAt(offset int) (left, right Span) {
 	offset = s.Clamp(offset)
 	return Span{start: s.start, end: offset}, Span{start: offset, end: s.end}
 }
@@ -274,7 +276,7 @@ func (s Span) SplitAt(offset uint32) (Span, Span) {
 //
 
 // WithStart returns a copy with a different start.
-func (s Span) WithStart(start uint32) Span {
+func (s Span) WithStart(start int) Span {
 	if start == s.start {
 		return s
 	}
@@ -282,7 +284,7 @@ func (s Span) WithStart(start uint32) Span {
 }
 
 // WithEnd returns a copy with a different end.
-func (s Span) WithEnd(end uint32) Span {
+func (s Span) WithEnd(end int) Span {
 	if end == s.end {
 		return s
 	}
@@ -290,7 +292,7 @@ func (s Span) WithEnd(end uint32) Span {
 }
 
 // WithLength returns a copy with a different length.
-func (s Span) WithLength(length uint32) Span {
+func (s Span) WithLength(length int) Span {
 	if length == s.Len() {
 		return s
 	}

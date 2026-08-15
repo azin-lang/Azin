@@ -4,7 +4,7 @@ import "github.com/azin-lang/Azin/internal/azin/syntax"
 
 type Node interface {
 	Kind() syntax.Kind
-	FullWidth() uint32
+	FullWidth() int
 	Flags() NodeFlags
 	SlotCount() int
 	Slot(index int) Node

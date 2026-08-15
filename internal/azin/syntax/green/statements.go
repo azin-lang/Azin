@@ -54,7 +54,7 @@ type IfStatement struct {
 	elseBranch  Node
 }
 
-func NewIfStatement(ifKeyword *Token, condition Node, thenBranch Node, elseKeyword *Token, elseBranch Node) *IfStatement {
+func NewIfStatement(ifKeyword *Token, condition, thenBranch Node, elseKeyword *Token, elseBranch Node) *IfStatement {
 	width, flags := ComputeProperties5(ifKeyword, condition, thenBranch, elseKeyword, elseBranch)
 	return &IfStatement{
 		Base: Base{

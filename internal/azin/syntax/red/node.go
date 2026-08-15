@@ -10,7 +10,7 @@ import (
 type Node struct {
 	greenNode green.Node
 	parent    *Node
-	position  uint32
+	position  int
 }
 
 // NewRoot creates the root of the red tree from a green root node.
@@ -39,14 +39,14 @@ func (n *Node) Parent() *Node {
 	return n.parent
 }
 
-func (n *Node) Position() uint32 {
+func (n *Node) Position() int {
 	if n == nil {
 		return 0
 	}
 	return n.position
 }
 
-func (n *Node) FullWidth() uint32 {
+func (n *Node) FullWidth() int {
 	if n == nil || n.greenNode == nil {
 		return 0
 	}

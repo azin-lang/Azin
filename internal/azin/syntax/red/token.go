@@ -11,11 +11,11 @@ import (
 type SyntaxToken struct {
 	parent   *Node
 	green    *green.Token
-	position uint32
+	position int
 	index    int
 }
 
-func NewSyntaxToken(parent *Node, greenTok *green.Token, position uint32, index int) SyntaxToken {
+func NewSyntaxToken(parent *Node, greenTok *green.Token, position, index int) SyntaxToken {
 	return SyntaxToken{
 		parent:   parent,
 		green:    greenTok,
@@ -39,7 +39,7 @@ func (t SyntaxToken) Parent() *Node {
 	return t.parent
 }
 
-func (t SyntaxToken) Position() uint32 {
+func (t SyntaxToken) Position() int {
 	return t.position
 }
 
@@ -54,7 +54,7 @@ func (t SyntaxToken) Text() string {
 	return t.green.Text()
 }
 
-func (t SyntaxToken) FullWidth() uint32 {
+func (t SyntaxToken) FullWidth() int {
 	if t.IsZero() {
 		return 0
 	}

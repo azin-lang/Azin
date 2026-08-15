@@ -32,7 +32,7 @@ func countGreenListItems(g green.Node) int {
 		return 1
 	}
 	total := 0
-	for i := 0; i < g.SlotCount(); i++ {
+	for i := range g.SlotCount() {
 		total += countGreenListItems(g.Slot(i))
 	}
 	return total
@@ -52,7 +52,7 @@ func getItemFromList(n *Node, index int) *Node {
 	}
 
 	currentIndex := index
-	for i := 0; i < n.greenNode.SlotCount(); i++ {
+	for i := range n.greenNode.SlotCount() {
 		slot := n.greenNode.Slot(i)
 		if green.IsNil(slot) {
 			continue

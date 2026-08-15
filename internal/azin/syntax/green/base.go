@@ -12,13 +12,13 @@ const (
 )
 
 type Base struct {
-	fullWidth uint32
+	fullWidth int
 	kind      syntax.Kind
 	flags     NodeFlags
 }
 
 func (b Base) Kind() syntax.Kind { return b.kind }
-func (b Base) FullWidth() uint32 { return b.fullWidth }
+func (b Base) FullWidth() int    { return b.fullWidth }
 func (b Base) Flags() NodeFlags  { return b.flags }
 
 func (b Base) ContainsDiagnostics() bool {
