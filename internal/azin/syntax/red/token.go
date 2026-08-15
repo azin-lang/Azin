@@ -6,8 +6,6 @@ import (
 	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
-// SyntaxToken is a stack-allocated value type (struct, not pointer).
-// It acts as a lightweight facade over a green.Token.
 type SyntaxToken struct {
 	parent   *Node
 	green    *green.Token
@@ -15,71 +13,111 @@ type SyntaxToken struct {
 	index    int
 }
 
-func NewSyntaxToken(parent *Node, greenTok *green.Token, position, index int) SyntaxToken {
-	return SyntaxToken{
-		parent:   parent,
-		green:    greenTok,
-		position: position,
-		index:    index,
-	}
-}
-
 func (t SyntaxToken) IsZero() bool {
 	return t.green == nil
-}
-
-func (t SyntaxToken) Kind() syntax.Kind {
-	if t.IsZero() {
-		return syntax.Unknown
-	}
-	return t.green.Kind()
 }
 
 func (t SyntaxToken) Parent() *Node {
 	return t.parent
 }
 
-func (t SyntaxToken) Position() int {
-	return t.position
+func (t SyntaxToken) Green() *green.Token {
+	return t.green
+}
+
+func (t SyntaxToken) Kind() syntax.Kind {
+	if t.green == nil {
+		return syntax.Unknown
+	}
+
+	return t.green.Kind()
 }
 
 func (t SyntaxToken) Index() int {
 	return t.index
 }
 
+func (t SyntaxToken) Position() int {
+	return t.position
+}
+
 func (t SyntaxToken) Text() string {
-	if t.IsZero() {
+	if t.green == nil {
 		return ""
 	}
+
 	return t.green.Text()
 }
 
 func (t SyntaxToken) FullWidth() int {
-	if t.IsZero() {
+	if t.green == nil {
 		return 0
 	}
-	return t.green.FullWidth()
+
+	return int(t.green.FullWidth())
 }
 
-// FullSpan includes whitespace and comments.
 func (t SyntaxToken) FullSpan() text.Span {
-	if t.IsZero() {
+	if t.green == nil {
 		return text.Span{}
 	}
-	return text.NewSpan(t.position, t.green.FullWidth())
+
+	return text.NewSpan(
+		t.position,
+		int(t.green.FullWidth()),
+	)
 }
 
-// Span excludes leading and trailing trivia.
 func (t SyntaxToken) Span() text.Span {
-	if t.IsZero() {
+	if t.green == nil {
 		return text.Span{}
 	}
 
-	leadingW := green.GetLeadingTriviaWidth(t.green)
-	trailingW := green.GetTrailingTriviaWidth(t.green)
+	leading := int(green.GetLeadingTriviaWidth(t.green))
+	trailing := int(green.GetTrailingTriviaWidth(t.green))
+	fullWidth := int(t.green.FullWidth())
 
-	start := t.position + leadingW
-	length := t.green.FullWidth() - leadingW - trailingW
+	start := t.position + leading
+	width := fullWidth - leading - trailing
+	if width < 0 {
+		width = 0
+	}
 
-	return text.NewSpan(start, length)
+	return text.NewSpan(start, width)
+}
+
+func (t SyntaxToken) LeadingTrivia() SyntaxTrivia {
+	if t.green == nil {
+		return SyntaxTrivia{}
+	}
+
+	trivia := t.green.LeadingTrivia()
+	if green.IsNil(trivia) {
+		return SyntaxTrivia{}
+	}
+
+	return SyntaxTrivia{
+		parent:   t,
+		green:    trivia,
+		position: t.position,
+	}
+}
+
+func (t SyntaxToken) TrailingTrivia() SyntaxTrivia {
+	if t.green == nil {
+		return SyntaxTrivia{}
+	}
+
+	trivia := t.green.TrailingTrivia()
+	if green.IsNil(trivia) {
+		return SyntaxTrivia{}
+	}
+
+	leading := int(green.GetLeadingTriviaWidth(t.green))
+
+	return SyntaxTrivia{
+		parent:   t,
+		green:    trivia,
+		position: t.position + leading + len(t.green.Text()),
+	}
 }

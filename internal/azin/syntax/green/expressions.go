@@ -4,261 +4,143 @@ import "github.com/azin-lang/Azin/internal/azin/syntax"
 
 type BinaryExpression struct {
 	Base
-	left     Node
-	operator *Token
-	right    Node
+	children [3]Node
 }
 
 func NewBinaryExpression(left Node, operator *Token, right Node) *BinaryExpression {
-	width, flags := ComputeProperties3(left, operator, right)
+	children := [3]Node{NilSafe(left), NilSafe(operator), NilSafe(right)}
+	width, flags := ComputeProperties(children[:])
 	return &BinaryExpression{
-		Base: Base{
-			kind:      syntax.BinaryExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		left:     left,
-		operator: operator,
-		right:    right,
+		Base:     Base{kind: syntax.BinaryExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (b *BinaryExpression) Left() Node       { return b.left }
-func (b *BinaryExpression) Operator() *Token { return b.operator }
-func (b *BinaryExpression) Right() Node      { return b.right }
-
-func (b *BinaryExpression) IsNil() bool { return b == nil }
-
-func (b *BinaryExpression) SlotCount() int { return 3 }
-func (b *BinaryExpression) Slot(index int) Node {
-	switch index {
-	case 0:
-		return SafeNode(b.left)
-	case 1:
-		return SafeNode(b.operator)
-	case 2:
-		return SafeNode(b.right)
-	default:
-		return nil
-	}
-}
+func (b *BinaryExpression) Left() Node          { return b.children[0] }
+func (b *BinaryExpression) Operator() *Token    { t, _ := b.children[1].(*Token); return t }
+func (b *BinaryExpression) Right() Node         { return b.children[2] }
+func (b *BinaryExpression) IsNil() bool         { return b == nil }
+func (b *BinaryExpression) SlotCount() int      { return 3 }
+func (b *BinaryExpression) Slot(index int) Node { return b.children[index] }
 
 type CallExpression struct {
 	Base
-	expression Node
-	openParen  *Token
-	arguments  Node
-	closeParen *Token
+	children [4]Node
 }
 
 func NewCallExpression(expression Node, openParen *Token, arguments Node, closeParen *Token) *CallExpression {
-	width, flags := ComputeProperties4(expression, openParen, arguments, closeParen)
+	children := [4]Node{NilSafe(expression), NilSafe(openParen), NilSafe(arguments), NilSafe(closeParen)}
+	width, flags := ComputeProperties(children[:])
 	return &CallExpression{
-		Base: Base{
-			kind:      syntax.CallExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		expression: expression,
-		openParen:  openParen,
-		arguments:  arguments,
-		closeParen: closeParen,
+		Base:     Base{kind: syntax.CallExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (c *CallExpression) Expression() Node   { return c.expression }
-func (c *CallExpression) OpenParen() *Token  { return c.openParen }
-func (c *CallExpression) Arguments() Node    { return c.arguments }
-func (c *CallExpression) CloseParen() *Token { return c.closeParen }
-
-func (c *CallExpression) IsNil() bool { return c == nil }
-
-func (c *CallExpression) SlotCount() int { return 4 }
-func (c *CallExpression) Slot(index int) Node {
-	switch index {
-	case 0:
-		return SafeNode(c.expression)
-	case 1:
-		return SafeNode(c.openParen)
-	case 2:
-		return SafeNode(c.arguments)
-	case 3:
-		return SafeNode(c.closeParen)
-	default:
-		return nil
-	}
-}
+func (c *CallExpression) Expression() Node    { return c.children[0] }
+func (c *CallExpression) OpenParen() *Token   { t, _ := c.children[1].(*Token); return t }
+func (c *CallExpression) Arguments() Node     { return c.children[2] }
+func (c *CallExpression) CloseParen() *Token  { t, _ := c.children[3].(*Token); return t }
+func (c *CallExpression) IsNil() bool         { return c == nil }
+func (c *CallExpression) SlotCount() int      { return 4 }
+func (c *CallExpression) Slot(index int) Node { return c.children[index] }
 
 type LiteralExpression struct {
 	Base
-	token *Token
+	children [1]Node
 }
 
 func NewLiteralExpression(token *Token) *LiteralExpression {
-	width, flags := ComputeProperties1(token)
+	children := [1]Node{NilSafe(token)}
+	width, flags := ComputeProperties(children[:])
 	return &LiteralExpression{
-		Base: Base{
-			kind:      syntax.LiteralExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		token: token,
+		Base:     Base{kind: syntax.LiteralExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (l *LiteralExpression) IsNil() bool { return l == nil }
-
-func (l *LiteralExpression) Token() *Token  { return l.token }
-func (l *LiteralExpression) SlotCount() int { return 1 }
-func (l *LiteralExpression) Slot(index int) Node {
-	if index == 0 {
-		return SafeNode(l.token)
-	}
-	return nil
-}
+func (l *LiteralExpression) Token() *Token       { t, _ := l.children[0].(*Token); return t }
+func (l *LiteralExpression) IsNil() bool         { return l == nil }
+func (l *LiteralExpression) SlotCount() int      { return 1 }
+func (l *LiteralExpression) Slot(index int) Node { return l.children[index] }
 
 type MemberAccessExpression struct {
 	Base
-	expression Node
-	dot        *Token
-	name       *Token
+	children [3]Node
 }
 
 func NewMemberAccessExpression(expression Node, dot, name *Token) *MemberAccessExpression {
-	width, flags := ComputeProperties3(expression, dot, name)
+	children := [3]Node{NilSafe(expression), NilSafe(dot), NilSafe(name)}
+	width, flags := ComputeProperties(children[:])
 	return &MemberAccessExpression{
-		Base: Base{
-			kind:      syntax.MemberAccessExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		expression: expression,
-		dot:        dot,
-		name:       name,
+		Base:     Base{kind: syntax.MemberAccessExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (m *MemberAccessExpression) Expression() Node { return m.expression }
-func (m *MemberAccessExpression) Dot() *Token      { return m.dot }
-func (m *MemberAccessExpression) Name() *Token     { return m.name }
-
-func (m *MemberAccessExpression) IsNil() bool { return m == nil }
-
-func (m *MemberAccessExpression) SlotCount() int { return 3 }
-func (m *MemberAccessExpression) Slot(index int) Node {
-	switch index {
-	case 0:
-		return SafeNode(m.expression)
-	case 1:
-		return SafeNode(m.dot)
-	case 2:
-		return SafeNode(m.name)
-	default:
-		return nil
-	}
-}
+func (m *MemberAccessExpression) Expression() Node    { return m.children[0] }
+func (m *MemberAccessExpression) Dot() *Token         { t, _ := m.children[1].(*Token); return t }
+func (m *MemberAccessExpression) Name() *Token        { t, _ := m.children[2].(*Token); return t }
+func (m *MemberAccessExpression) IsNil() bool         { return m == nil }
+func (m *MemberAccessExpression) SlotCount() int      { return 3 }
+func (m *MemberAccessExpression) Slot(index int) Node { return m.children[index] }
 
 type NameExpression struct {
 	Base
-	identifier *Token
+	children [1]Node
 }
 
 func NewNameExpression(identifier *Token) *NameExpression {
-	width, flags := ComputeProperties1(identifier)
+	children := [1]Node{NilSafe(identifier)}
+	width, flags := ComputeProperties(children[:])
 	return &NameExpression{
-		Base: Base{
-			kind:      syntax.NameExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		identifier: identifier,
+		Base:     Base{kind: syntax.NameExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (n *NameExpression) IsNil() bool { return n == nil }
-
-func (n *NameExpression) Identifier() *Token { return n.identifier }
-func (n *NameExpression) SlotCount() int     { return 1 }
-func (n *NameExpression) Slot(index int) Node {
-	if index == 0 {
-		return SafeNode(n.identifier)
-	}
-	return nil
-}
+func (n *NameExpression) Identifier() *Token  { t, _ := n.children[0].(*Token); return t }
+func (n *NameExpression) IsNil() bool         { return n == nil }
+func (n *NameExpression) SlotCount() int      { return 1 }
+func (n *NameExpression) Slot(index int) Node { return n.children[index] }
 
 type ParenthesizedExpression struct {
 	Base
-	openParen  *Token
-	expression Node
-	closeParen *Token
+	children [3]Node
 }
 
 func NewParenthesizedExpression(openParen *Token, expression Node, closeParen *Token) *ParenthesizedExpression {
-	width, flags := ComputeProperties3(openParen, expression, closeParen)
+	children := [3]Node{NilSafe(openParen), NilSafe(expression), NilSafe(closeParen)}
+	width, flags := ComputeProperties(children[:])
 	return &ParenthesizedExpression{
-		Base: Base{
-			kind:      syntax.ParenthesizedExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		openParen:  openParen,
-		expression: expression,
-		closeParen: closeParen,
+		Base:     Base{kind: syntax.ParenthesizedExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (p *ParenthesizedExpression) OpenParen() *Token  { return p.openParen }
-func (p *ParenthesizedExpression) Expression() Node   { return p.expression }
-func (p *ParenthesizedExpression) CloseParen() *Token { return p.closeParen }
-
-func (p *ParenthesizedExpression) IsNil() bool { return p == nil }
-
-func (p *ParenthesizedExpression) SlotCount() int { return 3 }
-func (p *ParenthesizedExpression) Slot(index int) Node {
-	switch index {
-	case 0:
-		return SafeNode(p.openParen)
-	case 1:
-		return SafeNode(p.expression)
-	case 2:
-		return SafeNode(p.closeParen)
-	default:
-		return nil
-	}
-}
+func (p *ParenthesizedExpression) OpenParen() *Token   { t, _ := p.children[0].(*Token); return t }
+func (p *ParenthesizedExpression) Expression() Node    { return p.children[1] }
+func (p *ParenthesizedExpression) CloseParen() *Token  { t, _ := p.children[2].(*Token); return t }
+func (p *ParenthesizedExpression) IsNil() bool         { return p == nil }
+func (p *ParenthesizedExpression) SlotCount() int      { return 3 }
+func (p *ParenthesizedExpression) Slot(index int) Node { return p.children[index] }
 
 type UnaryExpression struct {
 	Base
-	operator *Token
-	operand  Node
+	children [2]Node
 }
 
 func NewUnaryExpression(operator *Token, operand Node) *UnaryExpression {
-	width, flags := ComputeProperties2(operator, operand)
+	children := [2]Node{NilSafe(operator), NilSafe(operand)}
+	width, flags := ComputeProperties(children[:])
 	return &UnaryExpression{
-		Base: Base{
-			kind:      syntax.UnaryExpression,
-			fullWidth: width,
-			flags:     flags,
-		},
-		operator: operator,
-		operand:  operand,
+		Base:     Base{kind: syntax.UnaryExpression, fullWidth: width, flags: flags},
+		children: children,
 	}
 }
 
-func (u *UnaryExpression) Operator() *Token { return u.operator }
-func (u *UnaryExpression) Operand() Node    { return u.operand }
-
-func (u *UnaryExpression) IsNil() bool { return u == nil }
-
-func (u *UnaryExpression) SlotCount() int { return 2 }
-func (u *UnaryExpression) Slot(index int) Node {
-	switch index {
-	case 0:
-		return SafeNode(u.operator)
-	case 1:
-		return SafeNode(u.operand)
-	default:
-		return nil
-	}
-}
+func (u *UnaryExpression) Operator() *Token    { t, _ := u.children[0].(*Token); return t }
+func (u *UnaryExpression) Operand() Node       { return u.children[1] }
+func (u *UnaryExpression) IsNil() bool         { return u == nil }
+func (u *UnaryExpression) SlotCount() int      { return 2 }
+func (u *UnaryExpression) Slot(index int) Node { return u.children[index] }

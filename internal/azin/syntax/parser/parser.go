@@ -40,7 +40,7 @@ func (p *Parser) ParseCompilationUnit() green.Node {
 func (p *Parser) advance() *green.Token {
 	previous := p.current
 	if p.current != nil {
-		p.pos += p.current.FullWidth()
+		p.pos += int(p.current.FullWidth())
 	}
 	p.current = p.lex.NextToken()
 	return previous
@@ -105,7 +105,7 @@ func (p *Parser) syncTo(kinds ...syntax.Kind) {
 func (p *Parser) currentLocation() text.Location {
 	width := 0
 	if p.current != nil {
-		width = p.current.FullWidth()
+		width = int(p.current.FullWidth())
 	}
 
 	return text.Location{

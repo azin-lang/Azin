@@ -6,127 +6,185 @@ import (
 	"github.com/azin-lang/Azin/internal/azin/text"
 )
 
-// Node is the user-facing syntax node. It knows its parent and absolute position.
+// Node is the user-facing red-tree node.
+//
+// Green nodes contain immutable structural information. Red nodes add
+// contextual information such as the parent and absolute source position.
+//
+// Red nodes are created lazily during traversal.
 type Node struct {
 	greenNode green.Node
 	parent    *Node
 	position  int
 }
 
-// NewRoot creates the root of the red tree from a green root node.
+// NewRoot creates a red node around a green root node.
 func NewRoot(greenRoot green.Node) *Node {
-	if greenRoot == nil {
+	if green.IsNil(greenRoot) {
 		return nil
 	}
+
 	return &Node{
 		greenNode: greenRoot,
-		parent:    nil,
 		position:  0,
 	}
 }
 
-func (n *Node) Kind() syntax.Kind {
-	if n == nil || n.greenNode == nil {
-		return syntax.Unknown
-	}
-	return n.greenNode.Kind()
-}
-
-func (n *Node) Parent() *Node {
-	if n == nil {
-		return nil
-	}
-	return n.parent
-}
-
-func (n *Node) Position() int {
-	if n == nil {
-		return 0
-	}
-	return n.position
-}
-
-func (n *Node) FullWidth() int {
-	if n == nil || n.greenNode == nil {
-		return 0
-	}
-	return n.greenNode.FullWidth()
-}
-
+// Green returns the underlying immutable green node.
 func (n *Node) Green() green.Node {
 	if n == nil {
 		return nil
 	}
+
 	return n.greenNode
 }
 
-// Child lazily evaluates and creates the red wrapper for a green child at a specific index.
-func (n *Node) Child(index int) *Node {
-	if n == nil || n.greenNode == nil {
+// Parent returns the containing red node.
+//
+// The root node has no parent.
+func (n *Node) Parent() *Node {
+	if n == nil {
 		return nil
 	}
 
-	greenChild := n.greenNode.Slot(index)
-	if greenChild == nil {
-		return nil
+	return n.parent
+}
+
+// Kind returns the syntax kind of the node.
+func (n *Node) Kind() syntax.Kind {
+	if n == nil || green.IsNil(n.greenNode) {
+		return syntax.Unknown
 	}
 
-	childPos := n.position
+	return n.greenNode.Kind()
+}
+
+// Position returns the absolute byte offset of the beginning of the node's
+// full span.
+func (n *Node) Position() int {
+	if n == nil {
+		return 0
+	}
+
+	return n.position
+}
+
+// FullWidth returns the width of the node including trivia.
+func (n *Node) FullWidth() int {
+	if n == nil || green.IsNil(n.greenNode) {
+		return 0
+	}
+
+	return int(n.greenNode.FullWidth())
+}
+
+// SlotCount returns the number of slots in the underlying green node.
+func (n *Node) SlotCount() int {
+	if n == nil || green.IsNil(n.greenNode) {
+		return 0
+	}
+
+	return n.greenNode.SlotCount()
+}
+
+// childPosition returns the absolute position of a child slot.
+//
+// Green nodes store widths rather than absolute positions. The red layer
+// reconstructs the absolute position from the parent's position and the
+// widths of preceding siblings.
+func (n *Node) childPosition(index int) int {
+	position := n.position
+
 	for i := range index {
-		sibling := n.greenNode.Slot(i)
-		if sibling != nil {
-			childPos += sibling.FullWidth()
+		child := n.greenNode.Slot(i)
+		if !green.IsNil(child) {
+			position += int(child.FullWidth())
 		}
 	}
 
+	return position
+}
+
+// Child returns a lazily-created red node for the specified slot.
+func (n *Node) Child(index int) *Node {
+	if n == nil || green.IsNil(n.greenNode) {
+		return nil
+	}
+
+	if index < 0 || index >= n.greenNode.SlotCount() {
+		return nil
+	}
+
+	child := n.greenNode.Slot(index)
+	if green.IsNil(child) {
+		return nil
+	}
+
 	return &Node{
-		greenNode: greenChild,
+		greenNode: child,
 		parent:    n,
-		position:  childPos,
+		position:  n.childPosition(index),
 	}
 }
 
+// ChildToken returns a red syntax token for the specified slot.
+//
+// A zero SyntaxToken is returned if the slot does not contain a token.
+func (n *Node) ChildToken(index int) SyntaxToken {
+	if n == nil || green.IsNil(n.greenNode) {
+		return SyntaxToken{}
+	}
+
+	if index < 0 || index >= n.greenNode.SlotCount() {
+		return SyntaxToken{}
+	}
+
+	child := n.greenNode.Slot(index)
+	if green.IsNil(child) {
+		return SyntaxToken{}
+	}
+
+	token, ok := child.(*green.Token)
+	if !ok {
+		return SyntaxToken{}
+	}
+
+	return SyntaxToken{
+		parent:   n,
+		green:    token,
+		position: n.childPosition(index),
+		index:    index,
+	}
+}
+
+// FullSpan returns the complete source span of the node, including trivia.
 func (n *Node) FullSpan() text.Span {
 	if n == nil || green.IsNil(n.greenNode) {
 		return text.Span{}
 	}
-	return text.NewSpan(n.position, n.greenNode.FullWidth())
+
+	return text.NewSpan(
+		n.position,
+		int(n.greenNode.FullWidth()),
+	)
 }
 
+// Span returns the source span of the node excluding its leading and trailing
+// trivia.
 func (n *Node) Span() text.Span {
 	if n == nil || green.IsNil(n.greenNode) {
 		return text.Span{}
 	}
 
-	leading := green.GetLeadingTriviaWidth(n.greenNode)
-	trailing := green.GetTrailingTriviaWidth(n.greenNode)
+	leading := int(green.GetLeadingTriviaWidth(n.greenNode))
+	trailing := int(green.GetTrailingTriviaWidth(n.greenNode))
+	fullWidth := int(n.greenNode.FullWidth())
 
 	start := n.position + leading
-	length := n.greenNode.FullWidth() - leading - trailing
-	return text.NewSpan(start, length)
-}
-
-func (n *Node) ChildToken(index int) SyntaxToken {
-	if n == nil || green.IsNil(n.greenNode) || index < 0 || index >= n.greenNode.SlotCount() {
-		return SyntaxToken{}
+	width := fullWidth - leading - trailing
+	if width < 0 {
+		width = 0
 	}
 
-	greenChild := n.greenNode.Slot(index)
-	if green.IsNil(greenChild) {
-		return SyntaxToken{}
-	}
-
-	greenTok, ok := greenChild.(*green.Token)
-	if !ok {
-		return SyntaxToken{}
-	}
-
-	childPos := n.position
-	for i := range index {
-		if sibling := n.greenNode.Slot(i); !green.IsNil(sibling) {
-			childPos += sibling.FullWidth()
-		}
-	}
-
-	return NewSyntaxToken(n, greenTok, childPos, index)
+	return text.NewSpan(start, width)
 }

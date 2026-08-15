@@ -2,7 +2,6 @@ package green
 
 import "github.com/azin-lang/Azin/internal/azin/syntax"
 
-// MaxChildrenPerNode is the branching threshold before a SyntaxList is balanced into a tree.
 const MaxChildrenPerNode = 10
 
 var emptySyntaxList = &SyntaxList{
@@ -20,8 +19,6 @@ type SyntaxList struct {
 
 func (s *SyntaxList) IsNil() bool { return s == nil }
 
-// NewSyntaxList ensures immutability by cloning the external slice,
-// then balances the tree using a zero-copy internal builder.
 func NewSyntaxList(children []Node) *SyntaxList {
 	if len(children) == 0 {
 		return emptySyntaxList
@@ -32,7 +29,6 @@ func NewSyntaxList(children []Node) *SyntaxList {
 	return buildSyntaxListUnsafe(clone)
 }
 
-// buildSyntaxListUnsafe creates balanced chunks without redundant cloning.
 func buildSyntaxListUnsafe(children []Node) *SyntaxList {
 	for len(children) > MaxChildrenPerNode {
 		numChunks := (len(children) + MaxChildrenPerNode - 1) / MaxChildrenPerNode
@@ -44,7 +40,7 @@ func buildSyntaxListUnsafe(children []Node) *SyntaxList {
 		children = chunks
 	}
 
-	width, flags := ComputePropertiesSlice(children)
+	width, flags := ComputeProperties(children)
 	return &SyntaxList{
 		Base: Base{
 			kind:      syntax.SyntaxList,

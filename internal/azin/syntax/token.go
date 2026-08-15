@@ -60,17 +60,17 @@ var tokenText = [...]string{
 	NewlineToken:            "\n",
 }
 
-var keywords map[string]Kind
+var keywords = func() map[string]Kind {
+	m := make(map[string]Kind, lastKeyword-firstKeyword+1)
 
-func init() {
-	// Dynamically build the keyword map from the array to prevent duplication
-	keywords = make(map[string]Kind, lastKeyword-firstKeyword+1)
-	for i := firstKeyword; i <= lastKeyword; i++ {
-		if txt := tokenText[i]; txt != "" {
-			keywords[txt] = i
+	for k := firstKeyword; k <= lastKeyword; k++ {
+		if text := tokenText[k]; text != "" {
+			m[text] = k
 		}
 	}
-}
+
+	return m
+}()
 
 // LookupKeyword checks if an identifier is a reserved keyword.
 func LookupKeyword(text string) Kind {
@@ -82,10 +82,11 @@ func LookupKeyword(text string) Kind {
 
 // Text returns the static string representation of a token.
 func (k Kind) Text() string {
-	if int(k) < len(tokenText) {
-		return tokenText[k]
+	if uint(k) >= uint(len(tokenText)) {
+		return ""
 	}
-	return ""
+
+	return tokenText[k]
 }
 
 // Display returns a human-readable representation for errors and diagnostics.

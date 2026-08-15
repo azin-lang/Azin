@@ -205,7 +205,7 @@ func TestLexer_TriviaPreservation(t *testing.T) {
 	// Total full width should match raw input string length
 	var totalWidth int
 	for _, tok := range tokens {
-		totalWidth += tok.FullWidth()
+		totalWidth += int(tok.FullWidth())
 	}
 
 	if totalWidth != len(input) {

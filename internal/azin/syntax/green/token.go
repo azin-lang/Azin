@@ -53,7 +53,6 @@ func NewToken(kind syntax.Kind, text string, leading, trailing Node) *Token {
 		key := tokenCacheKey{kind: kind, text: text}
 		shard := getShard(kind, text)
 
-		// Fast path: Read lock
 		shard.mu.RLock()
 		if cached, ok := shard.items[key]; ok {
 			shard.mu.RUnlock()
@@ -67,7 +66,7 @@ func NewToken(kind syntax.Kind, text string, leading, trailing Node) *Token {
 		token := &Token{
 			Base: Base{
 				kind:      kind,
-				fullWidth: len(internedText),
+				fullWidth: uint32(len(internedText)), //nolint:gosec
 				flags:     FlagNone,
 			},
 			text: internedText,
@@ -84,18 +83,31 @@ func NewToken(kind syntax.Kind, text string, leading, trailing Node) *Token {
 		return token
 	}
 
-	wL, fL := getProps(leading)
-	wT, fT := getProps(trailing)
+	var w uint32
+	var f NodeFlags
+
+	cleanLeading := NilSafe(leading)
+	cleanTrailing := NilSafe(trailing)
+
+	if cleanLeading != nil {
+		w += cleanLeading.FullWidth()
+		f |= cleanLeading.Flags()
+	}
+	if cleanTrailing != nil {
+		w += cleanTrailing.FullWidth()
+		f |= cleanTrailing.Flags()
+	}
+	w += uint32(len(text)) //nolint:gosec
 
 	return &Token{
 		Base: Base{
 			kind:      kind,
-			fullWidth: wL + wT + len(text),
-			flags:     fL | fT,
+			fullWidth: w,
+			flags:     f,
 		},
 		text:           text,
-		leadingTrivia:  leading,
-		trailingTrivia: trailing,
+		leadingTrivia:  cleanLeading,
+		trailingTrivia: cleanTrailing,
 	}
 }
 
