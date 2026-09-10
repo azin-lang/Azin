@@ -1,0 +1,91 @@
+name: Bug Report
+description: Report a bug in the Azin compiler or toolchain
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the sections below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Provide the minimal `.az` code and steps to reproduce the issue.
+      placeholder: |
+        1. Create a file `test.az` with:
+        ```az
+        // your code here
+        ```
+        2. Run `azin build test.az`
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages or output.
+      placeholder: |
+        ```
+        paste output here
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Azin Version
+      description: Output of `azin --version`
+      placeholder: "e.g. v0.1.0 or commit hash"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: arch
+    attributes:
+      label: Architecture
+      options:
+        - amd64
+        - arm64
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or related issues.
+    validations:
+      required: false
